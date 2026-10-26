@@ -29,6 +29,9 @@ you do not install a predictor, and you do not run anything twice.
 - The agent workspace is `demo-target/` inside this checkout, and
   ONLY that folder. Never point the harness at a personal project, a
   work repo, or any folder containing credentials.
+- The harness itself is started from the TestingPlatform repo root
+  (`pnpm run dev` there), not from inside `demo-target/` — running it
+  inside `demo-target/` fails with "Missing script: dev".
 - Before EVERY run, reset it from inside `demo-target/`:
 
 ```sh

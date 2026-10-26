@@ -5,7 +5,11 @@ Work through this in order. Do not skip the scrub step.
 ## Before your first task (once)
 
 - [ ] Clone TestingPlatform, frozen install, setup, `pnpm run dev`
-      (see `testing-platform/README.md`). Keep the terminal running;
+      (see `testing-platform/README.md`) — all from the TestingPlatform
+      repo root, NOT from inside `demo-target/`. `pnpm run dev` inside
+      `demo-target/` fails with "Missing script: dev", because `dev`
+      lives only in the root `package.json` (`demo-target/package.json`
+      has only a `test` script). Keep the terminal running;
       open the printed URL including its login token.
 - [ ] Prove the model route: Settings → Our Free Model → Free models
       → wait for the roster (or Refresh roster) → Text test on a model
