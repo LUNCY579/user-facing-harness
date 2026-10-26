@@ -15,7 +15,12 @@ Work through this in order. Do not skip the scrub step.
       → wait for the roster (or Refresh roster) → Text test on a model
       card. It sends `Reply with exactly: OK`.
 - [ ] Write down the EXACT model id the route reports. Use that one
-      model for every task. Recommended default: `deepseek-flash`.
+      model for every task. Any free model that Text-tests OK works
+      (the pilot used `kilo-auto/free`); a priced model such as
+      `deepseek-flash` also works if you have that route. Tell Cheng
+      your model id BEFORE running all tasks — your control can only
+      be paired with a treatment run on the same model, so if Cheng
+      cannot run that model, pick another one first.
 - [ ] In `demo-target/`, run `npm test`. Expect **10 pass / 2 fail**
       (the two intended pristine failures). If anything else appears,
       stop and tell Cheng.
@@ -47,6 +52,12 @@ Work through this in order. Do not skip the scrub step.
       EVERY field. No field left blank, no `<...>` placeholder left.
       Success is `pass` or `fail` against that task's criteria in
       `TASKS.md` — judge it honestly, in one line of notes.
+      Shortcut: `python3 demo-pack/fill_run_sheet.py --export
+      <unzipped-export> --task <TASK> --participant <code> --out
+      run-sheet.md` fills start, end, and model from the export;
+      fill the remaining human fields by hand. Run-sheet end time is
+      the last `turn/end` event, NOT the later `/export` command
+      time (the script already does this).
 - [ ] In `demo-target/`, write the post-run state to
       `demo-target-diff.txt` (`git diff` plus `git status --short`).
 - [ ] Put exactly these three files in a folder named
@@ -64,7 +75,28 @@ Work through this in order. Do not skip the scrub step.
         and check again.
       - Confirm no file outside `demo-target/` is in the bundle.
 - [ ] Zip the folder as `<participant-code>-<TASK>-control.zip`
-      (a code, not your personal name) and send it to Cheng.
+      (a code, not your personal name) and send it to Cheng. On
+      macOS, exclude Finder metadata: add `-x "*.DS_Store"` to the
+      zip command, or delete `.DS_Store` from the folder first.
+      Wave 1: send T1 first and wait for Cheng's check before
+      sending T2–T8.
+
+## Optional bonus runs (not the main tasks)
+
+You may also send a regular-work run, but only if ALL of these hold,
+and it is labeled separately — never pooled with the fixed tasks:
+
+- The workspace can be reproduced on Cheng's laptop without your
+  private data (demo-target, a public repo, or a folder you
+  explicitly share — not a private project).
+- No private data, secrets, or personal projects in the prompt or
+  the session.
+- Success is clear (a test passes, a file is written, etc.).
+- Model and settings are recorded, exactly as for a fixed task.
+- You explicitly consent to share that session.
+
+If any check fails, do not send it for a live pair. It may still be
+useful for an offline trajectory estimate if Cheng asks for it.
 
 ## Never do these
 

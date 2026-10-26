@@ -2,8 +2,11 @@
 
 You are the control group for a cost demo. You run each task once,
 with predictive tooling OFF, in the harness you already have in this
-checkout. You send Cheng a bundle per task. You do not run the meter,
-you do not install a predictor, and you do not run anything twice.
+checkout. You send Cheng a bundle per task. You do not install a
+predictor, and you do not run anything twice. You do not need to run
+the meter — Cheng runs it on receipt — but the meter now lives in
+this pack (`meter/`), so everything demo-related is in this one
+checkout and there is no second repo to clone.
 
 ## What is in this pack
 
@@ -23,6 +26,26 @@ you do not install a predictor, and you do not run anything twice.
   inside of the export ZIP for secrets (compressed content cannot be
   searched this way) — the manual ZIP-content check in the checklist
   is still required.
+- `fill_run_sheet.py` — a stdlib-only Python helper that fills a run
+  sheet from an unzipped session export: UTC start (first prompt
+  event), UTC end (last `turn/end` event — NOT the `/export` command
+  time), model id, and whether usage/tool blocks are present. It
+  leaves the human-judgment fields (success, criteria, permission,
+  ceiling, commit, pristine check, reset, preflight) for you to fill.
+  Usage: `python3 demo-pack/fill_run_sheet.py --export <unzipped-export>
+  --task <TASK> --participant <code> --out run-sheet.md`. You may
+  fill the sheet by hand instead; the script is only a shortcut.
+- `meter/` — the bill-audit reporter (`bill-audit.mjs` +
+  `prices.json`, price table 2026-10-26). This is the demo copy,
+  canonical for this demo; the original lives in the deepseek-harness
+  repo and is left untouched. Do not edit both copies. Cheng runs
+  this on receipt; you may run it on your own bundle to self-check.
+  See `SAVE_AND_COMPARE.md` for how Cheng saves and compares runs.
+- `SAVE_AND_COMPARE.md` — Cheng's receipt workflow: evidence layout,
+  meter and compare commands, and how pairs are compared (same task,
+  same model, success next to every number). Participants do not
+  need to follow it, but it is kept here so the whole demo workflow
+  is in one place.
 
 ## The workspace (do not get this wrong)
 
@@ -57,7 +80,10 @@ leak into the next run.
    the run failed — do not rescue it and report it as a pass.
 4. Export the session (`/export` in the Web UI) and download the ZIP.
 5. Copy `RUN_SHEET_TEMPLATE.md`, fill it in completely, and save it
-   as `run-sheet.md` in the bundle folder.
+   as `run-sheet.md` in the bundle folder. You may use
+   `fill_run_sheet.py` for the start, end, and model fields (see
+   above). Run-sheet end time is the last `turn/end` event, NOT the
+   later `/export` command time.
 6. In `demo-target/`, save the post-run state:
    `git diff > demo-target-diff.txt` and append `git status --short`.
    (For T1, `git diff` alone is empty because FINDINGS.md is a new
@@ -65,6 +91,11 @@ leak into the next run.
 7. Run preflight on the bundle folder (see below).
 8. Do the manual scrub in `PARTICIPANT_CHECKLIST.md`, then zip the
    three files as `<participant-code>-<TASK>-control.zip` and send it.
+   On macOS, exclude Finder metadata, or delete it first:
+   `zip -r <participant-code>-<TASK>-control.zip <TASK>-control
+   -x "*.DS_Store"`.
+   Wave 1 order: send T1 first and wait for Cheng's check before
+   sending T2–T8.
 
 Bundle folder (before zipping), exactly these three files:
 
@@ -90,9 +121,14 @@ cannot see inside a ZIP. Do the manual check anyway.
 
 ## What Cheng does on receipt
 
-He runs the bill-audit reporter over your export (requests, tool-call
-trajectory, official-list-price cost), checks your run sheet for
-completeness, and only then counts the run as evidence. An incomplete
-bundle goes back to you; he does not guess a missing field. A cheaper
-failed run is not a win — success is judged from your run sheet,
-next to cost.
+He runs the bill-audit reporter in `meter/` over your export
+(requests, tool-call trajectory, tokens, official-list-price cost
+where the model is priced), checks your run sheet for completeness,
+saves the run under `evidence/<TASK>/control/`, and only then counts
+it as evidence. An incomplete bundle goes back to you; he does not
+guess a missing field. A cheaper failed run is not a win — success
+is judged from your run sheet, next to every number. He then runs
+the same task himself with predictive tooling ON, on the same model,
+and compares the pair — see `SAVE_AND_COMPARE.md`. Unpriced models
+are compared on tool calls and tokens only, never converted to
+dollars without a price.
