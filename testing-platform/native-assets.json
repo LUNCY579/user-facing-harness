@@ -1,0 +1,196 @@
+{
+  "format_version": 1,
+  "target": "../plugins/dsh-our-free-model/vendor/magpie/bin/magpie-win32-x64.exe",
+  "source": {
+    "repository": "LUNCY579/dsh-our-free-model",
+    "commit": "e164fea59e0293ab6284fd62d25d3ab8a4f459ce",
+    "path": "vendor/magpie/bin/magpie-win32-x64.exe"
+  },
+  "archive_source": {
+    "repository": "LUNCY579/deepseek-harness",
+    "commit": "db87ee0d0adbaffdb6aa9ad2311ae3e92b42f0e1",
+    "path": "plugins/our-free-model-assets/",
+    "packing": "The original gzip stream is preserved and divided into 1 MiB parts."
+  },
+  "archive": {
+    "format": "gzip",
+    "size": 34767358,
+    "sha256": "97bf684c1e86b67d055520c7acdf9f38438221ee8f7434fe99428981f9711f9c",
+    "parts": [
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part01",
+        "size": 1048576,
+        "sha256": "170e10f538463a1e747357de728b95e1df1727c789d6d81468aab317129b9122"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part02",
+        "size": 1048576,
+        "sha256": "137f405b32a497ca2aa75d9b0ea2d8dbe55933a8bc45dd303cef2722f0bc9526"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part03",
+        "size": 1048576,
+        "sha256": "61e5b0e91e6e1df98388c37e54f5095b3e23c2a59205c6e4cf1c7209e46f516b"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part04",
+        "size": 1048576,
+        "sha256": "d79deb7fc6325115eae6cbd7393039bc2bd15a6d08f34fd4912f08a13c93209d"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part05",
+        "size": 1048576,
+        "sha256": "7f3a7590a41c2fcce43c9276d1e83effb3ffca275d99bbf31b4c55afef40327b"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part06",
+        "size": 1048576,
+        "sha256": "3cedd7cde61d2d26733e758a1070068d76d75444a2505ae00715025fe5d8081e"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part07",
+        "size": 1048576,
+        "sha256": "dd8fc4b4eb60da314c3e786097785512ce5a10864748016aa4b230daf9766cea"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part08",
+        "size": 1048576,
+        "sha256": "dfb3dbd297d029bb2bb63089236bdebd346736df000f9f2e6446a2232b2a30b2"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part09",
+        "size": 1048576,
+        "sha256": "af05f9af67e7d0308b0bdc9fa6bc787006f602b1d17b6196c9a6f92ce8bbaa5b"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part10",
+        "size": 1048576,
+        "sha256": "bef43b810f612517aaf943f9a55a347f2e231c3f6bb71f4d50ad989092c5b069"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part11",
+        "size": 1048576,
+        "sha256": "01cbdca0e80bc4d617252d602852f36c427e035afc193c6612ab98ab042bf93e"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part12",
+        "size": 1048576,
+        "sha256": "de605d60253ca7d7db8da0fa599336612f33e68145aef76469044b2a2dcafe84"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part13",
+        "size": 1048576,
+        "sha256": "2f3de30b3f2bc3b6bbadeab4f247452e01ad6e97ca694bd720b3c080ef7fae23"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part14",
+        "size": 1048576,
+        "sha256": "c7c7720ec66a1d024bf707e9b24fb700a41ce988620c0915ff44a209a4ff3238"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part15",
+        "size": 1048576,
+        "sha256": "f1230119b1c4a040bc16538859fd84fb73c6ef1a3e09d87fa89282d1d8d9cff4"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part16",
+        "size": 1048576,
+        "sha256": "34aa267bce4b4657fc0a97d2ba3fb36ed877256ad6a775d6fbd2d61b3c888081"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part17",
+        "size": 1048576,
+        "sha256": "411d0e4961b786e824bed5f1211292652de7e6dce961ebdb29af44f57656bbdb"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part18",
+        "size": 1048576,
+        "sha256": "1dfb6e1da38b9724ea23ecfcb6bacd63d245bd6151d6670ffef81151f01d8ce6"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part19",
+        "size": 1048576,
+        "sha256": "8cc75942bd010f29bd29de21be7b44ad9dc20c6bc0ee96c5f560b72c7ffd02aa"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part20",
+        "size": 1048576,
+        "sha256": "5a10e1e6231707c8a35ec85eddf0dba1e18960c38be29fecff9a64dc09fd2060"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part21",
+        "size": 1048576,
+        "sha256": "c3d6f9d448a8897d39ef622b4a33889ae32cffaf9de404bd721a5079761b480a"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part22",
+        "size": 1048576,
+        "sha256": "e366025e24df173734768c777956c3457bad64be3a055cb63dac24762958eab0"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part23",
+        "size": 1048576,
+        "sha256": "bce01bbf2ceadfa633ccb863b26bd7ebd40988cebd0bd892dc2c9eebe34c74c4"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part24",
+        "size": 1048576,
+        "sha256": "54627a6891895f69a85c41bcd2ad1f828e5e0f053bd7c9d3d42627142a5a8f99"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part25",
+        "size": 1048576,
+        "sha256": "cbb0cdef2532d1abd67c2eb18f8a6488424bcb14d87001aa3ca3a610d7d4d2fe"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part26",
+        "size": 1048576,
+        "sha256": "25edb6f746a1510c06196691933e102c2a14d07c2630cdba48a2a0a1dd23ba0c"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part27",
+        "size": 1048576,
+        "sha256": "93396fb22291c8a7bff3e10bf3b8d6597c985192aa1951e1990332a4e701da0b"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part28",
+        "size": 1048576,
+        "sha256": "6aa44e4cdc5d79caa43845d1828d76d4b06bc7b7dc4f0a4f7d5996a2703b1945"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part29",
+        "size": 1048576,
+        "sha256": "9811441d7000512c92d787f574d5138f9802985991c55b6d600e80eaadd9a57c"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part30",
+        "size": 1048576,
+        "sha256": "29668c3b5c7b0355b6fdecbcc8b6c78a303bd40cfc8300643ad25209cb4871e9"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part31",
+        "size": 1048576,
+        "sha256": "c1bed5421b135d95528047a2889797640822954348fee6406f46da3c7b93a127"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part32",
+        "size": 1048576,
+        "sha256": "8a74522a0a5d4b3b0b48ab1f11fb629ba4da935ae0f7d0287106fc996757dc7b"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part33",
+        "size": 1048576,
+        "sha256": "7d1b3186be31e501bb2d1e21cfb4a5e1462d20237773bcaf4b4c5fad99953ade"
+      },
+      {
+        "path": "assets/magpie-win32-x64.exe.gz.part34",
+        "size": 164350,
+        "sha256": "aa53d96d1fb4d928f23f8d6a727bac7507f6208d2a646a106b1e31bdd9a249e5"
+      }
+    ]
+  },
+  "binary": {
+    "size": 68578304,
+    "sha256": "6490f7ed2c5f001adc97284276af453f2a2b1711712e175e6fc780e09046fa3b"
+  }
+}

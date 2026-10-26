@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write testing-platform/README.md
+/:
+  en: d274b304ef1d2e92
+  zh: bcbd3e2deed41101
+/testingplatform-development-reference:
+  en: 429caff2874f03b1
+  zh: 00e4c86d7424a0d0
+/testingplatform-development-reference/summary:
+  en: ce8eb3f66eefeca6
+  zh: f9e9d50945b3ec2a
+/testingplatform-development-reference/contents:
+  en: 664b5ee59976e5fa
+  zh: 0318d30c614480b1
+/testingplatform-development-reference/repository-layout:
+  en: 10ff417a8d54b924
+  zh: b5153627d2a62ea3
+/testingplatform-development-reference/development-loop:
+  en: 3f3a364acc198518
+  zh: 4dd888e79bc86ee7
+/testingplatform-development-reference/profiles-and-isolated-experiments:
+  en: 6237c2ed1c27dacf
+  zh: f54edd89dd0afbd9
+/testingplatform-development-reference/integration-checks:
+  en: e3dda8512e3d6772
+  zh: 6868deb5a59b7cb5
+/testingplatform-development-reference/optional-applications:
+  en: f7f1f76d02c9b29f
+  zh: 2f09b346d4d3298f
+/testingplatform-development-reference/source-and-licenses:
+  en: 52f6cf440988837b
+  zh: c7b95e8e95073521
+/testingplatform-development-reference/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

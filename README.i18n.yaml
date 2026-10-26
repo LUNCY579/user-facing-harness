@@ -1,0 +1,76 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write README.md
+/:
+  en: 9cbb0fe95a319303
+  zh: 2e0cbee3a324cff6
+/testingplatform:
+  en: ddc8c43d99faf62a
+  zh: 80df62df7d1bf3e2
+/testingplatform/summary:
+  en: a6bf64763a08861a
+  zh: efc672dff2f6c9d0
+/testingplatform/contents:
+  en: f51bda4d64fab70a
+  zh: 645244c814c7a236
+/testingplatform/prerequisites:
+  en: b04e1dfd3ddb1978
+  zh: 5ddb938585000407
+/testingplatform/run:
+  en: a8458f3189aaa7ab
+  zh: 141c47fc7b749494
+/testingplatform/run/run-from-source:
+  en: 28462b58f8d1fc90
+  zh: 15ed26fe00921ce8
+/testingplatform/send-your-first-model-request:
+  en: b66bf927b0e70c79
+  zh: 51aa171d28a7d8f9
+/testingplatform/send-your-first-model-request/1-check-a-response-inside-the-plugin:
+  en: 6d3334cf134c76bb
+  zh: 8ffb87e681fef83c
+/testingplatform/send-your-first-model-request/2-chat-through-the-harness-interface:
+  en: 2af456a4b4fb17b5
+  zh: d02916ad2696372f
+/testingplatform/connect-your-api-key-or-local-model:
+  en: 67c277fb93b6fa5f
+  zh: 4ba6c9c558b51356
+/testingplatform/connect-your-api-key-or-local-model/an-api-provider:
+  en: aa9dcee847f43268
+  zh: 3e12ff2661869aeb
+/testingplatform/connect-your-api-key-or-local-model/a-local-inference-server:
+  en: 20c90a3636679390
+  zh: ae3a354ce640c4a5
+/testingplatform/enable-additional-functionality:
+  en: eea43dcefcf45a18
+  zh: 170156db811e5801
+/testingplatform/enable-additional-functionality/connect-another-client-through-the-plugin:
+  en: 0baad7abcf16897c
+  zh: ac5b8fc9d2b5c0b4
+/testingplatform/enable-additional-functionality/gemini-account-configuration:
+  en: ebaab3d75b492131
+  zh: 716eac9183493bbc
+/testingplatform/state-credentials-and-environment:
+  en: 6e610f6cdcd19712
+  zh: c57cd8035e08beb2
+/testingplatform/troubleshooting:
+  en: 78ebd90d88ffc13a
+  zh: f5b8fc255f0bcc75
+/testingplatform/development:
+  en: da7e8928766d6b4d
+  zh: 78aea443f7cc6cc7
+/testingplatform/developer-preview:
+  en: 1bc75d9780a995b6
+  zh: ca621845f5e17f2f
+/testingplatform/contributing:
+  en: c3a330393957ec4b
+  zh: 458dfc5ec2ea270a
+/testingplatform/citation:
+  en: 23c4cec7b3e5f87c
+  zh: d711826d3d3f462b
+/testingplatform/license:
+  en: a31c18905ca6d2ef
+  zh: fd66feca069698ac
+/testingplatform/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269
