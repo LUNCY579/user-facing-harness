@@ -1,0 +1,3 @@
+# node_modules only. .demo-registry.json is intentionally NOT ignored:
+# the demo reset rule (git clean -fd) must be able to remove it between runs.
+node_modules/

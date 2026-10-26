@@ -1,0 +1,1 @@
+{"description":"Small standalone project used as the fixed workspace for the WING predictive-tooling demo (control vs treatment). No dependencies.","name":"demo-target","private":true,"scripts":{"test":"node --test --test-concurrency=1 test/*.test.js"},"type":"commonjs","version":"1.0.0"}
