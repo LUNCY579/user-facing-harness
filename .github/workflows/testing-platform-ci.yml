@@ -12,6 +12,7 @@ concurrency:
 
 env:
   DSH_TELEMETRY_DISABLED: '1'
+  DSH_GATE_CONCURRENCY: '1'
 
 jobs:
   checks:
@@ -29,8 +30,12 @@ jobs:
       - name: Install pinned dependencies
         run: pnpm install --frozen-lockfile
       - name: Build harness and check TypeScript
-        run: pnpm run build
+        run: pnpm run setup
       - name: Check plugin adapter types
         run: pnpm --dir plugins/dsh-our-free-model run typecheck
       - name: Run plugin offline regressions
         run: pnpm --dir plugins/dsh-our-free-model run test:contributor
+      - name: Test repository integration
+        run: pnpm run test:integration
+      - name: Smoke test the combined Web application
+        run: pnpm run smoke:platform

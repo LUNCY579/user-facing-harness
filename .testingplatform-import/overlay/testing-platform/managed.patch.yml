@@ -1,0 +1,5 @@
+# The repository owns these plugin files; plugin self-updates must not replace them.
+- id: our-free-model
+  name: dsh-our-free-model
+  config:
+    distribution: managed
