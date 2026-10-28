@@ -135,6 +135,7 @@ Install your chosen inference application, load or download a model there, and s
 | Ollama | `http://localhost:11434/v1` | Not required by the bundled local configuration. |
 | LM Studio | `http://localhost:1234/v1` | Not required by the bundled local configuration. |
 | llama.cpp | `http://localhost:8080/v1` | Not required by the bundled local configuration. |
+| NVIDIA NIM | `https://integrate.api.nvidia.com/v1` | Required. Enter the key you were given in the provider's API key field; the key is never stored in this repository. See the [NVIDIA NIM endpoint guide](plugins/dsh-our-free-model/docs/nvidia-nim-endpoint.md). |
 
 Follow the same **Configure → Add/Save → Discover models** flow. These entries have no bundled model IDs: discover the running server’s models or save the exact ID in **Model override**. If your server uses another port or authentication, match its settings. `localhost` means the machine/environment running the Harness server, which can differ from the browser’s machine or a Windows host when using WSL.
 
