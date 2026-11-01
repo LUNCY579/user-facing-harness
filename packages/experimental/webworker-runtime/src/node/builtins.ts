@@ -14,12 +14,12 @@
  * is a structural placeholder whose calls report the missing capability. File
  * names match their Node module specifiers exactly, nesting included.
  *
- * Every value is a {@link StaticModuleFactory}, so the loader reads a table
- * entry only when a `require` names that specifier. What a factory defers is the
- * table read, not module evaluation: each one answers a namespace object of the
- * static ESM graph below, which the worker bundle evaluates at load like any
- * other import. Deferring a shim's own start-up cost therefore belongs inside
- * that shim, on the path that first needs it.
+ * Every value is a {@link StaticModuleFactory}, invoked only when a `require`
+ * names its specifier. Namespace factories defer the table read, while the
+ * static ESM graph below still evaluates when the Worker bundle loads. An
+ * unavailable native SDK instead refuses at factory invocation; constructing
+ * the table stays silent and loads no native payload. Deferring a shim's own
+ * start-up cost belongs inside that shim, on the path that first needs it.
  */
 import * as nodeAssertStrict from './builtin_modules/implemented/assert/strict.ts'
 import * as nodeAsyncHooks from './builtin_modules/implemented/async_hooks.ts'
@@ -61,6 +61,7 @@ import * as piCodingAgent from './external_packages/pi-coding-agent.ts'
 import * as ripgrep from './external_packages/ripgrep.ts'
 import * as sharp from './external_packages/sharp.ts'
 import * as ws from './external_packages/ws.ts'
+import { loadZvec } from './external_packages/zvec.ts'
 import { REPLACED_EXTERNAL_PACKAGES } from './external_packages/replaced-externals.ts'
 import type { StaticModuleFactory } from '../module-system/module-loader.ts'
 
@@ -109,6 +110,7 @@ const EXTERNALS: Record<string, StaticModuleFactory> = {
   'node-addon-require-builtin': () => nodeAddonRequireBuiltin,
   'ws': () => ws,
   '@vscode/ripgrep': () => ripgrep,
+  '@zvec/zvec': loadZvec,
   '@earendil-works/pi-ai': () => piAi,
   '@earendil-works/pi-coding-agent': () => piCodingAgent,
 }

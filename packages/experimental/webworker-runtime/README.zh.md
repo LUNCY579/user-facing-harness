@@ -60,6 +60,7 @@ kind: "package-library"
 - **原生 TLS 监听器需要 Node Host**：worker 的 `node:https.createServer` 会拒绝激活，不会替换成明文。预览内部的 HTTP 隧道不绑定套接字；面向浏览器的 HTTPS 由部署服务器提供。
 - **桌面产品埋点不可用**：`got.post` 明确报告 worker host 不支持该调用。浏览器镜像不包含 Got 及其 Node HTTP 依赖；预览组合不启用桌面上报。
 - **宿主包管理命令不可用**：`execa` 明确报告 worker host 不支持该调用；预览无法运行 pnpm、安装插件或安装原生依赖。
+- **原生检索需要 Node Host**：镜像排除 `@zvec/zvec` 及其原生文件。停用的检索行不会加载 SDK；请求 SDK 时抛出 `ERR_FEATURE_UNAVAILABLE_ON_PLATFORM`，因此启用 Zvec 提供方会报告检索不可用。Python turbovec 加速器同样需要原生宿主。
 - **Pi Agent 执行不可用**：`@earendil-works/pi-coding-agent` 替代模块允许元数据导入，并以 `ERR_FEATURE_UNAVAILABLE_ON_PLATFORM` 拒绝 SDK 调用。镜像不包含其原生 CLI 与终端 UI 依赖。原生 DSH 仍保留完整的 OAR 运行时注册表。
 - **pi-ai 模型请求不可用**：替代实现暴露已安装提供方标识的固定子集，不包含模型，使适配器能够注册配置元数据。升级 pi-ai 时必须保持这些标识有效；推理入口明确报告 worker host 不支持该调用。
 - **PTC Node 程序不可用**：process shim 用 `/dsh/bin/node` 表示可执行文件身份，使 provider 能够激活，但 Worker 既没有 Node 可执行文件，也没有 `stripTypeScriptTypes`。程序执行会在启动子进程前失败。
