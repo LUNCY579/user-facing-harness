@@ -81,6 +81,15 @@ flowchart LR
   svc_deepseekLlmApiExtensions["ctx.deepseekLlmApiExtensions<br/>Official DeepSeek request extensions"]
   pkg_session_log_deepseek["session-log-deepseek"]
   pkg_plugin_package_inventory_deepseek["plugin-package-inventory-deepseek"]
+  pkg_retrieval["retrieval"]
+  svc_embeddings["ctx.embeddings<br/>Text embedding provider"]
+  pkg_retrieval_embed["retrieval-embed"]
+  pkg_retrieval_zvec["retrieval-zvec"]
+  svc_vectorStore["ctx.vectorStore<br/>Authoritative retrieval records and vectors"]
+  svc_accelerator["ctx.accelerator<br/>Optional compressed dense reranking"]
+  svc_retrieval["ctx.retrieval<br/>Scoped retrieval and explicit memory"]
+  pkg_retrieval_tools["retrieval-tools"]
+  svc_retrievalIndexing["ctx.retrievalIndexing<br/>Workspace and Session source synchronization"]
   pkg_token_meter["token-meter"]
   svc_tokenMeter["ctx.tokenMeter<br/>Replay token measurement"]
   pkg_compaction_tool_result_pruner["compaction-tool-result-pruner"]
@@ -400,6 +409,14 @@ flowchart LR
   pkg_ptc_runtime --> svc_ptcRuntime
   pkg_ptc_runtime_node --> svc_ptcRuntime
   pkg_pwsh_local --> svc_shell
+  pkg_retrieval --> svc_accelerator
+  pkg_retrieval --> svc_embeddings
+  pkg_retrieval --> svc_retrieval
+  pkg_retrieval --> svc_retrievalIndexing
+  pkg_retrieval --> svc_vectorStore
+  pkg_retrieval_embed --> svc_embeddings
+  pkg_retrieval_zvec --> svc_accelerator
+  pkg_retrieval_zvec --> svc_vectorStore
   pkg_sandbox --> svc_sandbox
   pkg_sandbox_local --> svc_sandbox
   pkg_sandbox_policy --> svc_sandboxPolicy
@@ -466,6 +483,7 @@ flowchart LR
   pkg_working_directory --> svc_workingDirectory
   pkg_workspace --> svc_workspaceRegistry
   pkg_workspace_changes --> svc_workspaceChanges
+  svc_accelerator --> pkg_retrieval
   svc_actionCards --> pkg_client_ui_action_cards
   svc_actionCards --> pkg_creation_recommendations
   svc_agentDefaultModel --> pkg_api_session_controller
@@ -505,6 +523,8 @@ flowchart LR
   svc_deepseekLlmApiExtensions --> pkg_llm_deepseek
   svc_directoryPicker --> pkg_api_workspace_controller
   svc_dynamicCordisRunner --> pkg_tool_cordis
+  svc_embeddings --> pkg_retrieval
+  svc_embeddings --> pkg_retrieval_zvec
   svc_fileReferences --> pkg_api_session_controller
   svc_fileUploads --> pkg_api_session_controller
   svc_fs --> pkg_tool_fs
@@ -534,6 +554,8 @@ flowchart LR
   svc_remoteAccess --> pkg_api_gateway
   svc_remoteAccess --> pkg_api_session_controller
   svc_remoteAccess --> pkg_api_workspace_controller
+  svc_retrieval --> pkg_retrieval_tools
+  svc_retrievalIndexing --> pkg_retrieval_tools
   svc_sandbox --> pkg_bash_sandbox
   svc_sandbox --> pkg_terminal_bash
   svc_sandboxPolicy --> pkg_bash_sandbox
@@ -609,6 +631,7 @@ flowchart LR
   svc_typert --> pkg_api_gateway
   svc_typert --> pkg_typert_loader
   svc_userQuestions --> pkg_tool_ask_user
+  svc_vectorStore --> pkg_retrieval
   svc_web --> pkg_tool_web
   svc_webApp --> pkg_harness_dev_context
   svc_webServer --> pkg_client_connection
@@ -653,6 +676,11 @@ flowchart LR
 | `ctx.fileUploads` | `core` | [`client-file-upload`](../packages/client/file-upload) | - | [`api-session-controller`](../packages/api/session-controller) | - | Owns streaming intake, durable storage, and staged receipt lifetime; the Session controller binds receipts to accepted submissions. |
 | `ctx.llm` | `seam` | [`llm`](../packages/llm/llm) | [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`llm-replay`](../packages/test-support/llm-replay) | [`agent-loop`](../packages/core/agent-loop), [`compaction-basic`](../packages/compaction/compaction-basic) | - | Adapters register provider implementations; the loop and compaction call the provider-neutral stream service. |
 | `ctx.deepseekLlmApiExtensions` | `seam` | [`deepseek-llm-api-extensions`](../packages/llm/deepseek-llm-api-extensions) | [`session-log-deepseek`](../packages/session/session-log-deepseek), [`plugin-package-inventory-deepseek`](../packages/llm/plugin-package-inventory-deepseek) | [`llm-deepseek`](../packages/llm/llm-deepseek) | - | Plugins prepare independent top-level fields; the official adapter merges them and commits their delivery state after HTTP acceptance. |
+| `ctx.embeddings` | `seam` | [`retrieval`](../packages/retrieval/retrieval) | [`retrieval-embed`](../packages/retrieval/retrieval-embed) | [`retrieval`](../packages/retrieval/retrieval), [`retrieval-zvec`](../packages/retrieval/retrieval-zvec) | - | Produces validated vectors for one declared embedding space; local hashing, loopback servers, and explicitly permitted remote servers share the same service definition. |
+| `ctx.vectorStore` | `seam` | [`retrieval`](../packages/retrieval/retrieval) | [`retrieval-zvec`](../packages/retrieval/retrieval-zvec) | [`retrieval`](../packages/retrieval/retrieval) | - | Zvec persists records and vectors, applies authorization filters before scoring, and reports accepted writes; source indexing and explicit memory share this authoritative store. |
+| `ctx.accelerator` | `seam` | [`retrieval`](../packages/retrieval/retrieval) | [`retrieval-zvec`](../packages/retrieval/retrieval-zvec) | [`retrieval`](../packages/retrieval/retrieval) | - | The isolated turbovec worker holds a rebuildable derivative and scores only canonical authorized candidate ids; worker failure leaves Zvec retrieval available. |
+| `ctx.retrieval` | `service` | [`retrieval`](../packages/retrieval/retrieval) | - | [`retrieval-tools`](../packages/retrieval/retrieval-tools) | - | Authorizes searches and memory mutations, reconciles pending memory publication, and packs source-linked evidence within the configured context budget. |
+| `ctx.retrievalIndexing` | `service` | [`retrieval`](../packages/retrieval/retrieval) | - | [`retrieval-tools`](../packages/retrieval/retrieval-tools) | - | Explicitly synchronizes permitted workspace files and historical Session text into derivative chunks; scoped rebuild removes chunks while preserving explicit memories and source logs. |
 | `ctx.tokenMeter` | `core` | [`token-meter`](../packages/llm/token-meter) | - | [`compaction-basic`](../packages/compaction/compaction-basic) | - | Owns isolated per-session replay folds; pressure consumers share immutable revisioned measurements. |
 | `ctx.toolResultPruner` | `core` | [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner) | - | [`compaction-basic`](../packages/compaction/compaction-basic) | - | Rewrites oversized current tool results through replayable single-node surface replacements before summary compaction. |
 | `ctx.sessions` | `core` | [`session`](../packages/core/session) | - | [`agent-loop`](../packages/core/agent-loop), [`agent`](../packages/core/agent), [`session-persistence`](../packages/session/session-persistence), [`session-query`](../packages/session-query/session-query), [`session-query-sqlite`](../packages/session-query/session-query-sqlite), [`subagent`](../packages/subagent/subagent), [`message-feedback`](../packages/feedback/message-feedback) | - | Owns append-only Session instances and emits the durable session event feed. |

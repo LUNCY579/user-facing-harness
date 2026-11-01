@@ -6,11 +6,41 @@
   en: 0be8ffbf23193557
   zh: ce2c69aa86875171
 /tool-schema-catalog:
-  en: 6cc2cd9ced70bb09
-  zh: 1c0e6cb4ba2ed637
+  en: d1677d8c37f3efef
+  zh: 0116b37cdf2a93ff
 /tool-schema-catalog/tool-package-map:
-  en: 4d42222acd39d083
-  zh: 8153a5065bf2ebd6
+  en: 611b654c606c0479
+  zh: e1f4f91a13bf3ea3
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools:
+  en: 580e22c3bd21055c
+  zh: 580e22c3bd21055c
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/context-index:
+  en: d38b50ee0af7920a
+  zh: c4465941de4e787d
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/context-search:
+  en: 003572c3b840308c
+  zh: 6ffe63ea24383309
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/memory-forget:
+  en: d2346f7a3bc7f4b2
+  zh: 92cd96f7be2e70b5
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/memory-remember:
+  en: c09ffe1b18a042cd
+  zh: bcb9c1c63729d30e
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/memory-search:
+  en: 532c0e5b4f33fbbc
+  zh: 0b2e3a3eaa73bfa4
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/memory-status:
+  en: 59c6c4a616bc6e50
+  zh: 59958129a95eca48
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/memory-update:
+  en: 54454a1664402601
+  zh: af8de1be4efc97c4
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/vector-similarity-search:
+  en: 0d7ff5de20d83b33
+  zh: e3278464e2a4ba98
+/tool-schema-catalog/deepseek-ai-dsh-retrieval-tools/workspace-semantic-search:
+  en: c5d6f2c78ee4a360
+  zh: 6af532626766a9d0
 /tool-schema-catalog/deepseek-ai-dsh-plugin-manager:
   en: e0143916bb634762
   zh: e0143916bb634762

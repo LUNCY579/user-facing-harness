@@ -82,6 +82,55 @@ export interface TypeApiEntry {
 /** Every harness `ctx.<key>` service, sorted by key. */
 export const SERVICE_API: readonly ServiceApiEntry[] = [
   {
+    key: 'accelerator',
+    summary: 'Optional rebuildable dense-vector accelerator.',
+    description: 'Optional rebuildable dense-vector accelerator. It stores quantized copies of vectors already durable in VectorStore under the same record ids, so every failure mode — unavailable, inconsistent, crashed — permits a Zvec-only answer.\n\nImplementers must never return an id absent from ReadFilter.onlyIds: the engine passes the authorized candidate set as an allowlist so a stale accelerator cannot widen access.',
+    methods: [
+      {
+        signature: 'abstract add(ids: readonly RecordId[], vectors: readonly (readonly number[])[], signal?: AbortSignal): Promise<number>',
+        description: 'Add or replace quantized copies of vectors.',
+        parameters: [{ name: 'ids', description: 'record ids matching `vectors` positionally.' }, { name: 'vectors', description: 'dense vectors in the store\'s space.' }, { name: 'signal', description: 'cancellation of the in-flight batch.' }],
+        returns: 'count accepted.',
+      },
+      {
+        signature: 'abstract search(vector: readonly number[], topK: number, allowlist: readonly RecordId[], signal?: AbortSignal): Promise<BackendHit[]>',
+        description: 'Search the accelerator, restricted to an authorized candidate set.',
+        parameters: [{ name: 'vector', description: 'query vector in the store\'s space.' }, { name: 'topK', description: 'maximum candidate count.' }, { name: 'allowlist', description: 'record ids permitted to match; empty means nothing is permitted.' }, { name: 'signal', description: 'cancellation of the in-flight worker request; absent means activation lifetime only.' }],
+        returns: 'hits ordered by accelerator relevance, with accelerator-raw scores.',
+      },
+      {
+        signature: 'abstract remove(ids: readonly RecordId[]): Promise<number>',
+        description: 'Drop quantized copies of removed records.',
+        parameters: [{ name: 'ids', description: 'record ids to remove.' }],
+        returns: 'count removed.',
+      },
+      {
+        signature: 'abstract sync(): Promise<void>',
+        description: 'Persist accelerator state to its own rebuildable file.',
+        parameters: [],
+        returns: 'when written.',
+      },
+      {
+        signature: 'abstract stats(): Promise<AcceleratorStats>',
+        description: 'Inspect accelerator availability and synchronization counters.',
+        parameters: [],
+        returns: 'availability, size, and drift against the authoritative store.',
+      },
+      {
+        signature: 'abstract rebuild( ids: readonly RecordId[], vectors: readonly (readonly number[])[], signal?: AbortSignal, ): Promise<number>',
+        description: 'Rebuild accelerator state from authoritative vectors.',
+        parameters: [{ name: 'ids', description: 'every record id with a vector in the store.' }, { name: 'vectors', description: 'the corresponding vectors, positionally matching `ids`.' }, { name: 'signal', description: 'cancellation of the in-flight rebuild.' }],
+        returns: 'count re-added.',
+      },
+      {
+        signature: 'abstract close(): Promise<void>',
+        description: 'Release accelerator resources. Idempotent.',
+        parameters: [],
+        returns: 'when released.',
+      },
+    ],
+  },
+  {
     key: 'actionCards',
     summary: 'Card tool, kind registry, Session projection, user actions and status notices.',
     description: 'Card tool, kind registry, Session projection, user actions and status notices.',
@@ -1158,6 +1207,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'embeddings',
+    summary: 'One text-to-vector provider.',
+    description: 'One text-to-vector provider. `space` identifies the vectors it produces; the engine refuses to mix spaces, so a model or dimension change must surface as a new space rather than a silent default.',
+    methods: [
+      {
+        signature: 'abstract embed(texts: readonly string[], signal?: AbortSignal): Promise<number[][]>',
+        description: 'Embed a batch of texts.',
+        parameters: [{ name: 'texts', description: 'inputs in caller order.' }, { name: 'signal', description: 'cancellation of the in-flight batch.' }],
+        returns: 'one vector per input, in the same order, each exactly `space.dimension` long.',
+      },
+      {
+        signature: 'abstract close(): Promise<void>',
+        description: 'Release provider resources such as a model or a remote session. Idempotent.',
+        parameters: [],
+        returns: 'when released.',
+      },
+    ],
+  },
+  {
     key: 'fileReferences',
     summary: 'Host capability for cancellable file-reference discovery.',
     description: 'Host capability for cancellable file-reference discovery.',
@@ -2151,6 +2219,128 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Stream the calling Peer\'s access snapshot: one baseline, then `upsert` and `remove` frames after each `invalidate()` and each policy registration or removal that changes a grant. The owner receives only `{ owner: true }`. The generation ends when `signal` aborts or this service unloads, so a reloaded service starts every reader from a fresh baseline.',
         parameters: [{ name: 'signal', description: 'generation cancellation.' }],
         returns: 'the access frames of one generation.',
+      },
+    ],
+  },
+  {
+    key: 'retrieval',
+    summary: 'Unified retrieval and memory service.',
+    description: 'Unified retrieval and memory service. Providers must mount `vectorStore` and `embeddings` before this service is used; an accelerator is optional and only ever re-ranks candidates the store already authorized.',
+    methods: [
+      {
+        signature: 'authorizeScopes(requested: readonly RecordScope[], identity: TrustedIdentity): RecordScope[]',
+        description: 'Resolve which scopes a caller may actually read: the request\'s scopes intersected with the identity\'s grants. A model cannot widen this set by asking for a scope.',
+        parameters: [{ name: 'requested', description: 'scopes the caller asked for.' }, { name: 'identity', description: 'host-resolved caller identity.' }],
+        returns: 'permitted scopes, possibly empty.',
+      },
+      {
+        signature: 'buildFilter( identity: TrustedIdentity, scopes: readonly RecordScope[], pathPrefixes: readonly string[] = [], onlyIds: readonly RecordId[] | null = null, kinds: readonly RecordKind[] | null = null, activeAt: number | null = null, ): ReadFilter',
+        description: 'Build the filter-first constraint the store must apply before scoring anything.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity.' }, { name: 'scopes', description: 'authorized scopes.' }, { name: 'pathPrefixes', description: 'optional path restriction.' }, { name: 'onlyIds', description: 'candidate id restriction, used by accelerator re-ranking.' }, { name: 'kinds', description: 'record classes to admit, or `null` for both.' }, { name: 'activeAt', description: 'current-memory cutoff for search, or `null` to include lifecycle history.' }],
+        returns: 'the store read filter.',
+      },
+      {
+        signature: 'async search(input: RetrievalQuery, identity: TrustedIdentity): Promise<ContextPacket>',
+        description: 'Search records under a caller\'s authority. Keyword mode uses term matching only; semantic mode uses vectors; hybrid mode fuses both inside the store. An mounted accelerator re-ranks the authorized candidate set and never widens it.',
+        parameters: [{ name: 'input', description: 'query intent, with limits expressed in the same units the model sees.' }, { name: 'identity', description: 'host-resolved caller identity.' }],
+        returns: 'the packed packet; an empty packet when nothing matched.',
+      },
+      {
+        signature: 'async remember(input: RememberInput, identity: TrustedIdentity, signal?: AbortSignal): Promise<MemoryRecord>',
+        description: 'Store one explicit memory. Personal (`user` scope) writes require the opt-in configuration. A duplicate of an existing readable memory returns that record instead of writing again.',
+        parameters: [{ name: 'input', description: 'memory text, scope, tags, optional ttl and supersession list.' }, { name: 'identity', description: 'host-resolved caller identity.' }, { name: 'signal', description: 'cancellation before the durable write.' }],
+        returns: 'the stored or reused memory.',
+      },
+      {
+        signature: 'async updateMemory(id: RecordId, patch: MemoryPatch, identity: TrustedIdentity, signal?: AbortSignal): Promise<MemoryRecord>',
+        description: 'Rewrite one memory in place, bumping its version. Only the owning identity may write it.',
+        parameters: [{ name: 'id', description: 'memory id.' }, { name: 'patch', description: 'fields to change.' }, { name: 'identity', description: 'host-resolved caller identity.' }, { name: 'signal', description: 'cancellation before the durable write.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'async forget(selector: ForgetSelector, identity: TrustedIdentity, signal?: AbortSignal): Promise<RecordId[]>',
+        description: 'Delete memories and prove the deletion by re-reading the store.',
+        parameters: [{ name: 'selector', description: 'ids, expired sweep, and scope sweep.' }, { name: 'identity', description: 'host-resolved caller identity.' }, { name: 'signal', description: 'cancellation before deletion; once started, deletion is completed and verified.' }],
+        returns: 'ids durably removed.',
+      },
+      {
+        signature: 'async listMemories( identity: TrustedIdentity, options: { includeExpired?: boolean; includeSuperseded?: boolean } = {}, ): Promise<MemoryRecord[]>',
+        description: 'Read memories the caller may see, newest first, dropping expired and superseded rows by default.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity.' }, { name: 'options', description: '`includeExpired` keeps expired rows, `includeSuperseded` keeps replaced rows.' }],
+        returns: 'matching records.',
+      },
+      {
+        signature: 'async countMemories(identity: TrustedIdentity): Promise<MemoryCounts>',
+        description: 'Count authorized memories by their current lifecycle state.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity.' }],
+        returns: 'active, expired, superseded, and pending memory counts.',
+      },
+      {
+        signature: 'async rebuildAccelerator(identity: TrustedIdentity, signal?: AbortSignal): Promise<number>',
+        description: 'Rebuild the optional accelerator from current authorized records, including explicit memories. The authoritative store remains readable if embedding, worker startup, or synchronization fails. Concurrent source changes invalidate this rebuild and require a retry after indexing completes.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity; only its readable scopes are copied.' }, { name: 'signal', description: 'cancellation before or between bounded batches; absent means activation lifetime only. Pending memories are reconciled even when acceleration is disabled or absent. Zvec searches remain available during accelerator rebuilding; memory mutations wait for its snapshot read.' }],
+        returns: 'number of copied records, or zero when acceleration is disabled or absent.',
+      },
+      {
+        signature: 'assertOwnership(record: StoredRecord, identity: TrustedIdentity, mode: \'read\' | \'write\'): void',
+        description: 'Reject a read or write of a record the caller does not own. Ownership is workspace- plus scope-bound: a session record belongs to its own session unless cross-session read was granted.',
+        parameters: [{ name: 'record', description: 'the record in question.' }, { name: 'identity', description: 'host-resolved caller identity.' }, { name: 'mode', description: '`read` or `write`; a write always needs the caller\'s own session or agent.' }],
+        returns: 'nothing.',
+      },
+      {
+        signature: 'renderInjection(packet: ContextPacket): string',
+        description: 'Render a packet for injection, framed so a model reads the passages as data.',
+        parameters: [{ name: 'packet', description: 'a completed search packet.' }],
+        returns: 'the injection block, or `\'\'` when the packet is empty.',
+      },
+      {
+        signature: 'async status(identity?: TrustedIdentity, indexedRoots: readonly string[] = []): Promise<RetrievalStatus>',
+        description: 'Inspect backend health and authorized memory counters.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity, or `undefined` for a global health view.' }, { name: 'indexedRoots', description: 'absolute roots the indexing service currently maintains.' }],
+        returns: 'store, accelerator, embedding, and memory counters.',
+      },
+      {
+        signature: 'async close(): Promise<void>',
+        description: 'Stop accepting mutations and await this service\'s queued writes. Providers retain ownership of their resources.',
+        parameters: [],
+        returns: 'when resources are released.',
+      },
+    ],
+  },
+  {
+    key: 'retrievalIndexing',
+    summary: 'Discovers, chunks, and stores workspace and session records, and removes records whose source is gone.',
+    description: 'Discovers, chunks, and stores workspace and session records, and removes records whose source is gone. Writes go to the authoritative store first, so a failed sync leaves the store readable and the ledger unchanged for the sources it did not finish.',
+    methods: [
+      {
+        signature: 'async syncWorkspace(identity: TrustedIdentity, signal?: AbortSignal): Promise<SyncReport>',
+        description: 'Reconcile every configured root with the store.',
+        parameters: [{ name: 'identity', description: 'host-resolved identity that owns the produced records.' }, { name: 'signal', description: 'cancellation checked between files and between write batches.' }],
+        returns: 'the sync report.',
+      },
+      {
+        signature: 'async syncSessions(identity: TrustedIdentity, signal?: AbortSignal): Promise<SyncReport>',
+        description: 'Index live session transcripts as `session` scope records. The session log stays authoritative; these records are a derivative and are rebuilt from the log whenever the ledger is cleared.',
+        parameters: [{ name: 'identity', description: 'host-resolved identity; its workspace keys the produced records.' }, { name: 'signal', description: 'cancellation between sessions.' }],
+        returns: 'the sync report.',
+      },
+      {
+        signature: 'async close(): Promise<void>',
+        description: 'Stop admitting indexing work, cancel accepted operations at their next checkpoint, and await them. Interrupted source journals remain available for the next authorized sync.',
+        parameters: [],
+        returns: 'when this service\'s indexing operations have settled.',
+      },
+      {
+        signature: 'sources(): SourceState[]',
+        description: 'Inspect sources from the most recently loaded ledger.',
+        parameters: [],
+        returns: 'ledger entries for diagnostics, or an empty array before the ledger is loaded.',
+      },
+      {
+        signature: 'async clear(identity: TrustedIdentity, signal?: AbortSignal): Promise<number>',
+        description: 'Forget the ledger and every record this service wrote. Memory records are untouched.',
+        parameters: [{ name: 'identity', description: 'host-resolved identity whose workspace and session records are dropped.' }, { name: 'signal', description: 'cancellation between deletion batches; absent means activation lifetime only.' }],
+        returns: 'count of removed chunk records; explicit memories are preserved.',
       },
     ],
   },
@@ -3822,6 +4012,73 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'vectorStore',
+    summary: 'Authoritative store for records and their vectors.',
+    description: 'Authoritative store for records and their vectors. Exactly one provider is mounted; Zvec is the shipped implementation and stays the source of truth for ids, fields, and durability.\n\nImplementers must honor these semantics:\n\n- A read applies ReadFilter before scoring, so unauthorized records never enter the candidate set, and never rely on the caller to post-filter.\n- A record whose space key differs from the store\'s is counted in WriteOutcome.rejected, with WriteOutcome.spaceConflict set. Compatible records in the same call may commit.\n- Callers must not publish a source ledger after any rejected record or space conflict. Writes do not imply batch rollback; interrupted operations require reconciliation.\n- A failed write leaves previously durable records readable.',
+    methods: [
+      {
+        signature: 'abstract write( records: readonly StoredRecord[], vectors: ReadonlyMap<RecordId, readonly number[]>, signal?: AbortSignal, ): Promise<WriteOutcome>',
+        description: 'Write or replace records and their vectors.',
+        parameters: [{ name: 'records', description: 'records to store, each already carrying a stable id.' }, { name: 'vectors', description: 'dense vector per record id; a record with no entry keeps its stored vector.' }, { name: 'signal', description: 'cancellation of the in-flight batch.' }],
+        returns: 'counted writes, including any rejected batch.',
+      },
+      {
+        signature: 'abstract remove(ids: readonly RecordId[]): Promise<number>',
+        description: 'Remove records by id; ids that are absent are ignored.',
+        parameters: [{ name: 'ids', description: 'record ids to delete durably.' }],
+        returns: 'count actually removed.',
+      },
+      {
+        signature: 'abstract searchVector( vector: readonly number[], topK: number, filter: ReadFilter, signal?: AbortSignal, ): Promise<BackendHit[]>',
+        description: 'Vector similarity search under a filter.',
+        parameters: [{ name: 'vector', description: 'query vector in the store\'s space.' }, { name: 'topK', description: 'maximum candidate count.' }, { name: 'filter', description: 'authorization and scope constraint applied before scoring.' }, { name: 'signal', description: 'cancellation of the in-flight query.' }],
+        returns: 'hits ordered by backend relevance.',
+      },
+      {
+        signature: 'abstract searchKeyword( text: string, topK: number, filter: ReadFilter, signal?: AbortSignal, ): Promise<BackendHit[]>',
+        description: 'Exact keyword or full-text search under a filter.',
+        parameters: [{ name: 'text', description: 'query text; treated as terms, not as an expression.' }, { name: 'topK', description: 'maximum candidate count.' }, { name: 'filter', description: 'authorization and scope constraint applied before scoring.' }, { name: 'signal', description: 'cancellation of the in-flight query.' }],
+        returns: 'hits ordered by backend relevance.',
+      },
+      {
+        signature: 'abstract searchHybrid( vector: readonly number[], text: string, topK: number, filter: ReadFilter, signal?: AbortSignal, ): Promise<BackendHit[]>',
+        description: 'Fused keyword-plus-vector search. The store fuses calibrated vector and term relevance so every hit is reported on one scale.',
+        parameters: [{ name: 'vector', description: 'query vector in the store\'s space.' }, { name: 'text', description: 'keyword terms.' }, { name: 'topK', description: 'maximum candidate count.' }, { name: 'filter', description: 'authorization and scope constraint applied before scoring.' }, { name: 'signal', description: 'cancellation of the in-flight query.' }],
+        returns: 'fused hits ordered by relevance.',
+      },
+      {
+        signature: 'abstract listIds(filter: ReadFilter, limit: number): Promise<RecordId[]>',
+        description: 'Enumerate stored record ids that satisfy a filter, without scoring. Used for lifecycle sweeps such as listing memories and reconciling the accelerator.',
+        parameters: [{ name: 'filter', description: 'authorization and scope constraint applied before an id is returned.' }, { name: 'limit', description: 'maximum ids to return.' }],
+        returns: 'matching ids, in unspecified order.',
+      },
+      {
+        signature: 'abstract fetch(ids: readonly RecordId[]): Promise<StoredRecord[]>',
+        description: 'Read stored records by id, ignoring ids that are absent.',
+        parameters: [{ name: 'ids', description: 'record ids to fetch.' }],
+        returns: 'the records that exist, in unspecified order.',
+      },
+      {
+        signature: 'abstract stats(): Promise<StoreStats>',
+        description: 'Inspect authoritative store counters and its configured location.',
+        parameters: [],
+        returns: 'current store counters and identity.',
+      },
+      {
+        signature: 'abstract optimize(): Promise<void>',
+        description: 'Fold pending writes into the searchable index.',
+        parameters: [],
+        returns: 'when the index reflects stored records.',
+      },
+      {
+        signature: 'abstract close(): Promise<void>',
+        description: 'Release the store. Idempotent, and safe to call during disposal.',
+        parameters: [],
+        returns: 'when resources are released.',
+      },
+    ],
+  },
+  {
     key: 'web',
     summary: 'The web access service.',
     description: 'The web access service. Registered as `ctx.web` (one instance per context).\n\nSelection semantics (resolved at execution time, never order-dependent):\n\n- A configured id that is registered and `available()` → that provider.\n- A configured id not registered → `WEB_PROVIDER_CONFIGURED_MISSING`.\n- A configured id registered but unavailable → `WEB_PROVIDER_CONFIGURED_UNAVAILABLE`.\n- No id configured, exactly one registered usable provider → that provider.\n- No id configured, multiple usable providers → `WEB_PROVIDER_AMBIGUOUS`.\n- No id configured, no usable provider → `WEB_PROVIDER_UNAVAILABLE`.',
@@ -4893,6 +5150,10 @@ export const EVENT_API: readonly EventApiEntry[] = [
 /** Shapes of every exported type the Service and Event signatures reference (transitively), sorted by name. */
 export const TYPE_API: readonly TypeApiEntry[] = [
   {
+    name: 'AcceleratorStats',
+    declaration: 'export interface AcceleratorStats {\n    backend: string;\n    available: boolean;\n    vectors: number;\n    bitWidth: number;\n    drift: number;\n    degradedReason: string | null;\n}',
+  },
+  {
     name: 'AccountBonusBatch',
     declaration: 'export interface AccountBonusBatch {\n    readonly accountId: AccountUserId;\n    readonly bonuses: readonly AccountBonusNotification[];\n}',
   },
@@ -4991,6 +5252,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AgentHandle',
     declaration: 'export interface AgentHandle {\n    agent: Agent;\n    dispose(): Promise<void>;\n}',
+  },
+  {
+    name: 'AgentKey',
+    declaration: 'export type AgentKey = Branded<\'RetrievalAgentKey\'>;',
   },
   {
     name: 'AgentOptions',
@@ -5217,6 +5482,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type AuthorizationStatus = \'authorized\' | \'cancelled\';',
   },
   {
+    name: 'BackendHit',
+    declaration: 'export interface BackendHit {\n    id: RecordId;\n    score: number;\n    record?: StoredRecord;\n}',
+  },
+  {
     name: 'BackendRegistry',
     declaration: 'export class BackendRegistry {\n    register(name: string, backend: StorageBackend): () => void;\n    get(name: string): StorageBackend;\n    names(): string[];\n}',
   },
@@ -5265,8 +5534,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ButtonProps {\n    readonly label: string;\n    readonly hotkey?: string | undefined;\n    readonly disabled?: boolean | undefined;\n    readonly onPress?: (() => unknown) | undefined;\n}',
   },
   {
+    name: 'Candidate',
+    declaration: 'export interface Candidate {\n    record: StoredRecord;\n    rawScore: number;\n    score: number;\n    origin: CandidateOrigin;\n}',
+  },
+  {
+    name: 'CandidateOrigin',
+    declaration: 'export type CandidateOrigin = \'keyword\' | \'vector\' | \'accelerator\' | \'hybrid\';',
+  },
+  {
     name: 'ChangeResult',
     declaration: 'export interface ChangeResult {\n    changed: boolean;\n    application: \'applied\' | \'restart-required\' | \'overridden\' | \'failed\' | \'cancelled\';\n    restartReason?: RestartReason;\n    stage: \'install\' | \'enable\' | \'remove\';\n    target: string;\n    enabled?: boolean;\n    error?: ManagementError;\n    warnings?: string[];\n    packageResult?: PackageResult;\n    bundle?: string;\n    version?: string;\n    pendingBuilds?: string[];\n    approvedBuilds?: string[];\n    registries?: Registry[];\n    failedAt?: \'registry\' | \'spec-host\';\n}',
+  },
+  {
+    name: 'ChunkRecord',
+    declaration: 'export interface ChunkRecord {\n    kind: \'chunk\';\n    id: RecordId;\n    scope: RecordScope;\n    ownerKey: OwnerKey;\n    workspaceKey: WorkspaceKey;\n    sessionKey: SessionKey | null;\n    agentKey: AgentKey | null;\n    source: string;\n    startLine: number;\n    endLine: number;\n    text: string;\n    contentHash: string;\n    updatedAt: number;\n    spaceKey: SpaceKey;\n}',
   },
   {
     name: 'ClientArtifactBaseline',
@@ -5435,6 +5716,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ContentBlockType',
     declaration: 'export type ContentBlockType = keyof ContentBlockMap;',
+  },
+  {
+    name: 'ContextPacket',
+    declaration: 'export interface ContextPacket {\n    candidates: Candidate[];\n    tokens: number;\n    truncated: boolean;\n    deduplicated: number;\n    servedBy: \'zvec\' | \'zvec+accelerator\';\n    elapsedMs: number;\n    rendered: string;\n}',
   },
   {
     name: 'ContextPressureProjection',
@@ -5819,6 +6104,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'FinishReasonMap',
     declaration: 'export interface FinishReasonMap {\n    \'stop\': {\n        kind: \'stop\';\n    };\n    \'tool-calls\': {\n        kind: \'tool-calls\';\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    \'aborted\': {\n        kind: \'aborted\';\n        failure: LlmFailure;\n    };\n    \'error\': {\n        kind: \'error\';\n        failure: LlmFailure;\n    };\n}',
+  },
+  {
+    name: 'ForgetSelector',
+    declaration: 'export interface ForgetSelector {\n    ids?: readonly RecordId[];\n    includeExpired?: boolean;\n    scopes?: readonly RecordScope[];\n}',
   },
   {
     name: 'FrequencyTooHighError',
@@ -6433,6 +6722,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type McpResourceRequest = {\n    method: \'resources/list\' | \'resources/templates/list\';\n    cursor?: string;\n} | {\n    method: \'resources/read\';\n    uri: string;\n};',
   },
   {
+    name: 'MemoryAttribution',
+    declaration: 'export interface MemoryAttribution {\n    actor: \'model\' | \'user\' | \'indexer\';\n    ref: string;\n}',
+  },
+  {
+    name: 'MemoryCounts',
+    declaration: 'export interface MemoryCounts {\n    pending: number;\n    active: number;\n    expired: number;\n    superseded: number;\n}',
+  },
+  {
+    name: 'MemoryPatch',
+    declaration: 'export interface MemoryPatch {\n    text?: string;\n    tags?: readonly string[];\n    expiresAt?: number | null;\n}',
+  },
+  {
+    name: 'MemoryRecord',
+    declaration: 'export interface MemoryRecord {\n    kind: \'memory\';\n    pending: boolean;\n    id: RecordId;\n    scope: RecordScope;\n    ownerKey: OwnerKey;\n    workspaceKey: WorkspaceKey;\n    sessionKey: SessionKey | null;\n    agentKey: AgentKey | null;\n    text: string;\n    tags: string[];\n    attribution: MemoryAttribution;\n    version: number;\n    supersedes: RecordId[];\n    supersededBy: RecordId | null;\n    createdAt: number;\n    updatedAt: number;\n    expiresAt: number | null;\n    contentHash: string;\n    spaceKey: SpaceKey;\n}',
+  },
+  {
     name: 'Message',
     declaration: 'export type Message = MessageRoleMap[keyof MessageRoleMap];',
   },
@@ -6651,6 +6956,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'OTelEventScalar',
     declaration: 'export type OTelEventScalar = string | number | boolean;',
+  },
+  {
+    name: 'OwnerKey',
+    declaration: 'export type OwnerKey = Branded<\'RetrievalOwnerKey\'>;',
   },
   {
     name: 'PackageResult',
@@ -6993,12 +7302,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface PtcRunSpec extends PtcRunRequest {\n    cwd: string;\n    timeoutMs: number | null;\n}',
   },
   {
+    name: 'QueryMode',
+    declaration: 'export type QueryMode = \'keyword\' | \'semantic\' | \'hybrid\';',
+  },
+  {
     name: 'QueueAction',
     declaration: 'export type QueueAction = {\n    readonly kind: \'edit\';\n    readonly content: readonly TextBlock[];\n} | {\n    readonly kind: \'remove\';\n} | {\n    readonly kind: \'steer\';\n};',
   },
   {
     name: 'ReadFileLine',
     declaration: 'export interface ReadFileLine {\n    number: number;\n    text: string;\n}',
+  },
+  {
+    name: 'ReadFilter',
+    declaration: 'export interface ReadFilter {\n    activeAt: number | null;\n    pendingOnly?: boolean;\n    scopes: RecordScope[];\n    kinds: readonly RecordKind[] | null;\n    ownerKey: OwnerKey;\n    workspaceKey: WorkspaceKey;\n    agentKey: AgentKey | null;\n    sessionKey: SessionKey | null;\n    crossSession: boolean;\n    userScope: boolean;\n    pathPrefixes: string[];\n    onlyIds: RecordId[] | null;\n}',
   },
   {
     name: 'ReadOnlyReason',
@@ -7021,6 +7338,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type RecommendationDetails = {\n    readonly status: \'available\';\n    readonly title: LocalizedText;\n    readonly description: LocalizedText;\n    readonly enabled: boolean;\n} | {\n    readonly status: \'refused\';\n    readonly reason: \'unknown\' | \'unavailable\' | \'not-live-root\' | \'closing\';\n};',
   },
   {
+    name: 'RecordId',
+    declaration: 'export type RecordId = Branded<\'RetrievalRecordId\'>;',
+  },
+  {
+    name: 'RecordKind',
+    declaration: 'export type RecordKind = \'chunk\' | \'memory\';',
+  },
+  {
+    name: 'RecordScope',
+    declaration: 'export type RecordScope = \'user\' | \'workspace\' | \'session\' | \'agent\';',
+  },
+  {
     name: 'RecurringScheduleRecord',
     declaration: 'export type RecurringScheduleRecord = EveryScheduleRecord | DailyScheduleRecord | WeeklyScheduleRecord | CronScheduleRecord;',
   },
@@ -7039,6 +7368,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'Reload',
     declaration: 'export interface Reload {\n    filename: string;\n    modules: ReloadModules;\n    runtime?: Plugin.Runtime | undefined;\n}',
+  },
+  {
+    name: 'RememberInput',
+    declaration: 'export interface RememberInput {\n    text: string;\n    scope: RecordScope;\n    tags?: readonly string[];\n    ttlMs?: number;\n    supersedes?: readonly RecordId[];\n    attribution: MemoryRecord[\'attribution\'];\n}',
   },
   {
     name: 'RemoteAccessAction',
@@ -7195,6 +7528,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ResumeAgentOptions',
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly parentAgent?: Agent;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+  },
+  {
+    name: 'RetrievalQuery',
+    declaration: 'export interface RetrievalQuery {\n    mode: QueryMode;\n    text: string;\n    topK: number;\n    scopes: RecordScope[];\n    pathPrefixes: string[];\n    kinds?: readonly RecordKind[] | null;\n    minScore: number;\n    budgetTokens: number;\n    signal?: AbortSignal;\n}',
+  },
+  {
+    name: 'RetrievalStatus',
+    declaration: 'export interface RetrievalStatus {\n    enabled: boolean;\n    store: StoreStats | null;\n    accelerator: AcceleratorStats | null;\n    embedding: {\n        provider: string;\n        model: string;\n        dimension: number;\n    } | null;\n    memories: {\n        active: number;\n        expired: number;\n        superseded: number;\n        pending: number;\n    };\n    indexedRoots: string[];\n    lastError: string | null;\n}',
   },
   {
     name: 'RpcId',
@@ -7587,6 +7928,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionInspection',
     declaration: 'export interface SessionInspection extends SessionStorageMetadata {\n    readonly events: readonly SessionEvent[];\n}',
+  },
+  {
+    name: 'SessionKey',
+    declaration: 'export type SessionKey = Branded<\'RetrievalSessionKey\'>;',
   },
   {
     name: 'SessionLineageNode',
@@ -8089,6 +8434,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SkillViewOptions extends SkillLookupOptions {\n    readonly scope?: ScopeKey | undefined;\n}',
   },
   {
+    name: 'SourceState',
+    declaration: 'export interface SourceState {\n    sourceKey: string;\n    ownerKey: OwnerKey;\n    workspaceKey: WorkspaceKey;\n    source: string;\n    scope: ChunkRecord[\'scope\'];\n    sessionKey: SessionKey | null;\n    contentHash: string;\n    mtimeMs: number;\n    size: number;\n    chunkIds: RecordId[];\n}',
+  },
+  {
+    name: 'SpaceKey',
+    declaration: 'export type SpaceKey = Branded<\'RetrievalSpaceKey\'>;',
+  },
+  {
     name: 'SpawnTeammateRequest',
     declaration: 'export interface SpawnTeammateRequest {\n    readonly name: string;\n    readonly description: string;\n    readonly prompt: ContentBlock[];\n    readonly context: \'fresh\' | \'fork\';\n    readonly provider: string;\n    readonly signal: AbortSignal;\n}',
   },
@@ -8203,6 +8556,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'StoredImageAttachment',
     declaration: 'export interface StoredImageAttachment {\n    ref: ImageAttachmentRef;\n    data: Uint8Array;\n}',
+  },
+  {
+    name: 'StoredRecord',
+    declaration: 'export type StoredRecord = ChunkRecord | MemoryRecord;',
+  },
+  {
+    name: 'StoreStats',
+    declaration: 'export interface StoreStats {\n    backend: string;\n    documents: number;\n    pending: number;\n    indexCompleteness: number;\n    space: SpaceKey | null;\n    path: string;\n}',
   },
   {
     name: 'StreamChunk',
@@ -8387,6 +8748,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SurfaceSnapshot',
     declaration: 'export interface SurfaceSnapshot {\n    readonly generation: number;\n    readonly tree: readonly SerializedNode[] | null;\n}',
+  },
+  {
+    name: 'SyncReport',
+    declaration: 'export interface SyncReport {\n    scanned: number;\n    added: number;\n    updated: number;\n    removed: number;\n    skipped: number;\n    chunksWritten: number;\n    bytesRead: number;\n    elapsedMs: number;\n}',
   },
   {
     name: 'SystemMessage',
@@ -8759,6 +9124,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TranslationSpec',
     declaration: 'export type TranslationSpec = AnonymousTranslationSpec | PaidTranslationSpec;',
+  },
+  {
+    name: 'TrustedIdentity',
+    declaration: 'export interface TrustedIdentity {\n    ownerKey: OwnerKey;\n    workspaceRoot: string;\n    workspaceKey: WorkspaceKey;\n    sessionKey: SessionKey | null;\n    agentKey: AgentKey | null;\n    allowCrossSession: boolean;\n    allowUserScope: boolean;\n}',
   },
   {
     name: 'TurnBoundaryProjection',
@@ -9287,6 +9656,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkspaceView',
     declaration: 'export interface WorkspaceView {\n    readonly workspaceId: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly sessionIds: readonly SessionId[];\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+  },
+  {
+    name: 'WriteOutcome',
+    declaration: 'export interface WriteOutcome {\n    written: number;\n    rejected: number;\n    spaceConflict: SpaceKey | null;\n}',
   },
 ]
 

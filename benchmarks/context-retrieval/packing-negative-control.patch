@@ -1,0 +1,48 @@
+--- a/packages/retrieval/retrieval/src/fusion.ts
++++ b/packages/retrieval/retrieval/src/fusion.ts
+@@ -100,7 +100,7 @@
+   candidates: readonly Candidate[],
+   overlap = 0.8,
+ ): { kept: Candidate[]; dropped: number } {
+-  const kept: { candidate: Candidate; tokens: ReadonlySet<string> }[] = []
++  const kept: Candidate[] = []
+   const seenHashes = new Set<string>()
+   let dropped = 0
+   for (const candidate of candidates) {
+@@ -108,24 +108,25 @@
+       dropped++
+       continue
+     }
+-    const tokens = new Set(tokenize(candidate.record.text))
+-    if (kept.some(other => overlaps(other.tokens, tokens, overlap))) {
++    if (kept.some(other => overlaps(other.record.text, candidate.record.text, overlap))) {
+       dropped++
+       continue
+     }
+     seenHashes.add(candidate.record.contentHash)
+-    kept.push({ candidate, tokens })
+-  }
+-  return { kept: kept.map(entry => entry.candidate), dropped }
+-}
+-
+-/**
+- * @param prior - distinct tokens in an already-kept passage.
+- * @param tokens - distinct tokens in the passage under test.
++    kept.push(candidate)
++  }
++  return { kept, dropped }
++}
++
++/**
++ * @param text - already-kept passage.
++ * @param other - passage under test.
+  * @param overlap - Jaccard threshold at or above which the two count as duplicates.
+  * @returns whether `other` repeats most of `text`.
+  */
+-function overlaps(prior: ReadonlySet<string>, tokens: ReadonlySet<string>, overlap: number): boolean {
++function overlaps(text: string, other: string, overlap: number): boolean {
++  const prior = new Set(tokenize(text))
++  const tokens = new Set(tokenize(other))
+   if (prior.size === 0 || tokens.size === 0) return false
+   let shared = 0
+   for (const token of tokens) if (prior.has(token)) shared++

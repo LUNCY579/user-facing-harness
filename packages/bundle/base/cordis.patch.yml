@@ -488,6 +488,34 @@
     - id: mcp-resources
       name: '@deepseek-ai/dsh-mcp-resources'
 
+    # Opt in with apps/cli/config/examples/retrieval.yml. No model tools,
+    # indexing, personal memory, embeddings, or native workers start by default.
+    - id: retrieval-embed
+      name: '@deepseek-ai/dsh-retrieval-embed'
+      disabled: true
+
+    - id: retrieval-zvec
+      name: '@deepseek-ai/dsh-retrieval-zvec'
+      disabled: true
+      config:
+        indexDir: !!js dshHomePath('retrieval')
+        queryThreads: 1
+        optimizeThreads: 1
+
+    - id: retrieval
+      name: '@deepseek-ai/dsh-retrieval'
+      disabled: true
+
+    - id: retrieval-indexing
+      name: '@deepseek-ai/dsh-retrieval/indexing'
+      disabled: true
+      config:
+        statePath: !!js dshHomePath('retrieval/index-state.json')
+
+    - id: retrieval-tools
+      name: '@deepseek-ai/dsh-retrieval-tools'
+      disabled: true
+
     # ── rows every mode mounts, whose values each overlay may state ──────────────
 
     # Shared tool definitions and the deployment’s native executor.

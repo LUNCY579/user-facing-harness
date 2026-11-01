@@ -1,0 +1,700 @@
+{
+  "schema_version": 1,
+  "environment": {
+    "node": "24.22.1",
+    "platform": "darwin-arm64",
+    "python": "3.12.6",
+    "turbovec": "1.1.2",
+    "numpy": "2.3.5"
+  },
+  "checks": [
+    {
+      "label": "retrieval-constraints-final",
+      "command": [
+        "pnpm",
+        "run",
+        "constraints"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 2.566,
+      "completed_utc": "2026-11-01T19:00:17.865408+00:00",
+      "private_log": ".testingplatform/retrieval-constraints-final.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-install-frozen",
+      "command": "pnpm install --frozen-lockfile",
+      "exit_code": 0,
+      "result": "Completed with Node 24.22.1; optional native dependency installed.",
+      "private_log": ".testingplatform/retrieval-install-frozen.log"
+    },
+    {
+      "label": "retrieval-setup-final",
+      "command": "DSH_GATE_CONCURRENCY=1 pnpm run setup",
+      "exit_code": 0,
+      "result": "Artifacts 8/8, aggregate Host/Client build checks 2/2.",
+      "private_log": ".testingplatform/retrieval-setup-final.log"
+    },
+    {
+      "label": "retrieval-tests-final",
+      "command": "DSH_TEST_TURBOVEC_PYTHON=<repo>/.testingplatform/retrieval-python/bin/python DSH_RETRIEVAL_BENCH_OUTPUT=<repo>/.testingplatform/retrieval-benchmark/agent-workflow.json pnpm exec vitest run packages/retrieval scripts/gen-tool-catalog.spec.ts --maxWorkers=2",
+      "exit_code": 0,
+      "result": "12 files, 214 tests passed; subsequent added cases have focused evidence and a final aggregate record below.",
+      "private_log": ".testingplatform/retrieval-tests-final.log"
+    },
+    {
+      "label": "retrieval-e2e",
+      "command": "pnpm run test:e2e packages/retrieval --maxWorkers=2",
+      "exit_code": 0,
+      "result": "2 passed, 1 live model test skipped without a key; built entry identity and absent optional provider exercised.",
+      "private_log": ".testingplatform/retrieval-e2e.log"
+    },
+    {
+      "label": "retrieval-platform-integration",
+      "command": "pnpm run test:integration",
+      "exit_code": 0,
+      "result": "14 tests passed.",
+      "private_log": ".testingplatform/retrieval-platform-integration.log"
+    },
+    {
+      "label": "retrieval-platform-enabled-smoke",
+      "command": "pnpm run smoke:platform --retrieval",
+      "exit_code": 0,
+      "result": "Actual combined Web server: five retrieval rows enabled, auth, assets, model discovery, streamed fixture completion passed.",
+      "private_log": ".testingplatform/retrieval-platform-enabled-smoke.log"
+    },
+    {
+      "label": "retrieval-platform-disabled-smoke",
+      "command": "pnpm run smoke:platform",
+      "exit_code": 0,
+      "result": "Same combined Web fixture flow passed with retrieval disabled.",
+      "private_log": ".testingplatform/retrieval-platform-disabled-smoke.log"
+    },
+    {
+      "label": "retrieval-plugin-tests",
+      "command": "pnpm run test:plugin",
+      "exit_code": 1,
+      "result": "Initial 85/94 suites passed; 9 failed because macOS /var temp aliases violated canonical symlink checks. Test-only canonical TMPDIR correction applied.",
+      "private_log": ".testingplatform/retrieval-plugin-tests.log"
+    },
+    {
+      "label": "retrieval-plugin-tests-fixed",
+      "command": "pnpm run test:plugin",
+      "exit_code": 0,
+      "result": "94/94 suites passed. Internal unsupported-host skips remain: Magpie Darwin-arm64 groups, Windows console, unsupported desktop resources. This does not validate those platforms.",
+      "private_log": ".testingplatform/retrieval-plugin-tests-fixed.log"
+    },
+    {
+      "label": "retrieval-tools-final",
+      "command": "node node_modules/vitest/vitest.mjs run packages/retrieval/retrieval-tools/tests scripts/gen-tool-catalog.spec.ts --maxWorkers=2",
+      "exit_code": 0,
+      "result": "3 files, 32 tests passed before lint-only and async Session-reader cleanup.",
+      "private_log": ".testingplatform/retrieval-tools-final.log"
+    },
+    {
+      "label": "retrieval-snapshot-final",
+      "command": "node node_modules/vitest/vitest.mjs run --config vitest.snapshot.config.ts snapshots/session/headless.snapshot.ts scripts/session-snapshot-corpus.corpus.ts -t 'local-retrieval|keeps every recorded session owned'",
+      "exit_code": 0,
+      "result": "2 passed; 176 filtered cases are outside the selected scope.",
+      "private_log": ".testingplatform/retrieval-snapshot-final.log"
+    },
+    {
+      "label": "retrieval-catalog-final",
+      "command": "node --import tsx/esm scripts/gen-tool-catalog.ts --check",
+      "exit_code": 0,
+      "result": "Current at this run; final doc-sync validates regenerated catalogs.",
+      "private_log": ".testingplatform/retrieval-catalog-final.log"
+    },
+    {
+      "label": "retrieval-benchmark-matrix",
+      "command": "pnpm run bench:retrieval --sizes=1000,10000,100000 --queries=64 --python=<repo>/.testingplatform/retrieval-python/bin/python --output=.testingplatform/retrieval-benchmark/final.json",
+      "exit_code": 0,
+      "result": "18/18 fresh-process configurations completed; public matrix.json retains raw samples.",
+      "private_log": null
+    },
+    {
+      "label": "retrieval-benchmark-ann",
+      "command": "pnpm run bench:retrieval --sizes=100000 --modes=ann-sweep --queries=64 --python=<repo>/.testingplatform/retrieval-python/bin/python --output=.testingplatform/retrieval-benchmark/ann-sweep.json",
+      "exit_code": 0,
+      "result": "Supported depth sweep plus matched complete-service routes completed.",
+      "private_log": null
+    },
+    {
+      "label": "retrieval-benchmark-packing-before",
+      "command": "pnpm run bench:retrieval --sizes=40,100 --modes=packing --runs=3 --queries=100 --output=.testingplatform/retrieval-benchmark/packing-before-final.json",
+      "exit_code": 0,
+      "result": "6/6 processes completed with documented negative-control source patch and fresh artifacts.",
+      "private_log": null
+    },
+    {
+      "label": "retrieval-benchmark-packing-after",
+      "command": "pnpm run bench:retrieval --sizes=40,100 --modes=packing --runs=3 --queries=100 --output=.testingplatform/retrieval-benchmark/packing-after-final.json",
+      "exit_code": 0,
+      "result": "6/6 processes completed after restoring optimized source and rebuilding; all paired output hashes match.",
+      "private_log": null
+    },
+    {
+      "label": "retrieval-doc-quick",
+      "command": [
+        "pnpm",
+        "run",
+        "test:docs"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 84.516,
+      "completed_utc": "2026-11-01T19:03:49.551135+00:00",
+      "private_log": ".testingplatform/retrieval-doc-quick.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1"
+      }
+    },
+    {
+      "label": "retrieval-unit-complete",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/retrieval",
+        "scripts/gen-tool-catalog.spec.ts",
+        "--maxWorkers=2"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 36.041,
+      "completed_utc": "2026-11-01T19:04:08.539766+00:00",
+      "private_log": ".testingplatform/retrieval-unit-complete.log",
+      "environment": {
+        "DSH_TEST_TURBOVEC_PYTHON": "<repo>/.testingplatform/retrieval-python/bin/python",
+        "DSH_RETRIEVAL_BENCH_OUTPUT": "<repo>/.testingplatform/retrieval-benchmark/agent-workflow-final.json"
+      },
+      "result": "13files,225tests passed; real Python turbovec enabled. Final workflow fixture is agent-workflow.json; initial fixture is retained separately."
+    },
+    {
+      "label": "retrieval-product-role",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-product-use"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 73.905,
+      "completed_utc": "2026-11-01T19:10:17.808679+00:00",
+      "private_log": ".testingplatform/retrieval-product-role.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-build-final-complete",
+      "command": [
+        "pnpm",
+        "run",
+        "build:artifacts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 200.259,
+      "completed_utc": "2026-11-01T19:10:48.884236+00:00",
+      "private_log": ".testingplatform/retrieval-build-final-complete.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1"
+      }
+    },
+    {
+      "label": "retrieval-website",
+      "command": [
+        "pnpm",
+        "run",
+        "website:build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 258.536,
+      "completed_utc": "2026-11-01T19:11:47.995393+00:00",
+      "private_log": ".testingplatform/retrieval-website.log",
+      "environment": {},
+      "result": "Exit0. 5300internalfragment references resolve,207rawMarkdown files andllms.txt emitted. Build warned on existing es2024transpiler targets and chunk size; warnings did not fail build."
+    },
+    {
+      "label": "retrieval-build-complete",
+      "command": "DSH_GATE_CONCURRENCY=1 pnpm run build:artifacts",
+      "exit_code": 0,
+      "result": "8/8 passed; later final artifact result is separately recorded.",
+      "private_log": ".testingplatform/retrieval-build-complete.log"
+    },
+    {
+      "label": "retrieval-build-check-complete",
+      "command": "DSH_GATE_CONCURRENCY=1 pnpm run build:check",
+      "exit_code": 1,
+      "result": "Initial final Host aggregate caught omitted exported MessageSourceMap augmentation; added type-only auto entry export. Final rerun recorded separately.",
+      "private_log": ".testingplatform/retrieval-build-check-complete.log"
+    },
+    {
+      "label": "retrieval-artifacts-last",
+      "command": [
+        "pnpm",
+        "run",
+        "build:artifacts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 56.332,
+      "completed_utc": "2026-11-01T19:13:42.595270+00:00",
+      "private_log": ".testingplatform/retrieval-artifacts-last.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1"
+      }
+    },
+    {
+      "label": "retrieval-hygiene",
+      "command": [
+        "pnpm",
+        "run",
+        "hygiene"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 523.908,
+      "completed_utc": "2026-11-01T19:13:46.661960+00:00",
+      "private_log": ".testingplatform/retrieval-hygiene.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1"
+      }
+    },
+    {
+      "label": "retrieval-lint-complete",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 580.771,
+      "completed_utc": "2026-11-01T19:14:33.578802+00:00",
+      "private_log": ".testingplatform/retrieval-lint-complete.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2"
+      }
+    },
+    {
+      "label": "retrieval-optional-imports",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-optional-dependency-imports"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 30.394,
+      "completed_utc": "2026-11-01T19:15:18.675045+00:00",
+      "private_log": ".testingplatform/retrieval-optional-imports.log",
+      "environment": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "retrieval-locales",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-locale-metadata"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.828,
+      "completed_utc": "2026-11-01T19:16:05.710041+00:00",
+      "private_log": ".testingplatform/retrieval-locales.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-doc-sync",
+      "command": [
+        "pnpm",
+        "run",
+        "doc-sync"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 249.92,
+      "completed_utc": "2026-11-01T19:21:44.111750+00:00",
+      "private_log": ".testingplatform/retrieval-doc-sync.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "retrieval-artifacts-final",
+      "command": [
+        "pnpm",
+        "run",
+        "build:artifacts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 33.571,
+      "completed_utc": "2026-11-01T19:22:09.992229+00:00",
+      "private_log": ".testingplatform/retrieval-artifacts-final.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1"
+      }
+    },
+    {
+      "label": "retrieval-export-jsdoc-final",
+      "command": "node --import tsx/esm scripts/verify-export-jsdoc.ts",
+      "exit_code": 0,
+      "result": "Every exported package API name documented;14prior violations cleared."
+    },
+    {
+      "label": "retrieval-cordis-config-final",
+      "command": "pnpm run verify-cordis-config",
+      "exit_code": 0,
+      "result": "302configs passed after sourcealias addition."
+    },
+    {
+      "label": "retrieval-runtime-closure-final",
+      "command": "pnpm run verify-runtime-closure",
+      "exit_code": 0,
+      "result": "4presets/193workspacepackages closed after4retrievaldeps."
+    },
+    {
+      "label": "retrieval-tsconfig-paths-final",
+      "command": "pnpm run gen-tsconfig-paths && pnpm run verify-tsconfig-paths",
+      "exit_code": 0,
+      "result": "Generated bare aliases current; explicit indexing leaf preserved."
+    },
+    {
+      "label": "retrieval-persistence-formats-final",
+      "command": "pnpm run verify-persistence-formats --write; pnpm run verify-persistence-formats",
+      "exit_code": 0,
+      "result": "Only summary index pair+sidecar regenerated622\u2192630currentV4types;16frozen generation files byte-identical."
+    },
+    {
+      "label": "retrieval-final-lockfile",
+      "command": "pnpm install --lockfile-only",
+      "exit_code": 0,
+      "result": "Resolved Python runtime closure additions with Node24; no unrelated dependency versions changed."
+    },
+    {
+      "label": "retrieval-catalog-freshness",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-config-catalog"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.286,
+      "completed_utc": "2026-11-01T19:23:11.904427+00:00",
+      "private_log": ".testingplatform/retrieval-catalog-freshness.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-verified-artifacts",
+      "command": [
+        "pnpm",
+        "run",
+        "build:artifacts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 25.341,
+      "completed_utc": "2026-11-01T19:24:44.425571+00:00",
+      "private_log": ".testingplatform/retrieval-verified-artifacts.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1"
+      }
+    },
+    {
+      "label": "retrieval-doc-graphs-final",
+      "command": "NODE_OPTIONS=--max-old-space-size=4096 pnpm run verify-doc-graphs",
+      "exit_code": 0,
+      "result": "All7graphdocs current after adding5service/provider/consumer classifications and paired generated updates.",
+      "private_log": ".testingplatform/retrieval-verify-doc-graphs-final.log"
+    },
+    {
+      "label": "retrieval-verified-build-check",
+      "command": [
+        "pnpm",
+        "run",
+        "build:check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 62.739,
+      "completed_utc": "2026-11-01T19:28:14.365723+00:00",
+      "private_log": ".testingplatform/retrieval-verified-build-check.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "retrieval-e2e-final",
+      "command": [
+        "pnpm",
+        "run",
+        "test:e2e",
+        "packages/retrieval",
+        "--maxWorkers=2"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.983,
+      "completed_utc": "2026-11-01T19:29:34.093993+00:00",
+      "private_log": ".testingplatform/retrieval-e2e-final.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-lint-last",
+      "command": [
+        "pnpm",
+        "exec",
+        "tsx",
+        "scripts/run-oxlint.ts",
+        "packages/retrieval",
+        "scripts/gen-doc-graphs.ts",
+        "scripts/product-package-policy.ts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 7.8,
+      "completed_utc": "2026-11-01T19:29:38.766278+00:00",
+      "private_log": ".testingplatform/retrieval-lint-last.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2"
+      }
+    },
+    {
+      "label": "retrieval-smoke-final",
+      "command": [
+        "pnpm",
+        "run",
+        "smoke:platform",
+        "--retrieval"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.986,
+      "completed_utc": "2026-11-01T19:30:16.558229+00:00",
+      "private_log": ".testingplatform/retrieval-smoke-final.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-owned-pairs-final",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-translation-pairing",
+        "README.md",
+        "packages/README.md",
+        "packages/retrieval/README.md",
+        "packages/retrieval/retrieval/README.md",
+        "packages/retrieval/retrieval-embed/README.md",
+        "packages/retrieval/retrieval-zvec/README.md",
+        "packages/retrieval/retrieval-tools/README.md",
+        "docs/subsystems/README.md",
+        "docs/subsystems/retrieval.md",
+        "docs/user/guide/local-retrieval.md",
+        "benchmarks/context-retrieval/README.md",
+        "benchmarks/context-retrieval/report/README.md",
+        ".agents/notes/implemented/architecture/2026-11-01-authoritative-local-retrieval.md",
+        "docs/capability-seams.md"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.209,
+      "completed_utc": "2026-11-01T19:30:56.818546+00:00",
+      "private_log": ".testingplatform/retrieval-owned-pairs-final.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-consumer-types-final",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-node-next-types"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 4.506,
+      "completed_utc": "2026-11-01T19:30:58.978061+00:00",
+      "private_log": ".testingplatform/retrieval-consumer-types-final.log",
+      "environment": {}
+    },
+    {
+      "label": "retrieval-report-final",
+      "command": "pnpm run verify-translation-pairing --write benchmarks/context-retrieval/report/README.md; pnpm run verify-translation-pairing benchmarks/context-retrieval/report/README.md",
+      "exit_code": 0,
+      "result": "Final report bilingual pair sealed and consistent."
+    }
+  ],
+  "live_model_validation": "pending by explicit user choice",
+  "initial_failures": [
+    {
+      "operation": "Initial setup/build",
+      "result": "Failed because default Node 20 and downloaded runtime-only headers were incompatible; corrected using checksum-verified full Node24.22.1 distribution. Final setup/build checks pass."
+    },
+    {
+      "operation": "Initial source typechecking while package interfaces were under active implementation",
+      "result": "Failed on partial configuration input and consumer types; schemas and tests corrected, final aggregate checks recorded separately."
+    },
+    {
+      "operation": "Initial enabled platform smoke",
+      "result": "Failed on unquoted !!js array scalar and later global --patch flag ordering; corrected overlay scalar and place global patch before app flags. Both final smoke modes pass."
+    },
+    {
+      "operation": "Initial tool/config/Cordis generators",
+      "result": "Failed on missing service descriptions and tool consumer discovery; corrected JSDoc and explicit tool catalog registration/completeness test."
+    },
+    {
+      "operation": "Initial benchmark packing child",
+      "result": "Failed against stale built exports; no performance number accepted from failed process; fresh artifacts used for both final variants."
+    },
+    {
+      "operation": "ANN search-depth4096 diagnostic",
+      "result": "Native SDK rejected ef_search above2048; failed raw case saved in ann-limit-failure.json; parser now caps2048; supported sweep rerun passed."
+    },
+    {
+      "operation": "Initial targeted lint",
+      "result": "Failed on formatting, unsafe test JSON, dynamic delete, unnecessary conditions, and deprecated Session snapshot access; corrections and final lint result recorded separately."
+    },
+    {
+      "operation": "Initial constraints",
+      "result": "Failed on2 newly owned package.files issues and5 pre-existing plugin peer ranges; owned file lists corrected. Final constraints still report only the5 unchanged plugin ranges."
+    },
+    {
+      "operation": "First full documentation quick check",
+      "result": "17/21 leaves passed; failed on4 baseline English-only demo/installer READMEs plus2 missing newly owned pair sidecars, currentV4 format summary622\u2192630types, tools model-experience fence and Chinese README skeleton. Owned docs corrected; final scoped/full results recorded separately."
+    },
+    {
+      "operation": "First hygiene aggregate",
+      "result": "Pre-existing vendor-rescope ENOBUFS and5 plugin peer-policy findings, plus missing explicit optional classifications for4new default-off packages. Added maintained optional roles; focused verify-product-use passes282default/44optional/2229modules."
+    },
+    {
+      "operation": "Build-only message-source types",
+      "result": "Built aggregate revealed retrieval-tools augmentation omitted from emitted public declaration. Added a type-only export; package emit and focused Host check passed. Final aggregate after latest artifacts recorded separately."
+    },
+    {
+      "operation": "Optional dependency import gate in hygiene",
+      "result": "Node exited134: default heap exhausted. Standalone rerun with NODE_OPTIONS=--max-old-space-size=4096 passed; no optional dependency is loaded at module scope."
+    },
+    {
+      "operation": "Documentation graph generation",
+      "result": "Missing5service-role declarations; added precise definitions/providers/consumers. Default~2GiBheap then exhausted (exit134); Node24.22.1+4GiBretry regenerated7docs and freshnesspassed."
+    },
+    {
+      "operation": "Full documentation synchronization",
+      "result": "39/43leaves passed; failed onmissing service roles,4baseline English-onlydocs,14export JSDoc gaps,and staleconfigcatalog. All3owned failing leaves now pass focused reruns; baseline pairing failure remains."
+    }
+  ],
+  "preexisting_constraint_findings": [
+    {
+      "package": "dsh-our-free-model",
+      "field": "peerDependencies.@deepseek-ai/cordis",
+      "actual": "^4.0.2",
+      "required": "workspace:~"
+    },
+    {
+      "package": "dsh-our-free-model",
+      "field": "peerDependencies.@deepseek-ai/dsh-commands",
+      "actual": "^0.1.2-rc.1 || ^0.1.7-rc.2 || ^0.2.0-rc.1",
+      "required": "workspace:*"
+    },
+    {
+      "package": "dsh-our-free-model",
+      "field": "peerDependencies.@deepseek-ai/dsh-credentials",
+      "actual": "^0.1.2-rc.1 || ^0.1.7-rc.2 || ^0.2.0-rc.1",
+      "required": "workspace:*"
+    },
+    {
+      "package": "dsh-our-free-model",
+      "field": "peerDependencies.@deepseek-ai/dsh-llm",
+      "actual": "^0.1.2-rc.1 || ^0.1.7-rc.2 || ^0.2.0-rc.1",
+      "required": "workspace:*"
+    },
+    {
+      "package": "dsh-our-free-model",
+      "field": "peerDependencies.@deepseek-ai/schemastery",
+      "actual": "^3.18.4",
+      "required": "workspace:~"
+    }
+  ],
+  "baseline_findings": [
+    {
+      "check": "translation pairing",
+      "files": [
+        "demo-pack/README.md",
+        "demo-pack/meter/README.md",
+        "demo-target/README.md",
+        "installer/README.md"
+      ],
+      "evidence": "All four English-only files are committed in HEAD and unchanged by this task."
+    },
+    {
+      "check": "vendor rescope",
+      "error": "spawnSync git ENOBUFS",
+      "evidence": "Unchanged rescope-vendor.ts uses default execFileSync buffer on git ls-files -z; index file list equals HEAD and exceeds1MiB.",
+      "head_path_bytes": 1175171,
+      "index_path_bytes": 1175171,
+      "same_path_list": true
+    },
+    {
+      "check": "no new unknown casts",
+      "files": [
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/account-pool.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/auto-checkin.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/badge-preferences.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/channel-pack-rpc.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/channel-pack-store.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/dead-model-store.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/gemini-adapter.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/gemini-messages.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/gemini-oauth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/gemini-project.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/gemini-sigstore.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/index.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/llm-register-compat.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/lobsterai-auth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/lobsterai.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/loomy-wechat-login.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/minimax-auth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/minimax-messages.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/openai-gateway/index.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/openai-gateway/server.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/opencode-adapter.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/permanent-lock-store.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/qoder-oauth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/qoder-wasm.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/raccoon-auth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/raccoon-login-page.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/settings-compat.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/token-ledger-store.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/trae-auth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/trae-oauth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/zcode-adapter.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/zcode-auth.ts",
+        "plugins/dsh-our-free-model/vendor/channel-pack/src/zcode-transport.ts"
+      ],
+      "reported_occurrences": 51,
+      "all_files_byte_identical_to_HEAD": true
+    }
+  ],
+  "corrected_aggregate_leaves": {
+    "hygiene": [
+      "product package classification",
+      "optional dependency imports (4GiBstandalone retry)",
+      "plugin locale metadata",
+      "Cordis config sourcealias",
+      "Python runtime closure"
+    ],
+    "doc-sync": [
+      "doc graphs (4GiBstandalone retry)",
+      "export JSDoc",
+      "config catalog"
+    ]
+  },
+  "remaining_aggregate_failures": {
+    "hygiene": [
+      "vendor rescope ENOBUFS on unchanged index>1MiB",
+      "5pre-existingOurFreeModelpeer-dependencyranges",
+      "unknowncastsin33unchangedpluginvendorfiles"
+    ],
+    "doc-sync": [
+      "4pre-existingEnglish-onlydemo/installerREADMEs"
+    ],
+    "doc-quick": [
+      "same4pre-existingunpairedREADMEs; otherinitialfailuresfixed/coveredbydoc-sync"
+    ]
+  },
+  "readiness": {
+    "local_experimentation": "verified on macOS arm64 with a single trusted operator",
+    "multi_user_production": "not approved: no authenticated tenant service; other platforms and live-model/semantic-quality validation unverified",
+    "live_model_validation": "pending by explicit user choice",
+    "all_repository_gates_green": false,
+    "scope_owned_failures_corrected": true
+  },
+  "snapshot_phase": "initial implementation validation; see repository-checks.json for subsequent repository gate repairs"
+}

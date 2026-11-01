@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "createdAt": "2026-11-01T18:00:01.813Z",
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "release": "27.0.0",
+    "cpu": "Apple M2",
+    "logicalCpus": 8,
+    "memoryBytes": 8589934592,
+    "node": "v24.22.1"
+  },
+  "settings": {
+    "sizes": [
+      100000
+    ],
+    "modes": [
+      "ann-sweep"
+    ],
+    "runs": 1,
+    "queries": 64,
+    "dimension": 256,
+    "concurrency": 1,
+    "seed": 421337,
+    "python": "python3"
+  },
+  "samples": [
+    {
+      "size": 100000,
+      "mode": "ann-sweep",
+      "iteration": 0,
+      "code": 1,
+      "signal": null,
+      "sampledPeakTreeRssBytes": 999145472,
+      "sampledTreeCpuMs": 214700,
+      "result": null,
+      "stderr": "[ERROR 2026-11-01 12:03:41 0x1ffb97f80 hnsw_index.cc:277] ef_search must be greater than 0 and less than or equal to 2048.\n[ERROR 2026-11-01 12:03:41 0x1ffb97f80 index.cc:772] Failed to prepare for search\nRetrievalError: retrieval(backend_error): vector search: Read next record batch failed (fill_result): ExecutionError in Gandiva: prepare vector failed:Failed to search vector\n    at Proxy.translate (file://<repo>/packages/retrieval/retrieval-zvec/lib/index.js:1548:21)\n    at Object.apply (file://<repo>/vendor/cordis/lib/index.js:120:36)\n    at Proxy.searchVector (file://<repo>/packages/retrieval/retrieval-zvec/lib/index.js:1328:15)\n    at async file://<repo>/benchmarks/.dsh-build/context-retrieval/retrieval.worker.js:356:5 {\n  code: 'backend_error',\n  retryable: false,\n  detail: { code: 'ZVEC_INTERNAL_ERROR' }\n}\n"
+    }
+  ]
+}

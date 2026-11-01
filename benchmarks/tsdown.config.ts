@@ -16,6 +16,13 @@ const shared = {
 export default defineConfig([
   {
     ...shared,
+    entry: { 'retrieval.worker': 'context-retrieval/retrieval.worker.ts' },
+    outDir: '.dsh-build/context-retrieval',
+    clean: true,
+    tsconfig: 'tsconfig.host.json',
+  },
+  {
+    ...shared,
     entry: { 'terminal-io.worker': 'terminal-io/terminal-io.worker.ts' },
     outDir: '.dsh-build/terminal-io',
     clean: true,

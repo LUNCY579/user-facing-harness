@@ -186,6 +186,16 @@ flowchart LR
   cfg --> plugin_dsh_base_tool_web
   plugin_dsh_base_mcp_resources["mcp-resources<br/>@deepseek-ai/dsh-mcp-resources"]
   cfg --> plugin_dsh_base_mcp_resources
+  plugin_dsh_base_retrieval_embed["retrieval-embed<br/>@deepseek-ai/dsh-retrieval-embed"]
+  cfg --> plugin_dsh_base_retrieval_embed
+  plugin_dsh_base_retrieval_zvec["retrieval-zvec<br/>@deepseek-ai/dsh-retrieval-zvec"]
+  cfg --> plugin_dsh_base_retrieval_zvec
+  plugin_dsh_base_retrieval["retrieval<br/>@deepseek-ai/dsh-retrieval"]
+  cfg --> plugin_dsh_base_retrieval
+  plugin_dsh_base_retrieval_indexing["retrieval-indexing<br/>@deepseek-ai/dsh-retrieval/indexing"]
+  cfg --> plugin_dsh_base_retrieval_indexing
+  plugin_dsh_base_retrieval_tools["retrieval-tools<br/>@deepseek-ai/dsh-retrieval-tools"]
+  cfg --> plugin_dsh_base_retrieval_tools
   plugin_dsh_base_tools["tools<br/>@deepseek-ai/dsh-tools"]
   cfg --> plugin_dsh_base_tools
   plugin_dsh_base_tool_executor_native["tool-executor-native<br/>@deepseek-ai/dsh-tool-executor-native"]
@@ -295,6 +305,11 @@ flowchart LR
 | `web-fetch-http` | `@deepseek-ai/dsh-web-fetch-http` |
 | `tool-web` | `@deepseek-ai/dsh-tool-web` |
 | `mcp-resources` | `@deepseek-ai/dsh-mcp-resources` |
+| `retrieval-embed` | `@deepseek-ai/dsh-retrieval-embed` |
+| `retrieval-zvec` | `@deepseek-ai/dsh-retrieval-zvec` |
+| `retrieval` | `@deepseek-ai/dsh-retrieval` |
+| `retrieval-indexing` | `@deepseek-ai/dsh-retrieval/indexing` |
+| `retrieval-tools` | `@deepseek-ai/dsh-retrieval-tools` |
 | `tools` | `@deepseek-ai/dsh-tools` |
 | `tool-executor-native` | `@deepseek-ai/dsh-tool-executor-native` |
 | `tool-executor-ptc` | `@deepseek-ai/dsh-tool-executor-ptc` |

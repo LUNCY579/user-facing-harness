@@ -22,6 +22,18 @@ export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolic
   'packages/lsp/lsp': { category: 'optional', reason: 'Service definition for deployment-configured language servers.' },
   'packages/lsp/lsp-stdio': { category: 'optional', reason: 'Requires an explicit server list and language-server executables.' },
   'packages/lsp/tool-lsp': { category: 'optional', reason: 'Model tools selected together with a configured LSP provider.' },
+  'packages/retrieval/retrieval': {
+    category: 'optional', reason: 'Scoped retrieval and indexing selected through the local retrieval overlay.',
+  },
+  'packages/retrieval/retrieval-embed': {
+    category: 'optional', reason: 'Embedding provider selected with an explicit retrieval composition.',
+  },
+  'packages/retrieval/retrieval-tools': {
+    category: 'optional', reason: 'Retrieval and memory tools require an explicitly enabled local store.',
+  },
+  'packages/retrieval/retrieval-zvec': {
+    category: 'optional', reason: 'Native local storage and optional compression require explicit retrieval configuration.',
+  },
   'packages/ssh/ssh': { category: 'optional', reason: 'Explicit remote connection and helper configuration.' },
   'packages/ssh/ssh-helper-runtime': { category: 'optional', reason: 'Private executable carrier for explicitly configured SSH connections.' },
   'packages/ssh/fs-ssh': { category: 'optional', reason: 'Remote filesystem provider selected in an SSH composition.' },

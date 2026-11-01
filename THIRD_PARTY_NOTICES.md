@@ -74,6 +74,7 @@ External packages installed for runtime use or embedded in distributed Host or b
 | [`@xterm/headless`](https://github.com/xtermjs/xterm.js) | MIT |
 | [`@xterm/xterm`](https://github.com/xtermjs/xterm.js) | MIT |
 | [`@yarnpkg/parsers`](https://github.com/yarnpkg/berry) | BSD-2-Clause |
+| [`@zvec/zvec`](https://github.com/zvec-ai/zvec-node) | Apache-2.0 |
 | [`acorn`](https://github.com/acornjs/acorn) | MIT |
 | [`ajv`](https://github.com/ajv-validator/ajv) | MIT |
 | [`anser`](https://github.com/IonicaBizau/anser) | MIT |
@@ -97,6 +98,7 @@ External packages installed for runtime use or embedded in distributed Host or b
 | [`fflate`](https://github.com/101arrowz/fflate) | MIT |
 | [`got`](https://github.com/sindresorhus/got) | MIT |
 | [`hosted-git-info`](https://github.com/npm/hosted-git-info) | ISC |
+| [`ignore`](https://github.com/kaelzhang/node-ignore) | MIT |
 | [`immer`](https://github.com/immerjs/immer) | MIT |
 | [`ipaddr.js`](https://github.com/whitequark/ipaddr.js) | MIT |
 | [`js-yaml`](https://github.com/nodeca/js-yaml) | MIT |

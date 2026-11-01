@@ -352,6 +352,14 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 |---|---|---|
 | `@deepseek-ai/dsh-ptc-runtime-node` | yes | Node PTC execution with per-call sandboxed processes or in-memory REPL state |
 
+## retrieval
+
+| Package | Config | Description |
+|---|---|---|
+| `@deepseek-ai/dsh-retrieval-embed` | yes | Local and OpenAI-compatible embedding providers for the DeepSeek Harness retrieval seam |
+| `@deepseek-ai/dsh-retrieval-tools` | yes | Model-facing memory, workspace, and context retrieval tools over the Host ctx.retrieval service, plus conservative automatic pre-request retrieval |
+| `@deepseek-ai/dsh-retrieval-zvec` | yes | Zvec-backed authoritative record and vector store for the DeepSeek Harness retrieval seam |
+
 ## sandbox
 
 | Package | Config | Description |

@@ -51,6 +51,7 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 | [`skill/`](skill/README.zh.md) | skill（技能）能力系列：提供方注册表、本地提供方、面向模型的目录／loader |
 | [`compaction/`](compaction/README.zh.md) | 压缩（compaction）能力系列：Service Definition + 基础提供方 + 命令 Consumer |
 | [`context/`](context/README.zh.md) | 模型可见请求上下文：workspace 指令、时间上下文、引用 |
+| [`retrieval/`](retrieval/README.zh.md) | 本地工作区检索、显式分域记忆、Zvec 和可选 turbovec |
 | [`subagent/`](subagent/README.zh.md) | subagent 能力系列：提供方注册表约定和面向模型的委托工具 |
 | [`jobs/`](jobs/README.zh.md) | 通用后台任务运行时和面向模型的作业控制工具 |
 | [`experimental/`](experimental/README.zh.md) | 仍在评估中的能力；[状态与支持策略](experimental/README.zh.md#status) |

@@ -1,7 +1,7 @@
 /**
  * Generate `docs/tool-catalog.md` from schemas collected by booting each tool
  * plugin. Runtime registration is the source of truth for computed schemas;
- * the manifest is checked against every on-disk `tool-*` package. `--check`
+ * the manifest covers on-disk `tool-*` packages and the native retrieval consumer. `--check`
  * verifies the committed artifact. The original decision is recorded in
  * `.agents/notes/archived/process/2026-07-02-tool-schema-catalog.md`.
  */
@@ -87,6 +87,8 @@ import type { WorkflowRun, WorkflowStartRequest } from '@deepseek-ai/dsh-workflo
 import * as ToolRalph from '@deepseek-ai/dsh-tool-ralph'
 import * as ToolWorkflow from '@deepseek-ai/dsh-tool-workflow'
 import * as ToolWorkspaceDependencies from '@deepseek-ai/dsh-tool-workspace-dependencies'
+import { IndexingService, RetrievalService } from '@deepseek-ai/dsh-retrieval'
+import * as RetrievalTools from '@deepseek-ai/dsh-retrieval-tools'
 import { githubSlug } from './verify-md-links.ts'
 
 /** Attachment seam marker that makes the attachments-conditional `read_image` schema harvestable. */
@@ -184,11 +186,24 @@ export interface ToolPackage {
 }
 
 /**
- * The boot manifest: every shipped tool package (a `tool-*` leaf under
- * `packages/`). Ordered by package name (the render order); the completeness
- * guard proves it is exhaustive against the on-disk glob.
+ * Executable registration recipes in catalog order. The completeness guard checks tool-prefix
+ * packages and the explicit native retrieval consumer against the on-disk packages.
  */
 const TOOL_PACKAGES: ToolPackage[] = [
+  {
+    pkg: '@deepseek-ai/dsh-retrieval-tools',
+    dir: 'retrieval-tools',
+    source: 'packages/retrieval/retrieval-tools/src/tools.ts',
+    requires: ['ctx.tools', 'ctx.retrieval', 'ctx.retrievalIndexing', 'ctx.fs', 'a calling Agent', 'ctx.sessionQuery for automatic retrieval'],
+    writes: ['tool/call', 'tool/result', 'source index', 'explicit memory records', 'user/message for automatic context'],
+    async mount(ctx) {
+      // Schema harvest never executes retrieval, starts an embedding model, or opens a native index.
+      ctx.provide('retrieval', { config: RetrievalService.Config({}) } as RetrievalService)
+      ctx.provide('retrievalIndexing', { config: IndexingService.Config({}) } as IndexingService)
+      await ctx.plugin(RetrievalTools)
+    },
+    note: 'Opt-in native retrieval tools. Source synchronization is explicit; personal persistence and automatic context are disabled by default. Identity comes from the trusted local principal and canonical host-shared original Session workspace.',
+  },
   {
     pkg: '@deepseek-ai/dsh-plugin-manager',
     dir: 'plugin-manager',
@@ -736,8 +751,8 @@ interface CatalogPackage {
 export type ToolCatalog = CatalogPackage[]
 
 /**
- * Assert the boot manifest covers every shipped tool package on disk (a
- * `tool-*` leaf under `packages/`, excluding test support).
+ * Assert the boot manifest covers `tool-*` packages and the native retrieval consumer on disk,
+ * excluding test support.
  * Booting has no source declaration to enumerate, so this glob restores the
  * "a new tool cannot be silently undocumented" guarantee: an unlisted package
  * fails the generator (and the freshness gate) until it is added to
@@ -747,7 +762,7 @@ export type ToolCatalog = CatalogPackage[]
  */
 export function assertManifestComplete(packages: ToolPackage[] = TOOL_PACKAGES, scanRoot: string = root): void {
   // Native execution owns no tool definitions; PTC contributes run_code.
-  const onDisk = globSync('packages/*/tool-*', { cwd: scanRoot })
+  const onDisk = globSync(['packages/*/tool-*', 'packages/retrieval/retrieval-tools'], { cwd: scanRoot })
     .filter(path => basename(dirname(path)) !== 'test-support')
     .map(p => basename(p))
     .filter(dir => dir !== 'tool-executor-native').sort()
@@ -870,9 +885,9 @@ export function render(catalog: ToolCatalog): string {
     '',
     'Every model-facing tool a shipped plugin contributes to `ctx.tools`: the `name`, `description`, and JSON-Schema `parameters` the model receives via the system-prompt assembly. It complements the [subsystem pages](subsystems/core.md) (the types plus each page\'s generated Cordis API region) — this page is the *tools* the agent is offered.',
     '',
-    'This file is GENERATED and verified fresh by `pnpm run verify-tool-catalog` (part of `doc-sync`) — do not edit it by hand. Unlike the cordis catalog (a pure source-AST pass), this generator BOOTS each tool plugin on a real context and reads `ctx.tools.schemas()`, because a tool schema is not statically knowable (runtime-spread enums, concatenated descriptions, config-driven names, raw-JSON-Schema MCP tools). A completeness guard globs `packages/*/tool-*` and fails if any package is missing from the generator\'s boot manifest, so a new tool cannot be silently undocumented.',
+    'This file is GENERATED and verified fresh by `pnpm run verify-tool-catalog` (part of `doc-sync`) — do not edit it by hand. Unlike the cordis catalog (a pure source-AST pass), this generator BOOTS each tool plugin on a real context and reads `ctx.tools.schemas()`, because a tool schema is not statically knowable (runtime-spread enums, concatenated descriptions, config-driven names, raw-JSON-Schema MCP tools). A completeness guard checks `packages/*/tool-*` and the native retrieval consumer against the generator\'s boot manifest, so these tools cannot be silently undocumented.',
     '',
-    'Scope: shipped product tools under `packages/*/tool-*`, each booted with its DEFAULT config, except where a Config field is REQUIRED with no default — there the generator must choose, and the per-package note records which branch this page shows. The registered tool NAME can be a load-time config (e.g. `tool-subagent`\'s `toolName`), so a deployment may expose a package under a different or additional name — a per-package note records those shipped aliases where they exist. The `examples/` demo tools (e.g. `echo`) are excluded, matching the cordis catalog\'s packages-only scope.',
+    'Scope: shipped product tools listed in the boot manifest, each booted with its DEFAULT config, except where a Config field is REQUIRED with no default — there the generator must choose, and the per-package note records which branch this page shows. The registered tool NAME can be a load-time config (e.g. `tool-subagent`\'s `toolName`), so a deployment may expose a package under a different or additional name — a per-package note records those shipped aliases where they exist. The `examples/` demo tools (e.g. `echo`) are excluded, matching the cordis catalog\'s packages-only scope.',
     '',
     '## Tool Package Map',
     '',

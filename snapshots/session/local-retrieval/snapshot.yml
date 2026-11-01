@@ -1,0 +1,8 @@
+version: 1
+scenario: local-retrieval
+profile: headless
+composition: local-retrieval
+recording: authored
+header:
+  class: local-retrieval
+  pin: true

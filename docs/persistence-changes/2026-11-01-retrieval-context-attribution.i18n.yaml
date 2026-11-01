@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-11-01-retrieval-context-attribution.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-11-01-retrieval-context-attribution.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-11-01-retrieval-context-attribution:
+  en: c8476aebf10320f1
+  zh: b2be2fe815a499df
+/2026-11-01-retrieval-context-attribution/summary:
+  en: f33fc0a165ac9749
+  zh: 97e2e1eca218d528
+/2026-11-01-retrieval-context-attribution/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-11-01-retrieval-context-attribution/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-11-01-retrieval-context-attribution/compatibility:
+  en: e0a5dd9b79a636c1
+  zh: 41c0e489e2b0ec91
+/2026-11-01-retrieval-context-attribution/verification:
+  en: 65124052def2bda5
+  zh: f69ce4ca0afb4711
+/2026-11-01-retrieval-context-attribution/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

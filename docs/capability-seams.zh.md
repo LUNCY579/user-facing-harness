@@ -83,6 +83,15 @@ flowchart LR
   svc_deepseekLlmApiExtensions["ctx.deepseekLlmApiExtensions<br/>Official DeepSeek request extensions"]
   pkg_session_log_deepseek["session-log-deepseek"]
   pkg_plugin_package_inventory_deepseek["plugin-package-inventory-deepseek"]
+  pkg_retrieval["retrieval"]
+  svc_embeddings["ctx.embeddings<br/>Text embedding provider"]
+  pkg_retrieval_embed["retrieval-embed"]
+  pkg_retrieval_zvec["retrieval-zvec"]
+  svc_vectorStore["ctx.vectorStore<br/>Authoritative retrieval records and vectors"]
+  svc_accelerator["ctx.accelerator<br/>Optional compressed dense reranking"]
+  svc_retrieval["ctx.retrieval<br/>Scoped retrieval and explicit memory"]
+  pkg_retrieval_tools["retrieval-tools"]
+  svc_retrievalIndexing["ctx.retrievalIndexing<br/>Workspace and Session source synchronization"]
   pkg_token_meter["token-meter"]
   svc_tokenMeter["ctx.tokenMeter<br/>Replay token measurement"]
   pkg_compaction_tool_result_pruner["compaction-tool-result-pruner"]
@@ -402,6 +411,14 @@ flowchart LR
   pkg_ptc_runtime --> svc_ptcRuntime
   pkg_ptc_runtime_node --> svc_ptcRuntime
   pkg_pwsh_local --> svc_shell
+  pkg_retrieval --> svc_accelerator
+  pkg_retrieval --> svc_embeddings
+  pkg_retrieval --> svc_retrieval
+  pkg_retrieval --> svc_retrievalIndexing
+  pkg_retrieval --> svc_vectorStore
+  pkg_retrieval_embed --> svc_embeddings
+  pkg_retrieval_zvec --> svc_accelerator
+  pkg_retrieval_zvec --> svc_vectorStore
   pkg_sandbox --> svc_sandbox
   pkg_sandbox_local --> svc_sandbox
   pkg_sandbox_policy --> svc_sandboxPolicy
@@ -468,6 +485,7 @@ flowchart LR
   pkg_working_directory --> svc_workingDirectory
   pkg_workspace --> svc_workspaceRegistry
   pkg_workspace_changes --> svc_workspaceChanges
+  svc_accelerator --> pkg_retrieval
   svc_actionCards --> pkg_client_ui_action_cards
   svc_actionCards --> pkg_creation_recommendations
   svc_agentDefaultModel --> pkg_api_session_controller
@@ -507,6 +525,8 @@ flowchart LR
   svc_deepseekLlmApiExtensions --> pkg_llm_deepseek
   svc_directoryPicker --> pkg_api_workspace_controller
   svc_dynamicCordisRunner --> pkg_tool_cordis
+  svc_embeddings --> pkg_retrieval
+  svc_embeddings --> pkg_retrieval_zvec
   svc_fileReferences --> pkg_api_session_controller
   svc_fileUploads --> pkg_api_session_controller
   svc_fs --> pkg_tool_fs
@@ -536,6 +556,8 @@ flowchart LR
   svc_remoteAccess --> pkg_api_gateway
   svc_remoteAccess --> pkg_api_session_controller
   svc_remoteAccess --> pkg_api_workspace_controller
+  svc_retrieval --> pkg_retrieval_tools
+  svc_retrievalIndexing --> pkg_retrieval_tools
   svc_sandbox --> pkg_bash_sandbox
   svc_sandbox --> pkg_terminal_bash
   svc_sandboxPolicy --> pkg_bash_sandbox
@@ -611,6 +633,7 @@ flowchart LR
   svc_typert --> pkg_api_gateway
   svc_typert --> pkg_typert_loader
   svc_userQuestions --> pkg_tool_ask_user
+  svc_vectorStore --> pkg_retrieval
   svc_web --> pkg_tool_web
   svc_webApp --> pkg_harness_dev_context
   svc_webServer --> pkg_client_connection
@@ -655,6 +678,11 @@ flowchart LR
 | `ctx.fileUploads` | `core` | [`client-file-upload`](../packages/client/file-upload) | - | [`api-session-controller`](../packages/api/session-controller) | - | 负责流式接收、持久存储和暂存回执生命周期；Session Controller 将回执绑定到已接受的提交。 |
 | `ctx.llm` | `seam` | [`llm`](../packages/llm/llm) | [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`llm-replay`](../packages/test-support/llm-replay) | [`agent-loop`](../packages/core/agent-loop), [`compaction-basic`](../packages/compaction/compaction-basic) | - | 适配器注册提供方实现；agent loop（智能体循环）与压缩功能调用提供方无关的流服务。 |
 | `ctx.deepseekLlmApiExtensions` | `seam` | [`deepseek-llm-api-extensions`](../packages/llm/deepseek-llm-api-extensions) | [`session-log-deepseek`](../packages/session/session-log-deepseek), [`plugin-package-inventory-deepseek`](../packages/llm/plugin-package-inventory-deepseek) | [`llm-deepseek`](../packages/llm/llm-deepseek) | - | 插件准备彼此独立的顶层字段；官方适配器会合并这些字段，并在 HTTP 接受后提交其交付状态。 |
+| `ctx.embeddings` | `seam` | [`retrieval`](../packages/retrieval/retrieval) | [`retrieval-embed`](../packages/retrieval/retrieval-embed) | [`retrieval`](../packages/retrieval/retrieval), [`retrieval-zvec`](../packages/retrieval/retrieval-zvec) | - | 为一个声明的嵌入空间生成经验证的向量；本地哈希、回环服务器和经明确许可的远程服务器共用同一个服务定义。 |
+| `ctx.vectorStore` | `seam` | [`retrieval`](../packages/retrieval/retrieval) | [`retrieval-zvec`](../packages/retrieval/retrieval-zvec) | [`retrieval`](../packages/retrieval/retrieval) | - | Zvec 持久化记录与向量，在评分前应用授权过滤，并报告已接受的写入；源索引和显式记忆共用这个权威存储。 |
+| `ctx.accelerator` | `seam` | [`retrieval`](../packages/retrieval/retrieval) | [`retrieval-zvec`](../packages/retrieval/retrieval-zvec) | [`retrieval`](../packages/retrieval/retrieval) | - | 隔离的 turbovec worker 保存可重建的派生数据，仅对权威存储已授权的候选 id 评分；worker 故障时 Zvec 检索仍然可用。 |
+| `ctx.retrieval` | `service` | [`retrieval`](../packages/retrieval/retrieval) | - | [`retrieval-tools`](../packages/retrieval/retrieval-tools) | - | 对搜索和记忆变更执行授权，协调待发布记忆的恢复，并在配置的上下文预算内打包带源链接的证据。 |
+| `ctx.retrievalIndexing` | `service` | [`retrieval`](../packages/retrieval/retrieval) | - | [`retrieval-tools`](../packages/retrieval/retrieval-tools) | - | 显式将获准访问的工作区文件和历史 Session 文本同步为派生分块；限定作用域的重建会移除分块，同时保留显式记忆与源日志。 |
 | `ctx.tokenMeter` | `core` | [`token-meter`](../packages/llm/token-meter) | - | [`compaction-basic`](../packages/compaction/compaction-basic) | - | 拥有按会话隔离的回放折叠区；压力消费方共享不可变且带修订版本的测量结果。 |
 | `ctx.toolResultPruner` | `core` | [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner) | - | [`compaction-basic`](../packages/compaction/compaction-basic) | - | 在摘要压缩前，通过可回放的单节点表层替换来改写过大的当前工具结果。 |
 | `ctx.sessions` | `core` | [`session`](../packages/core/session) | - | [`agent-loop`](../packages/core/agent-loop), [`agent`](../packages/core/agent), [`session-persistence`](../packages/session/session-persistence), [`session-query`](../packages/session-query/session-query), [`session-query-sqlite`](../packages/session-query/session-query-sqlite), [`subagent`](../packages/subagent/subagent), [`message-feedback`](../packages/feedback/message-feedback) | - | 拥有仅追加的 Session 实例，并发出持久的会话事件流。 |

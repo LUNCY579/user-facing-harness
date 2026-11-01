@@ -1,0 +1,49 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/retrieval/retrieval-tools/README.md
+/:
+  en: caf57480f9167c89
+  zh: c12fa1034fcee96f
+/deepseek-ai-dsh-retrieval-tools:
+  en: 1cf3f5b11b3699a1
+  zh: 3ebd68d023e3d71b
+/deepseek-ai-dsh-retrieval-tools/summary:
+  en: e1712d7178dec745
+  zh: 3a999b1df54b10ac
+/deepseek-ai-dsh-retrieval-tools/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/deepseek-ai-dsh-retrieval-tools/use-this-package:
+  en: d425b21c8b854ecd
+  zh: 5c40e1ee2d2817cf
+/deepseek-ai-dsh-retrieval-tools/understand-the-implementation:
+  en: 32b79d9d3a909926
+  zh: 79d7a496ff07a751
+/deepseek-ai-dsh-retrieval-tools/further-exploration:
+  en: 2697ab90a7702757
+  zh: 95817252be5408da
+/deepseek-ai-dsh-retrieval-tools/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-retrieval-tools/model-experience/retrieval-tools-and-automatic-context:
+  en: b35a4d01829ec00a
+  zh: 612a1af1f0e6fa03
+/deepseek-ai-dsh-retrieval-tools/model-experience/retrieval-tools-and-automatic-context/what-the-model-sees:
+  en: 2b487ee71762016c
+  zh: 86e64caeaeefe50d
+/deepseek-ai-dsh-retrieval-tools/model-experience/retrieval-tools-and-automatic-context/what-the-model-sees/retrieval-warning:
+  en: b837f2751d14a6be
+  zh: f17a7a486d179cb8
+/deepseek-ai-dsh-retrieval-tools/model-experience/retrieval-tools-and-automatic-context/token-effect:
+  en: dd0d4775f283b987
+  zh: d13cf8475bcc1cf5
+/deepseek-ai-dsh-retrieval-tools/model-experience/retrieval-tools-and-automatic-context/kv-cache-effect:
+  en: 7cea23daa8006653
+  zh: ff4312335e93b57e
+/deepseek-ai-dsh-retrieval-tools/known-limitations-and-deferred-work:
+  en: f89a40ca01b2d6e8
+  zh: 786bc7cf55a34e5e
+/deepseek-ai-dsh-retrieval-tools/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: a4b126f9a4eaca6f

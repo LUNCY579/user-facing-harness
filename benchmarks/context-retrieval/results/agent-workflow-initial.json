@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "model": "local-scripted-fixture",
+  "samples": [
+    {
+      "send_to_evidence_ms": 3.6458330000000387,
+      "retrieval_mode": "keyword",
+      "initial_model_input_estimated_tokens": 2158,
+      "evidence_model_input_estimated_tokens": 2290,
+      "model_requests": 2,
+      "tool_calls": 1,
+      "source_linked_evidence": true
+    }
+  ],
+  "total_workflow_ms": 9963.642417000001,
+  "total_model_requests": 28,
+  "total_tool_calls": 14,
+  "token_estimation": "UTF-8 bytes/4 over serialized native message roles/content/tool-call IDs and tool schemas; excludes host source metadata; not provider usage or a model tokenizer",
+  "latency_scope": "Warm user followup send to first scripted adapter request containing that tool call result; excludes index creation and final answer generation",
+  "scripted_workflow_assertions": {
+    "workspace_retrieval": true,
+    "cross_session_recall": true,
+    "memory_correction": true,
+    "deletion_from_store": true,
+    "deletion_after_restart": true,
+    "optional_backend_fallback": true,
+    "same_store_workspace_isolation": true,
+    "rebuild_preserves_explicit_memory": true,
+    "secret_file_exclusion": true
+  },
+  "real_model_task_accuracy_measured": false
+}

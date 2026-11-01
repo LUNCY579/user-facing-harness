@@ -227,7 +227,8 @@
     "config:platform": "node testing-platform/launcher.mjs config",
     "test:integration": "node --test testing-platform/*.test.mjs",
     "test:plugin": "pnpm --filter dsh-our-free-model run test:contributor",
-    "smoke:platform": "node testing-platform/smoke.mjs"
+    "smoke:platform": "node testing-platform/smoke.mjs",
+    "bench:retrieval": "node benchmarks/context-retrieval/run.mjs"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-hooks-claude-code": "workspace:*",

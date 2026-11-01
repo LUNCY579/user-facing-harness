@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write benchmarks/context-retrieval/README.md
+/:
+  en: 8ef84a3f147e3096
+  zh: 4e2164e0691a33c5
+/context-retrieval-benchmarks:
+  en: 9835a41add6e28d7
+  zh: 98db9b987b2edb57
+/context-retrieval-benchmarks/summary:
+  en: cd95cc4d718a4bb5
+  zh: c624308608d2d11a
+/context-retrieval-benchmarks/table-of-contents:
+  en: 601eda6d509c28ea
+  zh: 19e92ca0d6a2c30f
+/context-retrieval-benchmarks/run-the-comparison:
+  en: 492183283f5e4587
+  zh: 691ce4a7e4bfd3bc
+/context-retrieval-benchmarks/measurement-endpoints:
+  en: b1fd5dd154b20ee3
+  zh: 6e2b343006c734fe
+/context-retrieval-benchmarks/reproduce-the-packing-control:
+  en: 627063f6825aad1a
+  zh: d3fb9384adbd7207
+/context-retrieval-benchmarks/limits:
+  en: 0a4c1ee545348519
+  zh: f7afe36200e09ddb
+/context-retrieval-benchmarks/dev-note:
+  en: 77c9ec2acd619393
+  zh: f4a64f8a0cd6cc3e

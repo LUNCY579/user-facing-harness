@@ -154,6 +154,7 @@ The combined profile includes the Harness base tools and plugin management inter
 | Tool-output compaction and prompt shaping | **Our Free Model → Token savers** | Enable desired options explicitly and compare their effect on your experiments; shaping can change model inputs. |
 | Files, commands, plans, subagents | Harness session/workspace | A selected workspace, a suitable model, required host tools, and the active permission policy. See the [Web guide](docs/user/guide/index.md). |
 | MCP tools and memory servers | Profile patches | Install/start the external MCP server and configure its command or URL. Follow the [MCP guide](docs/user/guide/mcp-memory.md). |
+| Native retrieval and memory | Optional profile overlay | Local Zvec search, explicit scoped memory, and optional turbovec; see the [retrieval guide](docs/user/guide/local-retrieval.md). |
 | Scheduled work | Harness settings/session tools | Configure a working model and the desired schedule; see the [schedule guide](docs/user/guide/schedule.md). |
 | Web search and fetch | Harness web providers | Configure the selected provider’s credentials and limits using the [web package guide](packages/web/README.md); anonymous HTTP fetch and provider-backed search have different requirements. |
 | Browser/desktop automation | Optional Harness provider bundles | Choose one backend and follow the [browser](packages/browser-use/README.md) or [computer-use](packages/computer-use/README.md) provider guide for browser installation and OS permissions. Some providers are experimental. |

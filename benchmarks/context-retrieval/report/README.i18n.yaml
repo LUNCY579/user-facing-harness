@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write benchmarks/context-retrieval/report/README.md
+/:
+  en: 7dcb86748055b8e7
+  zh: aeb0a9125d9c51a9
+/local-retrieval-engineering-report:
+  en: 43ba82179b8419e3
+  zh: 0c421e46f7000ced
+/local-retrieval-engineering-report/summary:
+  en: 1ff3db9bd21a62af
+  zh: 24b1fb21ade4c544
+/local-retrieval-engineering-report/table-of-contents:
+  en: 7f7151129a9323ff
+  zh: 007dedfa6fc60d88
+/local-retrieval-engineering-report/architecture-and-scope:
+  en: aad6bd561971b4f8
+  zh: 5417f7f4250afd99
+/local-retrieval-engineering-report/measured-results:
+  en: b021263b0cf26495
+  zh: f3472d058d28b4e0
+/local-retrieval-engineering-report/quality-and-defaults:
+  en: 8f0add12c705d593
+  zh: 707fa28273da1a05
+/local-retrieval-engineering-report/packing-optimization:
+  en: 0acc039b4a254278
+  zh: 5df0f2b678fbc8e7
+/local-retrieval-engineering-report/security-and-reliability-review:
+  en: bded989b08c272fe
+  zh: 6fed8c5e09650a05
+/local-retrieval-engineering-report/workflow-verification:
+  en: 704359ab7d56fd25
+  zh: 98ca59620786c61e
+/local-retrieval-engineering-report/checks-and-working-tree:
+  en: 3a6a02cd5af44a8b
+  zh: 1aa44f184f74a32a
+/local-retrieval-engineering-report/readiness-and-limitations:
+  en: 1eb894131ddac19f
+  zh: c25fb639159ff0b8
+/local-retrieval-engineering-report/dev-note:
+  en: 973a51310335fef9
+  zh: f8648608ee80c5ae

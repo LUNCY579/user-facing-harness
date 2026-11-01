@@ -1,0 +1,36 @@
+- id: retrieval-embed
+  disabled: false
+  config:
+    provider: local-hashed
+    model: dsh-hashed-v1
+    dimension: 64
+
+- id: retrieval-zvec
+  disabled: false
+  config:
+    indexDir: !!js dshHomePath('retrieval')
+    queryThreads: 1
+    optimizeThreads: 1
+    acceleratorEnabled: false
+
+- id: retrieval
+  disabled: false
+  config:
+    enabled: true
+    persistentMemory: false
+    crossSessionRead: false
+    useAccelerator: false
+
+- id: retrieval-indexing
+  disabled: false
+  config:
+    roots: !!js '[process.cwd()]'
+    statePath: !!js dshHomePath('retrieval/index-state.json')
+    excludedDirectories: [.git, node_modules, .testingplatform, .dsh, .snapshot-patches]
+    extensions: [ts]
+
+- id: retrieval-tools
+  disabled: false
+  config:
+    localPrincipal: synthetic-snapshot-operator
+    autoRetrieval: false

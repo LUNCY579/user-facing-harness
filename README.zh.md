@@ -154,6 +154,7 @@ pnpm start --no-open --port 3081
 | 工具输出压缩与提示调整 | **Our Free Model → Token savers**（省 Token） | 显式启用所需选项，并比较实验效果；提示调整会改变模型输入。 |
 | 文件、命令、计划与 subagent | Harness 会话与工作区 | 选中的工作区、合适的模型、必要的主机工具及当前权限策略。参见 [Web 指南](docs/user/guide/index.zh.md)。 |
 | MCP 工具与记忆服务器 | 配置补丁 | 安装或启动外部 MCP 服务器，并配置其命令或 URL。参见 [MCP 指南](docs/user/guide/mcp-memory.zh.md)。 |
+| 原生检索与记忆 | 可选配置补丁 | 本地 Zvec 检索、显式分域记忆和可选 turbovec；参见[检索指南](docs/user/guide/local-retrieval.zh.md)。 |
 | 定时任务 | Harness 设置与会话工具 | 配置可用模型及所需计划；参见[定时任务指南](docs/user/guide/schedule.zh.md)。 |
 | 网页搜索与获取 | Harness 网页提供商 | 按[网页包指南](packages/web/README.zh.md)配置所选提供商的凭据与限制；匿名 HTTP 获取与提供商支持的搜索具有不同要求。 |
 | 浏览器或桌面自动化 | 可选 Harness 提供商 bundle | 选择一个后端，并按[浏览器](packages/browser-use/README.zh.md)或[计算机操作](packages/computer-use/README.zh.md)提供商指南安装浏览器及配置操作系统权限。部分提供商处于实验阶段。 |

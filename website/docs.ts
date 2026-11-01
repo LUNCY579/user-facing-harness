@@ -179,6 +179,14 @@ const homeAndGuide = pairedPages([
     order: 2,
   },
   {
+    source: 'docs/user/guide/local-retrieval.md',
+    route: 'guide/local-retrieval.md',
+    label: { root: '本地检索与记忆', en: 'Local retrieval and memory' },
+    sidebar: { root: 'zh-guide', en: 'en-guide' },
+    section: { root: '集成', en: 'Integrations' },
+    order: 3,
+  },
+  {
     source: 'docs/user/guide/mcp-memory.md',
     route: 'guide/mcp-memory.md',
     label: { root: '记忆 MCP', en: 'Memory MCP' },

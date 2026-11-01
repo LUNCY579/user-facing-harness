@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "validation in progress",
+  "branch": "feat/local-retrieval-readiness",
+  "scope": "Canonical local check:all aggregate and current TestingPlatform CI workflow commands; live provider checks remain pending by user choice.",
+  "checks": [],
+  "negative_controls": [
+    {
+      "subject": "Rescope Git index above1MiB",
+      "old_result": "ENOBUFS;1test failed as intended",
+      "fixed_result": "Large-index and existing rescope tests pass."
+    },
+    {
+      "subject": "Pinned import vs maintained-source assertion checks",
+      "old_result": "Pinned-import regression failed as intended.",
+      "fixed_result": "71tests pass; baseline unchanged; maintained source still rejected."
+    }
+  ]
+}

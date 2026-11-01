@@ -10,6 +10,8 @@ import yaml from 'js-yaml'
 import { platformEnvironment, repositoryRoot } from './profile.mjs'
 
 const root = repositoryRoot
+const retrievalEnabled = process.argv.slice(2).includes('--retrieval')
+const overlays = retrievalEnabled ? ['--patch', join(root, 'apps/cli/config/examples/retrieval.yml')] : []
 
 function scrub(text) {
   return text.replace(/(https?:\/\/[^\s?]+)\?[^\s]+/g, '$1?[redacted]')
@@ -89,7 +91,7 @@ async function main() {
     fixture.listen(0, '127.0.0.1')
     await once(fixture, 'listening')
     const fixtureBase = `http://127.0.0.1:${fixture.address().port}/v1`
-    const dump = spawnSync(process.execPath, ['testing-platform/launcher.mjs', 'config'], {
+    const dump = spawnSync(process.execPath, ['testing-platform/launcher.mjs', 'config', ...overlays], {
       cwd: root, env: environment, encoding: 'utf8', timeout: 60_000, maxBuffer: 16 * 1024 * 1024,
     })
     if (dump.error) throw dump.error
@@ -103,9 +105,13 @@ async function main() {
     assert.equal(pluginRows.length, 1, 'the host composition must activate exactly one local plugin')
     assert.equal(pluginRows[0].name, 'dsh-our-free-model')
     assert.equal(pluginRows[0].config.distribution, 'managed')
+    const retrievalRows = entries.filter(entry => ['retrieval', 'retrieval-embed', 'retrieval-zvec', 'retrieval-indexing', 'retrieval-tools'].includes(entry.id))
+    assert.equal(retrievalRows.length, 5, 'the base must declare all optional native retrieval rows')
+    assert.ok(retrievalRows.every(entry => Boolean(entry.disabled) === !retrievalEnabled), 'native retrieval activation must match the requested overlay')
 
     child = spawn(process.execPath, [
-      'testing-platform/launcher.mjs', 'start', '--no-open', '--host', '127.0.0.1', '--port', '0',
+      'testing-platform/launcher.mjs', 'start', ...overlays,
+      '--no-open', '--host', '127.0.0.1', '--port', '0',
     ], { cwd: root, env: environment, stdio: ['ignore', 'pipe', 'pipe'] })
     completion = new Promise(resolve => {
       child.once('error', error => resolve({ error }))

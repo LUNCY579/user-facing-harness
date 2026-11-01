@@ -1,0 +1,37 @@
+# Native local retrieval. Index only the workspace explicitly selected for the
+# calling Session. context_index performs synchronization; searches never scan.
+# Remote embeddings, persistent personal memory, automatic injection, historical
+# session indexing, and the optional turbovec worker remain disabled.
+- id: retrieval-embed
+  disabled: false
+  config:
+    provider: local-hashed
+    model: dsh-hashed-v1
+    dimension: 256
+
+- id: retrieval-zvec
+  disabled: false
+  config:
+    indexDir: !!js dshHomePath('retrieval')
+    queryThreads: 1
+    optimizeThreads: 1
+
+- id: retrieval
+  disabled: false
+  config:
+    enabled: true
+    persistentMemory: false
+    crossSessionRead: false
+    useAccelerator: false
+
+- id: retrieval-indexing
+  disabled: false
+  config:
+    roots: !!js '[process.cwd()]'
+    statePath: !!js dshHomePath('retrieval/index-state.json')
+
+- id: retrieval-tools
+  disabled: false
+  config:
+    enableTools: true
+    autoRetrieval: false

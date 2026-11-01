@@ -1116,6 +1116,15 @@ importers:
       '@deepseek-ai/dsh-llm-replay':
         specifier: workspace:*
         version: link:../packages/test-support/llm-replay
+      '@deepseek-ai/dsh-retrieval':
+        specifier: workspace:*
+        version: link:../packages/retrieval/retrieval
+      '@deepseek-ai/dsh-retrieval-embed':
+        specifier: workspace:*
+        version: link:../packages/retrieval/retrieval-embed
+      '@deepseek-ai/dsh-retrieval-zvec':
+        specifier: workspace:*
+        version: link:../packages/retrieval/retrieval-zvec
       '@deepseek-ai/dsh-sdk-client':
         specifier: workspace:*
         version: link:../packages/sdk/client
@@ -2483,6 +2492,18 @@ importers:
       '@deepseek-ai/dsh-repeat-tool-reminder':
         specifier: workspace:*
         version: link:../../guard/repeat-tool-reminder
+      '@deepseek-ai/dsh-retrieval':
+        specifier: workspace:*
+        version: link:../../retrieval/retrieval
+      '@deepseek-ai/dsh-retrieval-embed':
+        specifier: workspace:*
+        version: link:../../retrieval/retrieval-embed
+      '@deepseek-ai/dsh-retrieval-tools':
+        specifier: workspace:*
+        version: link:../../retrieval/retrieval-tools
+      '@deepseek-ai/dsh-retrieval-zvec':
+        specifier: workspace:*
+        version: link:../../retrieval/retrieval-zvec
       '@deepseek-ai/dsh-sandbox-local':
         specifier: workspace:*
         version: link:../../sandbox/sandbox-local
@@ -13096,6 +13117,131 @@ importers:
         specifier: workspace:*
         version: link:../../util/timeout
 
+  packages/retrieval/retrieval:
+    dependencies:
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:*
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@deepseek-ai/dsh-session-persistence':
+        specifier: workspace:*
+        version: link:../../session/session-persistence
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      ignore:
+        specifier: 7.0.5
+        version: 7.0.5
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
+  packages/retrieval/retrieval-embed:
+    dependencies:
+      '@deepseek-ai/dsh-retrieval':
+        specifier: workspace:*
+        version: link:../retrieval
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
+  packages/retrieval/retrieval-tools:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@deepseek-ai/dsh-agent-loop':
+        specifier: workspace:*
+        version: link:../../core/agent-loop
+      '@deepseek-ai/dsh-agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
+      '@deepseek-ai/dsh-app-boot':
+        specifier: workspace:*
+        version: link:../../boot/app-boot
+      '@deepseek-ai/dsh-fs':
+        specifier: workspace:*
+        version: link:../../fs/fs
+      '@deepseek-ai/dsh-fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-loader-smoke':
+        specifier: workspace:*
+        version: link:../../test-support/loader-smoke
+      '@deepseek-ai/dsh-retrieval':
+        specifier: workspace:*
+        version: link:../retrieval
+      '@deepseek-ai/dsh-retrieval-embed':
+        specifier: workspace:*
+        version: link:../retrieval-embed
+      '@deepseek-ai/dsh-retrieval-zvec':
+        specifier: workspace:*
+        version: link:../retrieval-zvec
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@deepseek-ai/dsh-session-projection':
+        specifier: workspace:*
+        version: link:../../session/session-projection
+      '@deepseek-ai/dsh-session-query':
+        specifier: workspace:*
+        version: link:../../session-query/session-query
+      '@deepseek-ai/dsh-session-query-sqlite':
+        specifier: workspace:*
+        version: link:../../session-query/session-query-sqlite
+      '@deepseek-ai/dsh-system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@deepseek-ai/dsh-tool-executor-native':
+        specifier: workspace:*
+        version: link:../../core/tool-executor-native
+      '@deepseek-ai/dsh-tool-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/tool-testkit
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:*
+        version: link:../../core/tools
+      '@deepseek-ai/dsh-working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
+
+  packages/retrieval/retrieval-zvec:
+    dependencies:
+      '@deepseek-ai/dsh-retrieval':
+        specifier: workspace:*
+        version: link:../retrieval
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+    optionalDependencies:
+      '@zvec/zvec':
+        specifier: 0.8.0
+        version: 0.8.0
+
   packages/sandbox/sandbox:
     dependencies:
       '@deepseek-ai/dsh-util-values':
@@ -17294,6 +17440,18 @@ importers:
       '@deepseek-ai/dsh-repeat-tool-reminder':
         specifier: workspace:*
         version: link:../../packages/guard/repeat-tool-reminder
+      '@deepseek-ai/dsh-retrieval':
+        specifier: workspace:*
+        version: link:../../packages/retrieval/retrieval
+      '@deepseek-ai/dsh-retrieval-embed':
+        specifier: workspace:*
+        version: link:../../packages/retrieval/retrieval-embed
+      '@deepseek-ai/dsh-retrieval-tools':
+        specifier: workspace:*
+        version: link:../../packages/retrieval/retrieval-tools
+      '@deepseek-ai/dsh-retrieval-zvec':
+        specifier: workspace:*
+        version: link:../../packages/retrieval/retrieval-zvec
       '@deepseek-ai/dsh-sandbox':
         specifier: workspace:*
         version: link:../../packages/sandbox/sandbox
@@ -21094,6 +21252,53 @@ packages:
     resolution: {integrity: sha512-WoxUM/Be4hfsX06FxsvpGgfYqwgivMV7/Ol7aFuSfSmY6rRaiju4QxOEe9RUS0iYcSHWl5i9AhB1cMoE0p+XiA==}
     engines: {node: '>=18.12.0'}
 
+  '@zvec/bindings-darwin-arm64@0.8.0':
+    resolution: {integrity: sha512-QBLjpUOYvbYHZc221QFsD/t0x48GFOI7P2a8ai5WDcQ4qcCILppjQ/2CrB9IFcV0i9xYUjtuSkEKZ9P63UT6GA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@zvec/bindings-darwin-x64@0.8.0':
+    resolution: {integrity: sha512-Nqwx9qdMLyjC2ewaRUTbdiNy0xe5bBybsszFx10NRA7c99h9owbKp6tlezPVEpm/VPRymZJ4C3b5uqsAz4Ho6A==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@zvec/bindings-linux-arm64-musl@0.8.0':
+    resolution: {integrity: sha512-a0yypiTupxghZX24RkN3AcbkvT3g0wuDlw907ZY4psw1FoolwHg9jibdJ89QaeoNBtRDgxRo787nYv1znzomig==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@zvec/bindings-linux-arm64@0.8.0':
+    resolution: {integrity: sha512-m/ShX6wbTHVlF7NenOSJcK+NRb/3+62kOfTNJe4pFmU01APy64P6dq7kXv2jdF0jUJfYqxqTUzf0HdJ51eFOwQ==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@zvec/bindings-linux-x64-musl@0.8.0':
+    resolution: {integrity: sha512-LwZBBwgm/5IFfB3QKYyWkLx8sOm5Cqam6/D3IV2KWkyusE4a84uLfiYsR5/FRqfnVk/iGynC9KFiklJT+ultng==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@zvec/bindings-linux-x64@0.8.0':
+    resolution: {integrity: sha512-n6CpjJ41YHVaU+lp7X+NiRLi+f+wxe/cSAhpfFfLzCZgi1nPxXciJiRRrT8JvUFIPAKUjsVc7mK3CNFARCqFHQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@zvec/bindings-win32-arm64@0.8.0':
+    resolution: {integrity: sha512-DvHnJ71wyjSPbtuWE5KJrw/i+BthOoW/yjdOW2HqAsUuhkKBkOgvYDxkFV8Kwz6/T9twQGzh+GkTYULpNOdhjg==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@zvec/bindings-win32-x64@0.8.0':
+    resolution: {integrity: sha512-6Tg26+4VrmrzNWiYvtQMTlbDWjNUAib4VdLlmDo/pKqzgcQFSF6bDDPUHizH1VfOkgdsctH6tOVvpYNh8Ept6w==}
+    cpu: [x64]
+    os: [win32]
+
+  '@zvec/zvec@0.8.0':
+    resolution: {integrity: sha512-rgAEmGIhi9Mwd6ZWyN7ol6nYtF4Dl2s8gilX8TeLvM0u/EbouG5ocpZkAbfPiRlZP2h4o2k8sqIqrpTZ1htyfA==}
+
   abbrev@4.0.0:
     resolution: {integrity: sha512-a1wflyaL0tHtJSmLSOVybYhy22vRih4eduhhrkcjgrWGnRfrZtovJ2FRjxuTtkkj47O/baf0R86QU5OuYpz8fA==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -22695,6 +22900,10 @@ packages:
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
+    engines: {node: '>= 4'}
+
+  ignore@7.0.5:
+    resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
   ignore@7.0.8:
@@ -28550,6 +28759,44 @@ snapshots:
       js-yaml: 4.3.2
       tslib: 2.8.1
 
+  '@zvec/bindings-darwin-arm64@0.8.0':
+    optional: true
+
+  '@zvec/bindings-darwin-x64@0.8.0':
+    optional: true
+
+  '@zvec/bindings-linux-arm64-musl@0.8.0':
+    optional: true
+
+  '@zvec/bindings-linux-arm64@0.8.0':
+    optional: true
+
+  '@zvec/bindings-linux-x64-musl@0.8.0':
+    optional: true
+
+  '@zvec/bindings-linux-x64@0.8.0':
+    optional: true
+
+  '@zvec/bindings-win32-arm64@0.8.0':
+    optional: true
+
+  '@zvec/bindings-win32-x64@0.8.0':
+    optional: true
+
+  '@zvec/zvec@0.8.0':
+    dependencies:
+      detect-libc: 2.1.2
+    optionalDependencies:
+      '@zvec/bindings-darwin-arm64': 0.8.0
+      '@zvec/bindings-darwin-x64': 0.8.0
+      '@zvec/bindings-linux-arm64': 0.8.0
+      '@zvec/bindings-linux-arm64-musl': 0.8.0
+      '@zvec/bindings-linux-x64': 0.8.0
+      '@zvec/bindings-linux-x64-musl': 0.8.0
+      '@zvec/bindings-win32-arm64': 0.8.0
+      '@zvec/bindings-win32-x64': 0.8.0
+    optional: true
+
   abbrev@4.0.0: {}
 
   abort-controller@3.0.0:
@@ -30520,6 +30767,8 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@5.3.2: {}
+
+  ignore@7.0.5: {}
 
   ignore@7.0.8: {}
 

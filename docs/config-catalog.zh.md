@@ -2733,6 +2733,142 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-repeat-tool-reminder -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-retrieval-embed -->
+<a id="deepseek-aidsh-retrieval-embed"></a>
+
+## `@deepseek-ai/dsh-retrieval-embed`
+
+- `source`: [`packages/retrieval/retrieval-embed/src/index.ts:18`](../packages/retrieval/retrieval-embed/src/index.ts)
+
+```ts config-catalog
+/** Deployment choices for the embedding space. */
+export interface Config {
+  /** Which provider produces vectors. `openai-compatible` sends text to another machine. */
+  provider: 'local-hashed' | 'local-openai-compatible' | 'openai-compatible'
+  /** Model tag recorded in the space key; changing it makes every stored vector unreadable until re-index. */
+  model: string
+  /** Local model-weight revision; change it when a server replaces weights under the same model id. */
+  modelRevision: string
+  /** Vector width, fixed when the collection is created. */
+  dimension: number
+  /** Required affirmative to send any text to a remote embedding server. */
+  allowRemoteEmbeddings: boolean
+  /** Server root for `openai-compatible`, for example `http://127.0.0.1:11434/v1`. */
+  baseUrl: string
+  /** Explicit credential environment variable; empty sends no token and is valid only for local providers. */
+  apiKeyEnv: string
+  /** Milliseconds per remote request attempt. */
+  timeoutMs: number
+  /** Texts per remote request, and per local cancellation check. */
+  maxBatch: number
+  /** Retries after a retryable remote failure. */
+  maxRetries: number
+  /** Maximum bytes read from one embedding response. */
+  maxResponseBytes: number
+  /** Initial delay between retry attempts. */
+  retryBackoffMs: number
+  /** Maximum delay between retry attempts. */
+  retryMaxBackoffMs: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-retrieval-embed -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-retrieval-tools -->
+<a id="deepseek-aidsh-retrieval-tools"></a>
+
+## `@deepseek-ai/dsh-retrieval-tools`
+
+- `inject`: `retrieval` · `retrievalIndexing` · `tools` · `fs`
+- `source`: [`packages/retrieval/retrieval-tools/src/index.ts:28`](../packages/retrieval/retrieval-tools/src/index.ts)
+
+```ts config-catalog
+/** Tool and automatic-retrieval configuration. */
+export interface Config {
+  /** Trusted local principal; use separate profiles/stores for different operating-system users. */
+  localPrincipal: string
+  /** Passages returned when a search omits top_k. */
+  defaultSearchTopK: number
+  /** Memories listed when memory_search omits limit. */
+  defaultMemoryLimit: number
+  /** Register the memory and search tools. */
+  enableTools: boolean
+  /** Append retrieved passages to a turn's first step. */
+  autoRetrieval: boolean
+  /** Passage ceiling for one automatic query. */
+  autoTopK: number
+  /** Relevance floor below which automatic retrieval injects nothing. */
+  autoMinScore: number
+  /** Token ceiling for one automatic injection. */
+  autoBudgetTokens: number
+  /** Automatic retrieval skips requests shorter than this many characters. */
+  autoMinQueryChars: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-retrieval-tools -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-retrieval-zvec -->
+<a id="deepseek-aidsh-retrieval-zvec"></a>
+
+## `@deepseek-ai/dsh-retrieval-zvec`
+
+- `inject`: `embeddings`
+- `source`: [`packages/retrieval/retrieval-zvec/src/index.ts:22`](../packages/retrieval/retrieval-zvec/src/index.ts)
+
+```ts config-catalog
+/** Deployment configuration for the Zvec-backed retrieval providers. */
+export interface Config {
+  /** Index root for the authoritative collection, relative to the process working directory. */
+  indexDir: string
+  /** Collection name recorded in the Zvec schema. */
+  collectionName: string
+  /** Open the authoritative collection without write access. */
+  readOnly: boolean
+  /** Memory-map Zvec data files instead of reading them per access. */
+  enableMMAP: boolean
+  /** Threads Zvec uses for searches; `0` lets the engine choose. */
+  queryThreads: number
+  /** Threads Zvec uses for index builds; `0` lets the engine choose. */
+  optimizeThreads: number
+  /** Directory for Zvec's own log files; empty selects console logging. */
+  logDir: string
+  /** Zvec log level, `0` debug through `4` fatal. */
+  logLevel: number
+  /** Maximum graph neighbors retained per vector. */
+  hnswM: number
+  /** Candidate list size during HNSW construction. */
+  hnswEfConstruction: number
+  /** Candidate list size per HNSW query; Zvec accepts at most 2048. */
+  hnswEf: number
+  /** Full-text tokenizer: `standard`, `ngram`, `jieba`, or `whitespace`. */
+  ftsTokenizer: string
+  /** Full-text token filters, e.g. `lowercase`, `ascii_folding`, `stemmer`. */
+  ftsFilters: string[]
+  /** Ceiling on record ids in one explicit-id filter expression. */
+  maxFilterIds: number
+  /** Documents per write batch. */
+  writeBatchSize: number
+  /** Weight of the vector half in hybrid fusion, in `[0, 1]`. */
+  hybridVectorWeight: number
+  /** Mount the quantized accelerator and let the engine re-rank through it. */
+  acceleratorEnabled: boolean
+  /** TurboQuant bits per vector component: `4`, or experimental `2`. */
+  acceleratorBitWidth: number
+  /** Trusted Python executable with turbovec and numpy installed. */
+  turbovecPython: string
+  /** Worker operation deadline, including IPC. */
+  workerTimeoutMs: number
+  /** Maximum queued worker operations. */
+  workerMaxQueue: number
+  /** Maximum UTF-8 bytes per framed IPC message. */
+  workerMaxMessageBytes: number
+  /** Maximum compressed vectors per worker. */
+  workerMaxVectors: number
+  /** Maximum native worker threads. */
+  workerThreads: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-retrieval-zvec -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-sandbox-local -->
 <a id="deepseek-aidsh-sandbox-local"></a>
 
@@ -4894,6 +5030,7 @@ export interface Config {
 | `@deepseek-ai/dsh-plugin-detail` | — | [`packages/util/plugin-detail/src/index.ts`](../packages/util/plugin-detail/src/index.ts) |
 | `@deepseek-ai/dsh-plugin-market-index` | — | [`packages/util/plugin-market-index/src/index.ts`](../packages/util/plugin-market-index/src/index.ts) |
 | `@deepseek-ai/dsh-remote-mock` | — | [`packages/test-support/remote-mock/src/index.ts`](../packages/test-support/remote-mock/src/index.ts) |
+| `@deepseek-ai/dsh-retrieval` | — | [`packages/retrieval/retrieval/src/index.ts`](../packages/retrieval/retrieval/src/index.ts) |
 | `@deepseek-ai/dsh-sandbox-windows-acl` | — | [`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts) |
 | `@deepseek-ai/dsh-scope` | — | [`packages/core/scope/src/index.ts`](../packages/core/scope/src/index.ts) |
 | `@deepseek-ai/dsh-sdk-client` | — | [`packages/sdk/client/src/index.ts`](../packages/sdk/client/src/index.ts) |

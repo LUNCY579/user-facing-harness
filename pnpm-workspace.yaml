@@ -55,6 +55,9 @@ allowBuilds:
   electron-winstaller: false
   # Store-index rewriting only needs msgpackr's portable JavaScript codec.
   msgpackr-extract: false
+  # Zvec's install script selects the prebuilt native binding for this platform
+  # and architecture; without it the Node SDK has no engine to load.
+  '@zvec/zvec': true
 
 minimumReleaseAgeExclude:
   # Native Codex and Claude tests qualify this exact release with its local patches.

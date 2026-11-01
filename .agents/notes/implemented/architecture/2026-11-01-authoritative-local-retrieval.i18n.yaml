@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-01-authoritative-local-retrieval.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-01-authoritative-local-retrieval.md
+/agent-note-authoritative-local-retrieval-and-rebuildable-compression:
+  en: d13712e0c8973f29
+  zh: c58c2149987c7c71
+/agent-note-authoritative-local-retrieval-and-rebuildable-compression/problem:
+  en: 5b97ec4813fdfd4a
+  zh: 88471bb3574496bb
+/agent-note-authoritative-local-retrieval-and-rebuildable-compression/decision:
+  en: 458b3f5fa9316ff0
+  zh: ca81e2b1cee66914
+/agent-note-authoritative-local-retrieval-and-rebuildable-compression/alternatives-considered:
+  en: 268f9819a6d7c423
+  zh: 1d4736a0a1c0cb06
+/agent-note-authoritative-local-retrieval-and-rebuildable-compression/consequences:
+  en: 8b0e1de3d524e11b
+  zh: f470f7c503811e6c

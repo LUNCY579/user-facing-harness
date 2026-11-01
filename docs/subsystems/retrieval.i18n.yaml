@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for retrieval.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/subsystems/retrieval.md
+/local-retrieval-and-explicit-memory:
+  en: 7a0473072a105a4c
+  zh: fbb8ee2c117ffb14
+/local-retrieval-and-explicit-memory/services-and-ownership:
+  en: 421184ab252b107d
+  zh: e73ea8a7d85140f6
+/local-retrieval-and-explicit-memory/authority-and-identifiers:
+  en: 8ff2c6ec5d12308d
+  zh: 6078e40105274cbc
+/local-retrieval-and-explicit-memory/records-and-memory-lifecycle:
+  en: 9456dcf33fbe1177
+  zh: af00f0e97785214d
+/local-retrieval-and-explicit-memory/search-requests-and-context-packets:
+  en: c19ece34e7e0b840
+  zh: abeb763cb36e2cce
+/local-retrieval-and-explicit-memory/providers-and-health:
+  en: 5d3f68d2b680fde5
+  zh: 5a2546f040ae3e3e
+/local-retrieval-and-explicit-memory/index-synchronization:
+  en: 8430cbf9e2392bb6
+  zh: 4ec3c903223daff0
