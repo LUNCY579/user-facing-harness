@@ -112,7 +112,6 @@ describe('web e2e: queue row actions', () => {
     await input.press('Enter')
     await expect.poll(() => existsSync(readyFile), { timeout: 15_000 }).toBe(true)
 
-    const admitted = page.waitForResponse('**/api/session/prompt')
     const received = Promise.withResolvers<undefined>()
     const release = Promise.withResolvers<undefined>()
     await page.route('**/api/session/prompt', async (route) => {
@@ -120,29 +119,34 @@ describe('web e2e: queue row actions', () => {
       await release.promise
       await route.continue()
     }, { times: 1 })
-    try {
-      await input.fill(REMOVE)
-      await input.press('Enter')
-      await received.promise
-      const pending = page.locator('[data-queue-dock] [data-submission-echo]')
-      await pending.getByRole('status').waitFor()
-      expect(await pending.getByRole('status').textContent()).toBe('Sending…')
-      expect(await pending.getByRole('button').count()).toBe(3)
-      expect(await pending.getByRole('button').evaluateAll(buttons =>
-        buttons.every(button => (button as HTMLButtonElement).disabled))).toBe(true)
-      expect(await input.textContent()).toBe('')
-      expect(await input.getAttribute('contenteditable')).toBe('true')
-      const sending = await captureStableAria(page, '[class*="centerCol"]', scaffold.workspaceCwd)
-      await compareOrRefreshGolden(SENDING_EXPECTED, sending, MODE)
-      await page.setViewportSize({ width: 390, height: 1000 })
-      await page.locator('[data-sidebar-collapsed="true"]').waitFor()
-      await expect.poll(() => pending.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
-      await page.setViewportSize({ width: 1680, height: 1000 })
-      await page.locator('[data-sidebar-collapsed="true"]').waitFor({ state: 'detached' })
-    } finally {
-      release.resolve(undefined)
-    }
-    expect((await admitted).ok()).toBe(true)
+    const [admitted] = await Promise.all([
+      page.waitForResponse('**/api/session/prompt'),
+      (async () => {
+        try {
+          await input.fill(REMOVE)
+          await input.press('Enter')
+          await received.promise
+          const pending = page.locator('[data-queue-dock] [data-submission-echo]')
+          await pending.getByRole('status').waitFor()
+          expect(await pending.getByRole('status').textContent()).toBe('Sending…')
+          expect(await pending.getByRole('button').count()).toBe(3)
+          expect(await pending.getByRole('button').evaluateAll(buttons =>
+            buttons.every(button => (button as HTMLButtonElement).disabled))).toBe(true)
+          expect(await input.textContent()).toBe('')
+          expect(await input.getAttribute('contenteditable')).toBe('true')
+          const sending = await captureStableAria(page, '[class*="centerCol"]', scaffold.workspaceCwd)
+          await compareOrRefreshGolden(SENDING_EXPECTED, sending, MODE)
+          await page.setViewportSize({ width: 390, height: 1000 })
+          await page.locator('[data-sidebar-collapsed="true"]').waitFor()
+          await expect.poll(() => pending.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+          await page.setViewportSize({ width: 1680, height: 1000 })
+          await page.locator('[data-sidebar-collapsed="true"]').waitFor({ state: 'detached' })
+        } finally {
+          release.resolve(undefined)
+        }
+      })(),
+    ])
+    expect(admitted.ok()).toBe(true)
     await expect.poll(() => page.getByRole('button', { name: 'Remove queued message' }).isEnabled()).toBe(true)
     expect(await page.locator('[data-queue-dock] [data-submission-echo]').count()).toBe(0)
     expect(await page.locator('[data-queue-dock]').getByRole('status').count()).toBe(0)

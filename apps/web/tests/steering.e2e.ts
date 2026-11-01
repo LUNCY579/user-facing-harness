@@ -118,7 +118,6 @@ describe('web e2e: mid-turn steering lands durably and visibly', () => {
     }
     const input = page.locator('[data-composer-input]').first()
     await input.waitFor({ timeout: 10_000 })
-    const settled = scaffold.whenTurnSettled(MODE === 'record' ? 180_000 : 30_000)
     await page.locator('[data-composer-input][contenteditable="true"]').first().waitFor({ timeout: 10_000 })
     await input.fill(PROMPT)
     await input.press('Enter')
@@ -158,12 +157,15 @@ describe('web e2e: mid-turn steering lands durably and visibly', () => {
     // Answer the composer; the tool result closes the step, the loop drains
     // the steer as user/message, and the steered continuation runs the
     // final model call.
-    await composer.getByRole('radio', { name: 'Yes' }).click()
-    await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
-    await settled
+    const [sessionId] = await Promise.all([
+      scaffold.whenTurnSettled(MODE === 'record' ? 180_000 : 30_000),
+      (async () => {
+        await composer.getByRole('radio', { name: 'Yes' }).click()
+        await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
+      })(),
+    ])
 
     if (MODE === 'record') {
-      const sessionId = await settled
       await recordFixture(scaffold, sessionId, FIXTURE)
       // Fixture honesty: a recording where the live model ignored the steer
       // would replay as a vacuous scenario — reject it and re-record instead.
