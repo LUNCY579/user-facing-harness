@@ -81,7 +81,7 @@ function fixture(layout: { earlier: number; later: number; top: number; followin
     scrollTo: { value: scrollTo },
     getBoundingClientRect: { value: () => ({ top: 0, bottom: 400, height: 400 }) },
   })
-  Object.defineProperty(column, 'offsetHeight', { get: () => contentHeight })
+  Object.defineProperty(column, 'offsetHeight', { configurable: true, get: () => contentHeight })
   Object.defineProperties(row, {
     offsetHeight: { value: 1_800 },
     getBoundingClientRect: { value: () => ({ top: layout.earlier - top, bottom: layout.earlier - top + 1_800, height: 1_800 }) },
@@ -192,6 +192,72 @@ it('keeps a reader below folding rows on the same content without room or follow
   expect(h.spacer.style.height).toBe('')
   expect(h.reading.followingTail).toBe(false)
   expect(h.reading.pending).toBe(false)
+})
+
+it('keeps a later closing row beside the visible response as it enters the reader viewport', async () => {
+  const h = fixture({ earlier: 600, later: 3_048, top: 1_500, following: false })
+  const column = h.row.parentElement!
+  const response = document.createElement('div')
+  const laterRow = document.createElement('div')
+  column.append(response, laterRow)
+  let started = false
+  const height = (element: HTMLElement, initial: number): number => {
+    if (element.hidden) return 0
+    // CSS retains the starting box until the frame-clock batch takes over.
+    if (!started) return initial
+    const written = Number.parseFloat(element.style.height)
+    return Number.isNaN(written) ? initial : written
+  }
+  const upperHeight = () => height(h.row, 1_800)
+  const lowerHeight = () => height(laterRow, 1_000)
+  Object.defineProperty(column, 'offsetHeight', {
+    get: () => 600 + upperHeight() + 12 + 24 + 12 + lowerHeight() + 2_000,
+  })
+  Object.defineProperty(h.list, 'scrollHeight', {
+    get: () => column.offsetHeight + (Number.parseFloat(h.spacer.style.height) || 0),
+  })
+  Object.defineProperty(response, 'getBoundingClientRect', {
+    value: () => new DOMRect(0, 600 + upperHeight() + 12 - h.list.scrollTop, 680, 24),
+  })
+  Object.defineProperties(laterRow, {
+    offsetHeight: { get: () => lowerHeight() },
+    getBoundingClientRect: {
+      value: () => {
+        const translate = Number.parseFloat(laterRow.style.translate.split(' ')[1] ?? '') || 0
+        return new DOMRect(0, response.getBoundingClientRect().bottom + 12 + translate, 680, lowerHeight())
+      },
+    },
+  })
+  expect(laterRow.getBoundingClientRect().top).toBeGreaterThan(400)
+  h.viewport.motion.collapse(h.row, () => { h.row.hidden = true })
+  h.viewport.motion.collapse(laterRow, () => { laterRow.hidden = true })
+  await Promise.resolve()
+  started = true
+  runFrameCount(9)
+  const responseBox = response.getBoundingClientRect()
+  const closingBox = laterRow.getBoundingClientRect()
+  expect(responseBox.bottom).toBeGreaterThan(0)
+  expect(responseBox.bottom).toBeLessThan(400)
+  expect(closingBox.top - responseBox.bottom).toBe(12)
+  expect(closingBox.bottom).toBeGreaterThan(400)
+  expect(laterRow.style.opacity).toBe('1')
+  expect(h.reading.followingTail).toBe(false)
+  runFrames()
+  expect(h.list.scrollTop).toBe(600)
+  expect(h.spacer.style.height).toBe('')
+})
+
+it('keeps the fade for closing content fully above the reader', async () => {
+  const h = fixture({ earlier: 600, later: 2_500, top: 2_500, following: false })
+  h.viewport.motion.collapse(h.row, () => { h.row.hidden = true; h.grow(3_100) })
+  await Promise.resolve()
+  runFrameCount(8)
+  expect(h.row.style.opacity).toBe('0')
+  expect(h.row.style.translate).not.toBe('')
+  runFrames()
+  expect(h.list.scrollTop).toBe(700)
+  expect(h.spacer.style.height).toBe('')
+  expect(h.reading.followingTail).toBe(false)
 })
 
 it('keeps manual off-bottom ownership and reclaims only space below the reader', async () => {

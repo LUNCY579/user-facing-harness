@@ -210,8 +210,8 @@ export class ChatViewport {
 
   /**
    * Drive one fold batch on its frame clock. A tail landing ends at the floor, never above the reader's
-   * compensated position; a reader landing keeps the visible content still. Both install only the room
-   * the landing lacks.
+   * compensated position; a reader landing keeps the visible content still. Closing boxes below the
+   * reader stay opaque in the shrinking flow. Both install only the room the landing lacks.
    * @returns the batch driver, or null while detached or without a reading policy.
    */
   private foldDriver(): InputFoldDriver | null {
@@ -312,8 +312,8 @@ export class ChatViewport {
             if (box.element.getBoundingClientRect().top - shift - box.marginTop >= viewportTop) travelling.add(box.element)
           }
         }
-        // Scrolling forward past closing rows shows them shrinking; faded rows would leave their space empty.
-        if (tail && target > start) for (const element of below) travelling.add(element)
+        // Closing rows entering the viewport remain visible as their boxes shrink.
+        if (!tail || target > start) for (const element of below) travelling.add(element)
         return travelling
       },
       prepare: (progress, cancelled) => {
