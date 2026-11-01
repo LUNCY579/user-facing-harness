@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import {
   SlotTestRuntime, stubConfigForm, usePinnedBrowserLanguages,
 } from '@deepseek-ai/dsh-client-test-runtime'
@@ -7,12 +7,16 @@ import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { createSnapshotStore, type ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { apply, inject, type ViewTab } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import { ConversationController } from '../src/client/service.ts'
 
 usePinnedBrowserLanguages('zh-CN')
 
 const SID = 'session-1' as SessionId
 
-async function bench(options: { declareConversation?: boolean } = {}) {
+async function bench(options: {
+  declareConversation?: boolean
+  beforeMount?: (runtime: SlotTestRuntime) => void | Promise<void>
+} = {}) {
   const runtime = await SlotTestRuntime.create()
   const developerTools = createSnapshotStore(true)
   runtime.ctx.provide('uiWorkspace', {
@@ -31,6 +35,7 @@ async function bench(options: { declareConversation?: boolean } = {}) {
       'settings.general.item': { kind: 'list', scope: 'root' },
     }, (_props: { renderSlot?: unknown }) => null)
   }
+  await options.beforeMount?.(runtime)
   const feature = await runtime.mount({ inject: [...inject], apply })
   if (options.declareConversation !== false) runtime.renderRoot()
   return { runtime, feature, developerTools }
@@ -44,6 +49,61 @@ function entry(
 }
 
 describe('target-neutral Conversation apply wiring', () => {
+  it('publishes composer inject faces only after the Conversation provider is active', async () => {
+    const availability: boolean[] = []
+    const failures: unknown[] = []
+    const b = await bench({ beforeMount: async (runtime) => {
+      onTestFinished(() => runtime.dispose())
+      await runtime.sessions.add({ id: SID })
+      const reference = runtime.sessions.retain(SID)
+      onTestFinished(() => { reference.release() })
+      const off = runtime.ctx.on('slots/changed', (name) => {
+        if (name !== 'conversation.composer.bar') return
+        const entry = runtime.slots.entries(name)[0]
+        if (entry?.inject === undefined) return
+        availability.push(runtime.ctx.get('conversation') !== undefined)
+        try {
+          const inject = entry.inject as (id: SessionId) => Record<string, unknown>
+          inject(SID)
+        } catch (error) {
+          failures.push(error)
+        }
+      })
+      onTestFinished(() => { off() })
+    } })
+    expect(availability).not.toHaveLength(0)
+    expect(availability).not.toContain(false)
+    expect(failures).toEqual([])
+    expect(b.runtime.slots.entries('conversation.composer.bar')).toHaveLength(1)
+  })
+
+  it('withdraws provider-owned shell entries and restores them with a replacement controller', async () => {
+    const b = await bench({ beforeMount: async (runtime) => {
+      onTestFinished(() => runtime.dispose())
+      await runtime.sessions.add({ id: SID })
+      const reference = runtime.sessions.retain(SID)
+      onTestFinished(() => { reference.release() })
+    } })
+    const entry = b.runtime.slots.entries('conversation.composer.bar')[0]!
+    const inject = entry.inject as (id: SessionId) => Record<string, unknown>
+    expect(inject(SID).keyboard).toBeDefined()
+    const conversation = b.runtime.ctx.conversation as ConversationController
+    const controller = [...b.runtime.ctx.registry.get(ConversationController)!.fibers][0]!
+    await controller.dispose()
+    expect(b.runtime.ctx.get('conversation')).toBeUndefined()
+    expect(b.runtime.slots.entries('main')).toHaveLength(0)
+    expect(b.runtime.slots.entries('conversation.composer.bar')).toHaveLength(0)
+    expect(() => inject(SID)).not.toThrow()
+    const replacement = b.feature.fiber.ctx.plugin(ConversationController, {
+      input: conversation.input, blocks: conversation.blocks, maxConcurrentFileUploads: 2,
+    })
+    await replacement.await()
+    await vi.waitFor(() => { expect(b.runtime.slots.entries('conversation.composer.bar')).toHaveLength(1) })
+    const next = b.runtime.slots.entries('conversation.composer.bar')[0]!
+    expect(next).not.toBe(entry)
+    expect((next.inject as (id: SessionId) => Record<string, unknown>)(SID).keyboard).toBeDefined()
+  })
+
   it('hands every Session header the same in-memory View pins without restoring saved choices', async () => {
     localStorage.setItem('dsh.slot.manual-order.conversation.view.v1', JSON.stringify({ unpinned: ['trajectory'] }))
     try {

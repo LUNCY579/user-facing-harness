@@ -142,15 +142,9 @@ function scopedConversation(sessions: ISessions, id: SessionId): IConversation {
   return conversation
 }
 
-/** Resolve package-internal attachment operations from the public service. */
-function concreteConversation(ctx: Context): ConversationController {
-  const conversation = ctx.get('conversation') as ConversationController | undefined
-  if (conversation === undefined) throw new Error('ui-conversation: conversation service unavailable')
-  return conversation
-}
-
 /**
  * Mount the Conversation core and target-neutral presentation.
+ * Shell registrations follow the active controller and retain that instance in their inject callbacks.
  * @param ctx - Client root context.
  */
 export function apply(ctx: Context, config: Config = Config({})): void {
@@ -332,14 +326,14 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     },
   })
 
-  const registerConversationRoot = () => slots.register({
+  const registerConversationRoot = (registry: typeof slots) => registry.register({
     name: 'main.conversation',
     children: {
       'conversation.header': { kind: 'single', scope: 'session-maybe' },
     },
   }, ConversationRoot)
 
-  const registerConversationContent = () => slots.registerFactory({
+  const registerConversationContent = (registry: typeof slots, conversation: ConversationController) => registry.registerFactory({
     name: 'conversation.content',
     scope: 'session-maybe',
     locale: NS,
@@ -374,7 +368,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
             }
             // The same rule as intake: only an ordinary Session stages image uploads.
             const ordinary = binding.session.getSnapshot().subagent === null
-            concreteConversation(ctx).rebindDraftFiles(nextId, attachmentIds, ordinary)
+            conversation.rebindDraftFiles(nextId, attachmentIds, ordinary)
             if (draft.text !== '') {
               next.setDraft(draft)
               from.setDraft('')
@@ -388,7 +382,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     }),
   }, ConversationContent)
 
-  const registerConversationSession = () => slots.register({
+  const registerConversationSession = (registry: typeof slots) => registry.register({
     name: 'conversation.session',
     children: {
       'conversation.view': { kind: 'list', scope: 'session' },
@@ -426,7 +420,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     },
   }, ConversationSession)
 
-  const registerHeader = () => slots.register({
+  const registerHeader = (registry: typeof slots) => registry.register({
     name: 'conversation.header',
     children: {
       'conversation.header.leading': { kind: 'single', scope: 'root' },
@@ -434,7 +428,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     },
   }, ConversationHeader)
 
-  const registerSessionHeader = () => slots.register({
+  const registerSessionHeader = (registry: typeof slots) => registry.register({
     name: 'conversation.session.header',
     locale: NS,
     children: {
@@ -456,7 +450,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     }),
   }, ConversationSessionHeader)
 
-  const registerComposerBar = () => slots.register({
+  const registerComposerBar = (registry: typeof slots, conversation: ConversationController) => registry.register({
     name: 'conversation.composer.bar',
     locale: NS,
     children: {
@@ -490,7 +484,6 @@ export function apply(ctx: Context, config: Config = Config({})): void {
           },
         }
       }
-      const conversation = concreteConversation(ctx)
       const shell = inputHub.shell(sessionId)
       const inputTriggers = inputHub.inputTriggers(sessionId)
       const bridge = hostPathBridge()
@@ -570,18 +563,22 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     },
   }, InputBar)
 
-  slots.inject('main', function* () {
-    yield slots.register({
-      name: 'main',
-      key: 'conversation',
-      children: { 'main.conversation': { kind: 'single', scope: 'session-maybe' } },
-    }, ConversationPanel)
-    yield registerConversationRoot()
-    yield registerConversationContent()
-    yield registerConversationSession()
-    yield registerHeader()
-    yield registerSessionHeader()
-    yield registerComposerBar()
+  ctx.inject(['conversation'], (scope) => {
+    const registry = scope.slots
+    const conversation = scope.conversation as ConversationController
+    registry.inject('main', function* () {
+      yield registry.register({
+        name: 'main',
+        key: 'conversation',
+        children: { 'main.conversation': { kind: 'single', scope: 'session-maybe' } },
+      }, ConversationPanel)
+      yield registerConversationRoot(registry)
+      yield registerConversationContent(registry, conversation)
+      yield registerConversationSession(registry)
+      yield registerHeader(registry)
+      yield registerSessionHeader(registry)
+      yield registerComposerBar(registry, conversation)
+    })
   })
 
   ctx.plugin(ConversationController, {
