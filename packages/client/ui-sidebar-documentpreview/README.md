@@ -38,6 +38,8 @@ Document implementations register metadata with `ctx.documentPreviews.register({
 
 `loading: 'text-pages'` and `'bytes-complete'` use the shared file reader. With `'renderer'`, the selected body mounts before any bytes are read and receives `content: { kind: 'renderer', revision, loaded, failed, reload }`. Its injected face owns content loading, errors, store updates, and cancellation. `loaded(version)` records the displayed source version and ends loading. `failed()` ends loading without recording a successful version, allowing a later file change to retry; reports from replaced revisions are ignored. `reload()` increments the revision, which the body observes to cancel and replace its request. The body also cancels on unmount and tab closure, retains settled content in its declared tab store, and releases that state when the tab ends. [Office previews](#office-preview) use this mode without putting converted bytes or font metadata in the shared file store.
 
+The [Client assembly](src/client/index.ts) composes the renderer domains and supplies Office's PDF child registration. The [document API](src/client/contract/document.ts) owns their shared data and slots; the registry, resource retention, line navigation, and zoom viewport are package-private shared infrastructure. Renderer directories retain format-specific loading, presentation, and view state; image zoom state belongs to the image renderer.
+
 <a id="addresses"></a>
 ## Addresses
 

@@ -6,7 +6,7 @@
  * belongs here only when its bytes are never readable text — an uncertain
  * suffix stays out and keeps the plain-text fallback.
  */
-import { documentFileName, matchedSuffixLength } from './suffix.ts'
+import { documentFileName, matchedSuffixLength } from './document-suffix.ts'
 const UNVIEWABLE_BINARY_EXTENSIONS: readonly string[] = [
   // video
   'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 'm4v',

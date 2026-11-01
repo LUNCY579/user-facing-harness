@@ -92,6 +92,8 @@ Web 和桌面端共享[代码工作工具偏好](../../packages/client/ui-settin
 
 共享运行时值需要一个职责收窄、没有功能生命周期的静态 owner，例如 `client/store`、`ui-primitives` 或浏览器安全的 util 包。Transport 与生成 API assembly 可以导入运行时 contribution，因为组装同一个 protocol 正是它们的显式职责。功能包不能只为绕过此规则而添加 `dsh.client.external`。
 
+[包内领域检查器](../../scripts/verify-client-domain-graph.ts)检查 TypeScript 领域导入，包括仅类型引用。样式表和[受支持的包图片格式](../../packages/client/modules/src/assets.ts)是静态呈现资源，不属于该代码依赖图。目录名不提供豁免：`assets/` 或 `locales/` 中的 TypeScript 仍须遵循 [Client 指令](../../packages/client/AGENTS.md#directory-regime-plugin-packages)中的领域规则。
+
 根据所添加的扩展查阅四篇详细参考：
 
 - [Client Modules](client-modules.zh.md)：package discovery、loading、共享 module identity 与 boot order。

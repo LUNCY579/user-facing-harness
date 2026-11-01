@@ -33,8 +33,8 @@ import type {
   ComposerAttachment, ComposerAttachmentsOwnerProps, DraftFileUploads, InputActivityOwnerProps,
 } from '../src/client/contract/slots.ts'
 import type { DraftAttachmentId } from '../src/client/contract/input.ts'
-import { InputBar } from '../src/client/skeleton/InputBar.tsx'
-import type { InputBarProps } from '../src/client/skeleton/InputBar.tsx'
+import { InputBar } from '../src/client/input/InputBar.tsx'
+import type { InputBarProps } from '../src/client/input/InputBar.tsx'
 import { en, zh } from '../src/client/locales.ts'
 
 // Every fixture carries the resource hook the resources plugin merges into GlobalStandardProps.

@@ -3,7 +3,8 @@
  * verify-module-graph covers package-level edges; this gate covers the
  * directory level: domain directories may import `contract/` and never each
  * other, and only the assembly point (`apply.ts` / `index.ts`) may import
- * across domains.
+ * across domains. Stylesheets and supported package images are static
+ * presentation resources, so they do not add domain-code dependencies.
  *
  * Layer model (lower may not import higher):
  *   0  contract/            shared contract API (types + slot declarations)
@@ -16,6 +17,7 @@
 
 import { globSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, posix, resolve, sep } from 'node:path'
+import { packageAssetMediaType } from '../packages/client/modules/src/assets.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const CLIENT_DIR = join(root, 'packages/client')
@@ -25,7 +27,15 @@ const CONTRACT_DIRS = new Set(['contract'])
 /** Top-level client files allowed to import across domains (assembly layer). */
 const ASSEMBLY_FILES = new Set(['apply.ts', 'index.ts', 'index.tsx'])
 
-interface Violation { file: string; imported: string; reason: string }
+/** One relative code import that violates the package's domain layering. */
+export interface ClientDomainViolation {
+  /** Package-relative importing source path. */
+  file: string
+  /** Relative module specifier written in the source. */
+  imported: string
+  /** Domain relationship that the import violates. */
+  reason: string
+}
 
 /** Recursively list .ts/.tsx files under dir (relative paths). */
 function listSources(dir: string): string[] {
@@ -51,8 +61,19 @@ export function resolveClientImport(file: string, specifier: string): string {
   return posix.normalize(posix.join(posix.dirname(file), specifier))
 }
 
-function checkPackage(pkgName: string, clientDir: string): Violation[] {
-  const violations: Violation[] = []
+function isPresentationResource(specifier: string): boolean {
+  const path = specifier.split(/[?#]/u, 1)[0] ?? specifier
+  return path.endsWith('.css') || packageAssetMediaType(path) !== undefined
+}
+
+/**
+ * Check TypeScript imports inside one package's Client half.
+ * @param pkgName - package directory name used in diagnostics.
+ * @param clientDir - absolute path to the package's src/client directory.
+ * @returns invalid code dependencies; stylesheet and supported package-image imports are excluded.
+ */
+export function checkClientDomainPackage(pkgName: string, clientDir: string): ClientDomainViolation[] {
+  const violations: ClientDomainViolation[] = []
   const files = listSources(clientDir)
   for (const rel of files) {
     const fromDomain = domainOf(rel)
@@ -61,7 +82,7 @@ function checkPackage(pkgName: string, clientDir: string): Violation[] {
     const source = readFileSync(join(clientDir, rel), 'utf8')
     for (const match of source.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
       const spec = match[1]
-      if (spec === undefined) continue
+      if (spec === undefined || isPresentationResource(spec)) continue
       const target = resolveClientImport(rel, spec)
       if (target === '..' || target.startsWith('../')) continue // package-level rules govern
       const toDomain = domainOf(target)
@@ -80,7 +101,7 @@ function checkPackage(pkgName: string, clientDir: string): Violation[] {
 }
 
 function main(): void {
-  const violations: Violation[] = []
+  const violations: ClientDomainViolation[] = []
   for (const pkg of readdirSync(CLIENT_DIR)) {
     const clientDir = join(CLIENT_DIR, pkg, 'src/client')
     try {
@@ -89,7 +110,7 @@ function main(): void {
       // No client half in this package — nothing to layer-check.
       continue
     }
-    violations.push(...checkPackage(pkg, clientDir))
+    violations.push(...checkClientDomainPackage(pkg, clientDir))
   }
 
   if (violations.length > 0) {

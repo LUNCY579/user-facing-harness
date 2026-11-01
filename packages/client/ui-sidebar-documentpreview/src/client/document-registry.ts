@@ -1,31 +1,7 @@
 /** File-extension preview registrations; component dispatch belongs to the keyed document slot. */
 import { notifySubscribers } from '@deepseek-ai/dsh-client-store'
-import { documentFileName, matchedSuffixLength, normalizeSuffix } from './suffix.ts'
-
-/** Shared text or byte reads, or content loading owned by the renderer. */
-export type DocumentLoadMode = 'text-pages' | 'bytes-complete' | 'renderer'
-
-/** One renderer implementation, independent of its component registration. */
-export interface DocumentPreviewDefinition {
-  /** Unique implementation name, also used as the document slot key. */
-  readonly id: string
-  /** File suffixes without a leading dot; compound suffixes such as tar.gz are accepted. */
-  readonly extensions: readonly string[]
-  /**
-   * Suffixes among `extensions` whose bytes are not readable text; a file
-   * matching one loses the plain-text fallback among its viewer choices.
-   * Every entry must appear in `extensions`; `register` rejects strays.
-   */
-  readonly binaryExtensions?: readonly string[]
-  /** External implementations win over product implementations; defaults to extension. */
-  readonly priority?: 'builtin' | 'extension'
-  /** Localized implementation label, evaluated when the toolbar renders. @returns the visible name. */
-  readonly title: () => string
-  /** Content delivery mode supplied by the document owner. */
-  readonly loading: DocumentLoadMode
-  /** Whether the implementation consumes the document's wrap preference. */
-  readonly wrap?: boolean
-}
+import type { DocumentPreviewDefinition } from './contract/document.ts'
+import { documentFileName, matchedSuffixLength, normalizeSuffix } from './document-suffix.ts'
 
 /**
  * Rank an observed definition snapshot without consulting mutable service state.

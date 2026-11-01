@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseBrowserAddress } from '../src/client/browser/url.ts'
+import { parseBrowserAddress } from '../src/client/contract/url.ts'
 
 const APP = 'https://dsh.example'
 

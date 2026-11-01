@@ -66,6 +66,8 @@ Web records toolbar submissions and typed tab opens. A navigation state machine 
 
 ### Controller
 
+The shared `contract/` modules own navigation interfaces, address policy, saved records, store types and Slot callbacks. The `browser/` directory owns controllers and the iframe provider, `electron/` owns the native provider, and `view/` owns provider-neutral toolbar and title components. The client entry selects providers and registers Slots.
+
 Each tab's `BrowserController` owns address validation, commands and explicit restoration. `BrowserFrame` supplies carrier-neutral navigation state; `IframeImpl` uses `BrowserNavigation`, while `ElectronWebViewImpl` observes Chromium history. `BrowserPresentation` owns physical DOM attachment. Slot injection supplies `useBrowserState` and plain callbacks, keeping provider objects and observables out of the React body.
 
 Desktop's main process approves guest leases and enforces attachment, navigation and permission policy. Preload exposes only scoped Browser operations. Shared declarations use the standard `/types` export with `import type`; the Host and Client compile through separate tsconfig files. Desktop Browser tabs declare `keepMounted`, so Sidebar preserves their DOM across tab changes, Session switches, collapse and floating.

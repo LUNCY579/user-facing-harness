@@ -92,6 +92,8 @@ Feature plugin packages may share declarations through `import type`; they do no
 
 Shared runtime values need a narrow static owner with no feature lifecycle, such as `client/store`, `ui-primitives`, or a browser-safe utility package. Transport and generated API assembly may import runtime contributions because assembling one protocol is their explicit responsibility. A feature package does not add `dsh.client.external` merely to bypass this rule.
 
+The [intra-package domain checker](../../scripts/verify-client-domain-graph.ts) checks TypeScript domain imports, including type-only references. Stylesheets and the [supported package image formats](../../packages/client/modules/src/assets.ts) are static presentation resources outside that code graph. Directory names grant no exemption: TypeScript in `assets/` or `locales/` still follows the domain rules in [the Client instructions](../../packages/client/AGENTS.md#directory-regime-plugin-packages).
+
 Use the four detailed references according to the extension being added:
 
 - [Client Modules](client-modules.md) for package discovery, loading, shared module identities, and boot order.

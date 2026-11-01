@@ -66,6 +66,8 @@ Web 记录 toolbar 提交和 typed tab 打开。导航状态机把每个受控 r
 
 ### Controller
 
+共享的 `contract/` 模块定义导航接口、地址策略、保存记录、store 类型与 Slot callback。`browser/` 目录负责控制器和 iframe 提供方，`electron/` 负责原生提供方，`view/` 负责与提供方无关的工具栏和标题组件。Client 入口选择提供方并注册 Slot。
+
 每个 tab 的 `BrowserController` 负责地址校验、命令和显式恢复。`BrowserFrame` 提供与载体无关的导航状态；`IframeImpl` 使用 `BrowserNavigation`，`ElectronWebViewImpl` 观察 Chromium history。`BrowserPresentation` 负责 DOM 的物理挂载。Slot injection 提供 `useBrowserState` 和普通 callback，React body 不接收 provider 对象或 observable。
 
 Desktop 主进程批准 guest 租约，并执行挂载、导航和权限策略。preload 只暴露限定范围的 Browser 操作。共享声明通过标准 `/types` 出口配合 `import type` 引入；Host 与 Client 使用独立 tsconfig 编译。Desktop Browser tab 声明 `keepMounted`，Sidebar 因而在切 tab、切 Session、收起与浮动期间保留其 DOM。

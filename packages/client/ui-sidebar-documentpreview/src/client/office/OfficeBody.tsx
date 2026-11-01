@@ -1,30 +1,16 @@
 /** Office presents retained conversion results and font notices around the shared PDF view. */
 import { useEffect, type ReactNode } from 'react'
-import type { PropsLocale, PropsRenderSlots, PropsStore, SlotHookFactory } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsLocale, PropsRenderSlots, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 import type { TabId } from '@deepseek-ai/dsh-client-ui-dockkit'
 import { Button, FileTypeIcon, classifyFileType } from '@deepseek-ai/dsh-client-ui-primitives'
 import { pathPartsOf } from '@deepseek-ai/dsh-util-workspace-path'
-import type { UseSidebarRightTabInfo } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
-import type { DocumentBodyOwner, DocumentPreviewProps } from '../document/contract.ts'
+import type { DocumentPreviewProps } from '../contract/document.ts'
 import { hostFileOf } from '../rpc.ts'
 import { LoadingIndicator } from '../LoadingIndicator.tsx'
 import type { OfficeLoadInjected } from './face.ts'
 import type { OfficeStore } from './store.ts'
 import common from '../TextPreview.module.css'
 import css from './OfficeBody.module.css'
-
-declare module '@deepseek-ai/dsh-client-ui-slots' {
-  interface SlotMap {
-    /** PDF presentation supplied with Office-owned converted bytes. */
-    'sidebar.right.tab.document.office.pdf': {
-      kind: 'keyed'
-      scope: 'session'
-      owner: DocumentBodyOwner
-      hookContext: UseSidebarRightTabInfo
-      inject: { hooks: { tabInfo: SlotHookFactory<'sidebar.right.tab.document', UseSidebarRightTabInfo> } }
-    }
-  }
-}
 
 /** Office loading callbacks supplied by the registration's services. */
 export interface OfficeBodyInjected extends OfficeLoadInjected {

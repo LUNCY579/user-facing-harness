@@ -3,6 +3,34 @@ import type { PropsRuntime, SlotHookFactory } from '@deepseek-ai/dsh-client-ui-s
 import type { UseSidebarRightTabInfo } from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import type { RefCallback } from 'react'
 
+/** Stable plain-text fallback identity shared by the host and its renderer. */
+export const PLAIN_BODY_ID = '@deepseek-ai/dsh-client-ui-sidebar-documentpreview/text'
+
+/** Shared text or byte reads, or content loading owned by the renderer. */
+export type DocumentLoadMode = 'text-pages' | 'bytes-complete' | 'renderer'
+
+/** One renderer implementation, independent of its component registration. */
+export interface DocumentPreviewDefinition {
+  /** Unique implementation name, also used as the document slot key. */
+  readonly id: string
+  /** File suffixes without a leading dot; compound suffixes such as tar.gz are accepted. */
+  readonly extensions: readonly string[]
+  /**
+   * Suffixes among `extensions` whose bytes are not readable text; a file
+   * matching one loses the plain-text fallback among its viewer choices.
+   * Every entry must appear in `extensions`; `register` rejects strays.
+   */
+  readonly binaryExtensions?: readonly string[]
+  /** External implementations win over product implementations; defaults to extension. */
+  readonly priority?: 'builtin' | 'extension'
+  /** Localized implementation label, evaluated when the toolbar renders. @returns the visible name. */
+  readonly title: () => string
+  /** Content delivery mode supplied by the document owner. */
+  readonly loading: DocumentLoadMode
+  /** Whether the implementation consumes the document's wrap preference. */
+  readonly wrap?: boolean
+}
+
 /** One loaded text window, retaining source line positions. */
 export interface DocumentTextPage {
   readonly offset: number
@@ -105,3 +133,16 @@ export type DocumentPreviewProps = PropsRuntime<'sidebar.right.tab.document'>
  */
 export const documentTabInfoFactory: SlotHookFactory<'sidebar.right.tab.document', UseSidebarRightTabInfo> =
   (_standard, useTabInfo) => useTabInfo
+
+declare module '@deepseek-ai/dsh-client-ui-slots' {
+  interface SlotMap {
+    /** PDF presentation supplied with Office-owned converted bytes. */
+    'sidebar.right.tab.document.office.pdf': {
+      kind: 'keyed'
+      scope: 'session'
+      owner: DocumentBodyOwner
+      hookContext: UseSidebarRightTabInfo
+      inject: { hooks: { tabInfo: SlotHookFactory<'sidebar.right.tab.document', UseSidebarRightTabInfo> } }
+    }
+  }
+}

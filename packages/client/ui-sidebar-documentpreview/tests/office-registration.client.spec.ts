@@ -6,7 +6,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ClientRemote } from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-office-to-pdf/remote'
 import { makeTranslate, RemoteError } from '@deepseek-ai/dsh-client-test-runtime'
-import { DocumentPreviewRegistry } from '../src/client/document/registry.ts'
+import { DocumentPreviewRegistry } from '../src/client/document-registry.ts'
 import { apply } from '../src/client/office/index.ts'
 import { officeFace } from '../src/client/office/face.ts'
 import { Config } from '../src/config.ts'
@@ -73,8 +73,9 @@ async function harness(config: Partial<Config['office']> = {}, missing?: 'remote
     if (missing !== 'files') ctx.provide('remote.workspaceFiles', { stat, readBytes } as never)
     if (missing !== 'render') ctx.provide('remote.officeToPdf', { render, generation: rendererGeneration } as never)
   }
+  const registerPdfBody = vi.fn()
   const fiber = ctx.plugin({ apply: (scope: Context) => {
-    apply(scope, Config({ office: config }).office)
+    apply(scope, Config({ office: config }).office, registerPdfBody)
   } })
   await fiber.await()
   const entry = recorded.find(entry => entry.component === OfficeBody)!.options
@@ -82,7 +83,7 @@ async function harness(config: Partial<Config['office']> = {}, missing?: 'remote
   const injected = entry.inject(file.sessionId, instance.actions)
   const [read, describeFailure] = vi.mocked(officeFace).mock.calls.at(-1)!
   return { ctx, registry, instance, injected, describeFailure, recorded, locale, removeLocale, render, rendererGeneration,
-    stat, readBytes, register, removeNotice,
+    stat, readBytes, register, removeNotice, registerPdfBody,
     read: (signal = new AbortController().signal, path = file.path) => read({ ...file, path }, signal),
     close: () => fiber.dispose(),
   }
@@ -107,7 +108,8 @@ it.each(['remote', 'render', 'files'] as const)('keeps Word and PowerPoint regis
   expect(h.register).toHaveBeenCalledWith(expect.objectContaining({
     name: 'sidebar.right.tab.document', key: '@deepseek-ai/dsh-client-ui-sidebar-documentpreview/office', locale: 'sidebarOffice',
   }), OfficeBody)
-  expect(h.removeNotice).toHaveBeenCalledTimes(3)
+  expect(h.registerPdfBody).toHaveBeenCalledExactlyOnceWith('@deepseek-ai/dsh-client-ui-sidebar-documentpreview/office')
+  expect(h.removeNotice).toHaveBeenCalledTimes(2)
 })
 
 it('requests a Host PDF with source identity and borrows the same binary cache result', async () => {

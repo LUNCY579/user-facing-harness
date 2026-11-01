@@ -1,7 +1,7 @@
 /** Iframe DOM and revision-tagged load observations. */
-import type { BrowserTarget } from '../browser/url.ts'
-import type { BrowserPresentation } from './BrowserPresentation.ts'
-import css from './Browser.module.css'
+import type { BrowserTarget } from '../contract/url.ts'
+import type { BrowserPresentation } from '../contract/BrowserPresentation.ts'
+import css from '../view/Browser.module.css'
 
 /** Fixed iframe policy; top navigation and downloads are not granted directly. */
 export const WEB_BROWSER_SANDBOX = 'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox'

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { IframeImpl } from '../src/client/browser/IframeImpl.ts'
-import { IframePresentation } from '../src/client/view/IframePresentation.ts'
+import { IframePresentation } from '../src/client/browser/IframePresentation.ts'
 
 const frames: IframeImpl[] = []
 

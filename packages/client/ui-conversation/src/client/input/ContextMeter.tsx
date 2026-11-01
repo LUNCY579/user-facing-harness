@@ -12,7 +12,7 @@ import type {} from '@deepseek-ai/dsh-token-meter/client'
 import { Tooltip, useAnchoredPosition, useDismissOnOutsidePointer } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ComposerBarProps } from '../contract/slots.ts'
 import { contextOccupancy } from '../context-occupancy.ts'
-import css from './ContextMeter.module.css'
+import css from '../skeleton/ContextMeter.module.css'
 
 /** Ring geometry: 14px viewBox, 2px stroke. */
 const RADIUS = 5.5

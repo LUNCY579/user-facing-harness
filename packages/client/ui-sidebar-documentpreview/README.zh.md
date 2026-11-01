@@ -38,6 +38,8 @@ kind: "package-reference"
 
 `loading: 'text-pages'` 和 `'bytes-complete'` 使用共享文件读取器。选择 `'renderer'` 时，所选正文在读取任何字节前挂载，并接收 `content: { kind: 'renderer', revision, loaded, failed, reload }`。其注入 face 负责内容加载、错误、store 更新和取消。`loaded(version)` 记录已展示的源版本并结束加载。`failed()` 结束加载但不记录成功版本，使后续文件变化可以重试；已被替换的 revision 所发出的报告会被忽略。`reload()` 增加 revision，正文据此取消并替换当前请求。正文也在卸载和 tab 关闭时取消请求，将已完成内容保留在自己声明的 tab store 中，并在 tab 结束时释放。[Office 预览](#office-preview) 使用此模式，转换后的字节和字体元数据不会进入共享文件 store。
 
+Client [组合入口](src/client/index.ts)组合各渲染器领域，并为 Office 提供 PDF 子项注册。[文档 API](src/client/contract/document.ts)定义共享数据和槽位；注册表、资源保留、行导航与缩放视口是包内共享基础设施。各渲染器目录保留格式专用的加载、展示和视图状态；图片缩放状态归图片渲染器所有。
+
 <a id="addresses"></a>
 ## 地址
 

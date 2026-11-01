@@ -1,23 +1,14 @@
 /** Persisted Browser tab snapshots shared by the body and title slots. */
-import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
+import { defineStore } from '@deepseek-ai/dsh-client-store'
 import type { TabId } from '@deepseek-ai/dsh-client-ui-dockkit'
-import type { BrowserTabState } from './BrowserPersistence.ts'
-
-/** All Browser tabs in one Session-scoped store. */
-export interface BrowserState {
-  byTab: Record<TabId, BrowserTabState>
-}
-
-type BrowserActions = {
-  replace: (draft: BrowserState, tabId: TabId, state: BrowserTabState) => void
-  forget: (draft: BrowserState, tabId: TabId) => void
-}
+import type { BrowserTabState } from '../contract/BrowserPersistence.ts'
+import type { BrowserState, BrowserStore } from '../contract/store.ts'
 
 /**
  * Declare the Session-scoped Browser persistence store.
  * @returns a fresh store handle for Slot registration.
  */
-export function createBrowserStore(): EngineStoreHandle<BrowserState, BrowserActions> {
+export function createBrowserStore(): BrowserStore {
   return defineStore({
     init: (): BrowserState => ({ byTab: {} }),
     persist: 'dsh.sidebar-browser.v1',
@@ -33,6 +24,3 @@ export function createBrowserStore(): EngineStoreHandle<BrowserState, BrowserAct
     },
   })
 }
-
-/** Browser store handle shared by body and title registrations. */
-export type BrowserStore = ReturnType<typeof createBrowserStore>
