@@ -21,19 +21,21 @@ function EyeGlyph({ path }: { readonly path: string }) {
 }
 
 /**
- * Split the masked form into kept text and mask runs. Mask runs keep their
- * characters for copying and assistive technology but draw centered marks,
+ * Keep the same text fragments in masked and revealed states. Mask runs keep
+ * their characters for copying and assistive technology but draw centered marks,
  * because a font's own asterisk sits near the cap height.
  */
-function MaskedText({ masked }: { readonly masked: string }) {
+function SecretValue({ masked, raw, revealed }: { readonly masked: string; readonly raw: string; readonly revealed: boolean }) {
   let offset = 0
   return masked.split(MASK_RUNS).map((part) => {
     const key = offset
     offset += part.length
     if (part === '') return null
-    return part.startsWith(MASK)
-      ? <span key={key} className={css.mask}>{part}</span>
-      : <span key={key}>{part}</span>
+    return (
+      <span key={key} className={!revealed && part.startsWith(MASK) ? css.mask : undefined}>
+        {revealed ? raw.slice(key, offset) : part}
+      </span>
+    )
   })
 }
 
@@ -51,7 +53,7 @@ export function SecretText({ node, raw, interactive, t }: SecretTextProps) {
   const revealed = interactive && revealedRaw === raw
   return (
     <span className={css.secret} data-secret="">
-      <span className={css.value}>{revealed ? raw : <MaskedText masked={node.data.masked} />}</span>
+      <span className={css.value}><SecretValue masked={node.data.masked} raw={raw} revealed={revealed} /></span>
       {interactive && (
         <button
           type="button"
