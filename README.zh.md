@@ -135,6 +135,7 @@ pnpm start --no-open --port 3081
 | Ollama | `http://localhost:11434/v1` | 仓库中的本地配置不要求密钥。 |
 | LM Studio | `http://localhost:1234/v1` | 仓库中的本地配置不要求密钥。 |
 | llama.cpp | `http://localhost:8080/v1` | 仓库中的本地配置不要求密钥。 |
+| NVIDIA NIM | `https://integrate.api.nvidia.com/v1` | 需要。将收到的密钥填入提供方的 API 密钥字段；本仓库不保存密钥。参阅 [NVIDIA NIM 端点指南](plugins/dsh-our-free-model/docs/nvidia-nim-endpoint.md)。 |
 
 按照同样的 **Configure → Add/Save → Discover models** 流程操作。这些条目不预置模型 ID：请发现运行中服务器的模型，或在 **Model override** 中保存准确 ID。如果服务器使用其他端口或认证，请与之保持一致。`localhost` 指运行 Harness 服务的机器或环境；使用远程浏览器或 WSL 时，它可能不同于浏览器所在机器或 Windows 主机。
 
