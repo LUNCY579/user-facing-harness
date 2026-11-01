@@ -82,7 +82,7 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
   const plugins = page.locator('[data-plugin-panel]')
   const openDetails = page.getByRole('button', { name: 'View Computer use', exact: true })
   await openDetails.scrollIntoViewIfNeeded()
-  expect(await plugins.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+  expect(await plugins.locator('[data-plugin-body]').evaluate(element => element.scrollTop)).toBeGreaterThan(0)
   await openDetails.click()
   const panel = page.locator('[data-cua-settings]')
   const accessibility = panel.getByRole('group', { name: 'Accessibility', exact: true })
@@ -219,7 +219,8 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
   await diagnostic.waitFor()
   const diagnosticText = await diagnostic.innerText()
   const height = await panel.evaluate(element => element.getBoundingClientRect().height)
-  const rowToggle = plugins.getByRole('switch', { name: 'Enable component @deepseek-ai/dsh-experimental-cua-macos', exact: true })
+  const rowToggle = plugins.locator('[data-plugin-row]')
+    .filter({ hasText: '@deepseek-ai/dsh-experimental-cua-macos' }).getByRole('switch')
   const release = Promise.withResolvers<undefined>()
   const changeRow = scaffold.ctx.pluginManager.setPluginEnabled.bind(scaffold.ctx.pluginManager)
   let changing: ReturnType<typeof changeRow> | undefined

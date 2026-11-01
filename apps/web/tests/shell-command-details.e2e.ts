@@ -119,11 +119,29 @@ it.each([
             await page.keyboard.press('Tab')
             const focusTarget = background ? inputSection : card.getByRole('button', { name: 'Copy', exact: true })
             expect(await focusTarget.evaluate(element => document.activeElement === element)).toBe(true)
-            await page.keyboard.press('End')
-            await expect.poll(() => inputSection.evaluate(element =>
-              element.scrollTop + element.clientHeight >= element.scrollHeight - 1)).toBe(true)
-            await page.keyboard.press('Home')
-            await expect.poll(() => inputSection.evaluate(element => element.scrollTop)).toBe(0)
+            // Native scrolling can reach its last pixel before scrollend.
+            const endScroll = await inputSection.evaluateHandle((element) => {
+              const controller = new AbortController()
+              const state = { done: false, controller }
+              element.addEventListener('scrollend', (event) => {
+                if (event.target === element) state.done = true
+              }, { signal: controller.signal })
+              return state
+            })
+            try {
+              await page.keyboard.press('End')
+              await expect.poll(() => inputSection.evaluate(element =>
+                element.scrollTop + element.clientHeight >= element.scrollHeight - 1)).toBe(true)
+              await expect.poll(() => endScroll.evaluate(state => state.done)).toBe(true)
+              await page.keyboard.press('Home')
+              await expect.poll(() => inputSection.evaluate(element => element.scrollTop)).toBe(0)
+            } finally {
+              try {
+                await endScroll.evaluate(state => state.controller.abort())
+              } finally {
+                await endScroll.dispose()
+              }
+            }
           }
         }
         await card.evaluate((element) => { element.style.width = '' })
