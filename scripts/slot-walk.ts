@@ -189,17 +189,20 @@ export function slotDeclarations(file: ScannedFile): SlotDeclaration[] {
  * name it targets, with which component and cell identity, and which ordinary
  * child slots it declares. A call whose `name` is not a string literal is skipped — the
  * shipped composition always names its target literally, and a computed name
- * carries no catalog fact.
+ * carries no catalog fact. Local const aliases and helper parameters declared
+ * with `typeof` retain their referenced slots receiver.
  * @param file - a file returned by {@link scanSlotFiles}.
  * @returns the registrations, in source order.
  */
 export function slotRegistrations(file: ScannedFile): SlotRegistration[] {
   const out: SlotRegistration[] = []
+  let checker: ts.TypeChecker | undefined
+  const getChecker = (): ts.TypeChecker => checker ??= lexicalChecker(file.sf)
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node)
       && ts.isPropertyAccessExpression(node.expression)
       && (node.expression.name.text === 'register' || node.expression.name.text === 'registerFactory')
-      && isSlotsReceiver(node.expression.expression, file.sf)
+      && isSlotsReceiver(node.expression.expression, getChecker)
       && node.arguments.length >= 1) {
       const options = node.arguments[0]
       if (options !== undefined && ts.isObjectLiteralExpression(options)) {
@@ -305,9 +308,49 @@ function slotModuleBodies(sf: ts.SourceFile): ts.ModuleBlock[] {
  * takes an options object with a `name`, so the receiver is what separates a
  * slot occupancy fact from an unrelated registration.
  */
-function isSlotsReceiver(receiver: ts.Expression, sf: ts.SourceFile): boolean {
-  const text = receiver.getText(sf)
-  return text === 'slots' || text.endsWith('.slots')
+function isSlotsReceiver(
+  receiver: ts.Expression | ts.EntityName,
+  getChecker: () => ts.TypeChecker,
+  seen = new Set<ts.Node>(),
+): boolean {
+  if (ts.isPropertyAccessExpression(receiver)) return receiver.name.text === 'slots'
+  if (ts.isQualifiedName(receiver)) return receiver.right.text === 'slots'
+  if (ts.isParenthesizedExpression(receiver)) return isSlotsReceiver(receiver.expression, getChecker, seen)
+  if (!ts.isIdentifier(receiver)) return false
+  const symbol = getChecker().getSymbolAtLocation(receiver)
+  if (symbol === undefined) return receiver.text === 'slots'
+  const declarations = symbol.declarations
+  if (declarations?.length !== 1) return false
+  const binding = declarations[0]
+  if (binding === undefined || seen.has(binding)) return false
+  seen.add(binding)
+  if (ts.isVariableDeclaration(binding)) {
+    if (!ts.isIdentifier(binding.name) || binding.initializer === undefined
+      || !ts.isVariableDeclarationList(binding.parent) || !(binding.parent.flags & ts.NodeFlags.Const)) return false
+    return isSlotsReceiver(binding.initializer, getChecker, seen)
+  }
+  if (ts.isParameter(binding) && binding.type !== undefined && ts.isTypeQueryNode(binding.type)) {
+    return isSlotsReceiver(binding.type.exprName, getChecker, seen)
+  }
+  return false
+}
+
+/** Bind only this parsed file; imports and standard-library types are not loaded. */
+function lexicalChecker(sf: ts.SourceFile): ts.TypeChecker {
+  const host: ts.CompilerHost = {
+    getSourceFile: filename => filename === sf.fileName ? sf : undefined,
+    getDefaultLibFileName: () => '',
+    writeFile: () => undefined,
+    getCurrentDirectory: () => dirname(sf.fileName),
+    fileExists: filename => filename === sf.fileName,
+    readFile: filename => filename === sf.fileName ? sf.text : undefined,
+    getCanonicalFileName: filename => filename,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => '\n',
+  }
+  return ts.createProgram([sf.fileName], {
+    noLib: true, noResolve: true, types: [], target: ts.ScriptTarget.Latest, module: ts.ModuleKind.ESNext,
+  }, host).getTypeChecker()
 }
 
 /** The workspace package name owning a repo-relative file, memoized per package root. */

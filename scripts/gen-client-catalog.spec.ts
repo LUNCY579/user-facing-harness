@@ -8,8 +8,9 @@
  */
 
 import { describe, expect, it } from 'vitest'
+import ts from 'typescript'
 import { collectSlotEntries, oversizedSlotReports, resolveSlotEntries, validateSlotContracts } from './gen-client-catalog.ts'
-import type { SlotDeclaration, SlotRegistration, TypeDeclaration } from './slot-walk.ts'
+import { slotRegistrations, type SlotDeclaration, type SlotRegistration, type TypeDeclaration } from './slot-walk.ts'
 
 /** A declaration with every field the catalog needs, overridable per case. */
 function declaration(over: Partial<SlotDeclaration> = {}): SlotDeclaration {
@@ -232,6 +233,154 @@ describe('the per-slot report budget', () => {
   it('passes a slot whose report stays within the budget', () => {
     const entries = resolveSlotEntries([declaration({ ownerType: 'DemoOwnerProps' })], [], OWNER_TYPES, new Map())
     expect(oversizedSlotReports(entries)).toEqual([])
+  })
+})
+
+describe('slot receiver ownership', () => {
+  function registrations(text: string): SlotRegistration[] {
+    return slotRegistrations({
+      rel: 'packages/client/demo/src/client/apply.ts',
+      package: '@deepseek-ai/dsh-client-demo',
+      sf: ts.createSourceFile('apply.ts', text, ts.ScriptTarget.Latest, true),
+    })
+  }
+
+  it('keeps plain and context slot receiver registrations', () => {
+    const found = registrations(`
+      slots.register({ name: 'demo.plain' }, Plain)
+      ctx.slots.register({ name: 'demo.context' }, Context)
+      ctx.tools.register({ name: 'tools.unrelated' }, Tool)
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.plain', 'demo.context'])
+  })
+
+  it('tracks scoped aliases and typeof helper parameters to the declaring Factory', () => {
+    const found = registrations(`
+      function apply(ctx: Context) {
+        const slots = ctx.slots
+        const registerContent = (registry: typeof slots) => registry.registerFactory({
+          name: 'demo.content', children: { 'demo.seat': { kind: 'single', scope: 'root' } },
+        }, Content)
+        ctx.inject(['conversation'], (scope) => {
+          const scoped = scope.slots
+          const registry = scoped
+          registry.register({ name: 'demo.parent' }, Parent)
+          registerContent(registry)
+        })
+      }
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.content', 'demo.parent'])
+    const [entry] = resolveSlotEntries([declaration()], found, OWNER_TYPES, new Map())
+    expect(entry?.declaredBy).toContain("factory 'demo.content' (client-demo)")
+  })
+
+  it('recognizes helper parameters with a qualified typeof slots receiver', () => {
+    const found = registrations(`
+      function registerContent(registry: typeof scope.slots) {
+        registry.registerFactory({ name: 'demo.content' }, Content)
+      }
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.content'])
+  })
+
+  it('rejects unrelated and shadowed receiver aliases', () => {
+    const found = registrations(`
+      const registry = ctx.slots
+      const tools = ctx.tools
+      function registerTools(registry: typeof tools) {
+        registry.registerFactory({ name: 'tools.helper' }, Tool)
+      }
+      function shadowed() {
+        const registry = ctx.settings
+        registry.register({ name: 'settings.local' }, Setting)
+      }
+      function destructured() {
+        const { registry } = tools
+        registry.registerFactory({ name: 'tools.destructured' }, Tool)
+      }
+      try {} catch (registry) {
+        registry.register({ name: 'tools.error' }, Tool)
+      }
+      registry.register({ name: 'demo.live' }, Live)
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.live'])
+  })
+
+  it('rejects cyclic and mutable receiver aliases without treating their names as slots', () => {
+    const found = registrations(`
+      const first = second
+      const second = first
+      first.registerFactory({ name: 'cyclic.alias' }, Cyclic)
+      let mutable = ctx.slots
+      mutable = ctx.tools
+      mutable.registerFactory({ name: 'tools.mutable' }, Tool)
+      const slots = ctx.tools
+      const registry = slots
+      registry.registerFactory({ name: 'tools.namedSlots' }, Tool)
+    `)
+    expect(found).toEqual([])
+  })
+
+  it.each([
+    "import slots from './tools.ts'",
+    "import { tools as slots } from './tools.ts'",
+    "import * as slots from './tools.ts'",
+    "import slots = require('./tools.ts')",
+  ])('rejects imported receivers even when their local name is slots: %s', (importStatement) => {
+    const found = registrations(`
+      ${importStatement}
+      function registerTools(registry: typeof slots) {
+        registry.registerFactory({ name: 'tools.imported' }, Tool)
+      }
+      slots.register({ name: 'tools.direct' }, Tool)
+    `)
+    expect(found).toEqual([])
+  })
+
+  it.each([
+    'for (const registry of [ctx.tools])',
+    'for (const registry in ctx.tools)',
+    'for (let registry = ctx.tools; registry.active; registry.advance())',
+  ])('respects the nearest loop binding: %s', (loop) => {
+    const found = registrations(`
+      const registry = ctx.slots
+      ${loop} {
+        registry.registerFactory({ name: 'tools.loop' }, Tool)
+      }
+      registry.register({ name: 'demo.live' }, Live)
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.live'])
+  })
+
+  it('respects named function and class expression bindings', () => {
+    const found = registrations(`
+      const registry = ctx.slots
+      const helper = function registry() {
+        registry.registerFactory({ name: 'tools.function' }, Tool)
+      }
+      const owner = class registry {
+        static register() {
+          registry.registerFactory({ name: 'tools.class' }, Tool)
+        }
+      }
+      registry.register({ name: 'demo.live' }, Live)
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.live'])
+  })
+
+  it('respects hoisted function-local var declarations and untyped parameters', () => {
+    const found = registrations(`
+      const registry = ctx.slots
+      function shadowed() {
+        registry.registerFactory({ name: 'tools.hoisted' }, Tool)
+        if (condition) { var registry = ctx.tools }
+      }
+      function parameter(slots) {
+        slots.registerFactory({ name: 'tools.parameter' }, Tool)
+      }
+      registry.register({ name: 'demo.live' }, Live)
+    `)
+    expect(found.map(entry => entry.key)).toEqual(['demo.live'])
   })
 })
 
