@@ -332,7 +332,7 @@ describe('client build environment', () => {
 
   it('keeps public client values out of workflow-wide environments', () => {
     for (const name of dshBuildWorkflows) {
-      const path = `.github/workflows/${name}`
+      const path = `testing-platform/upstream-workflows/${name}`
       const document: unknown = yaml.load(readFileSync(resolve(root, path), 'utf8'))
       if (typeof document !== 'object' || document === null || Array.isArray(document)) {
         throw new TypeError(`${path} must contain a workflow object`)

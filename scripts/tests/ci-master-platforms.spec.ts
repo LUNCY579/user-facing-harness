@@ -28,7 +28,7 @@ interface Workflow {
 }
 
 function workflow(name: string): Workflow {
-  return load(readFileSync(resolve(root, '.github/workflows', name), 'utf8')) as Workflow
+  return load(readFileSync(resolve(root, 'testing-platform/upstream-workflows', name), 'utf8')) as Workflow
 }
 
 function commands(job: Job): string[] {

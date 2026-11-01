@@ -220,6 +220,24 @@ describe('CI worker allocation', () => {
       .not.toHaveProperty('DSH_COVERAGE_PARTITIONS')
   })
 
+  it.each([undefined, ''])('uses the whole-inventory CI test budget in check-all when the override is %s', (value) => {
+    const inherited = { DSH_COVERAGE_TEST_TIMEOUT_MS: value }
+    expect(ciWorkerEnvironment('check-all', inherited, 16)).toEqual({ DSH_COVERAGE_TEST_TIMEOUT_MS: '90000' })
+    expect(inherited.DSH_COVERAGE_TEST_TIMEOUT_MS).toBe(value)
+  })
+
+  it.each(['3500', '180000', '0'])('preserves the explicit check-all test budget %s for its owning parser', (value) => {
+    const inherited = { DSH_COVERAGE_TEST_TIMEOUT_MS: value }
+    expect(ciWorkerEnvironment('check-all', inherited, 16)).toEqual({})
+    expect(inherited.DSH_COVERAGE_TEST_TIMEOUT_MS).toBe(value)
+  })
+
+  it.each(['ci-unit', 'ci-coverage', 'ci-primary', 'doc-sync', 'hygiene'] as const)(
+    'does not supply an aggregate test timeout to %s', (mode) => {
+      expect(ciWorkerEnvironment(mode, {}, 16)).not.toHaveProperty('DSH_COVERAGE_TEST_TIMEOUT_MS')
+    },
+  )
+
   it('leaves the plain unit inventory with the environment pnpm run test finds', () => {
     // A 3-CPU host would otherwise receive DSH_COVERAGE_PARTITIONS=2, which
     // the inventory's own coverage-gate tests read as a partitioned lane.

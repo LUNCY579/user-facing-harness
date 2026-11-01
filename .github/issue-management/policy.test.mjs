@@ -991,7 +991,7 @@ test('performs no lifecycle requests for removed signals or title-only edits', a
 })
 
 test('keeps trusted preflight before token minting and required policy unconditional', () => {
-  const source = readFileSync(new URL('../workflows/issue-policy.yml', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../../testing-platform/upstream-workflows/issue-policy.yml', import.meta.url), 'utf8')
   const job = source.slice(source.indexOf('  policy:'))
   assert.ok(job.includes('    name: Issue policy'))
   assert.ok(!job.slice(0, job.indexOf('    steps:')).includes('    if:'))
@@ -1016,7 +1016,7 @@ test('keeps trusted preflight before token minting and required policy unconditi
 test('runs trusted rollout selection with absent and present capability markers', { skip: process.platform === 'win32' ? 'The policy workflow executes under hosted Ubuntu bash' : false }, (t) => {
   const directory = mkdtempSync(join(tmpdir(), 'dsh-policy-rollout-'))
   t.after(() => rmSync(directory, { recursive: true, force: true }))
-  const source = readFileSync(new URL('../workflows/issue-policy.yml', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../../testing-platform/upstream-workflows/issue-policy.yml', import.meta.url), 'utf8')
   const script = source.split('        run: |\n')[1].split('      - name: Create Project read token')[0]
     .split('\n').map((line) => line.slice(10)).join('\n')
   assert.deepEqual(JSON.parse(readFileSync(new URL('./selective-preflight.json', import.meta.url), 'utf8')), { version: 1 })
@@ -1056,7 +1056,7 @@ test('runs trusted rollout selection with absent and present capability markers'
 })
 
 test('allocates lifecycle runners only for relevant reviews and PR body edits', () => {
-  const source = readFileSync(new URL('../workflows/issue-lifecycle.yml', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../../testing-platform/upstream-workflows/issue-lifecycle.yml', import.meta.url), 'utf8')
   const issues = source.split('  issues:')[1].split('  pull_request:')[0]
   const pulls = source.split('  pull_request:')[1].split('  pull_request_review:')[0]
   const actions = (block) => [...block.matchAll(/^      - (\w+)$/gm)].map((match) => match[1])

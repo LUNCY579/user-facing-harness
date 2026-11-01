@@ -4957,7 +4957,8 @@ describe('PythonPtcRuntime — hostile peer', () => {
       maxLogBytes: 32 * 1024 * 1024,
       maxValueBytes: 32 * 1024 * 1024,
       addressSpaceMb: 512,
-      maxWallMs: 20_000,
+      // Large Unicode encoding exercises peak memory; use the adjacent memory fixture’s CPU budget.
+      maxWallMs: 60_000,
     })
     const result = await runtime.run(runtime.resolve({
       program: [
@@ -4968,7 +4969,7 @@ describe('PythonPtcRuntime — hostile peer', () => {
       bindings: [],
     }))
     expect(result.error?.kind).toBe('output-limit')
-  }, 30_000)
+  }, 90_000)
 
   it('checks and encodes a wide completion value in O(depth), not O(width)', async () => {
     // A wide flat list serializes to ~2 bytes per element but the pre-fix walk

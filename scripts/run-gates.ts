@@ -210,7 +210,7 @@ export function defaultConcurrency(
 }
 
 /**
- * Fill CI worker defaults from the [worker budget](./parallelism.ts) without replacing explicit overrides.
+ * Fill CI worker defaults and the comprehensive test budget without replacing explicit overrides.
  * Coverage shares one budget; artifact readers share CPUs with sibling commands.
  * @param mode - aggregate selected by the caller.
  * @param env - inherited worker overrides, including serial reference settings, and the `CI` value that selects the budget.
@@ -222,6 +222,11 @@ export function ciWorkerEnvironment(
   env: NodeJS.ProcessEnv,
   cpus = availableParallelism(),
 ): Record<string, string> {
+  if (mode === 'check-all') {
+    return env.DSH_COVERAGE_TEST_TIMEOUT_MS === undefined || env.DSH_COVERAGE_TEST_TIMEOUT_MS === ''
+      ? { DSH_COVERAGE_TEST_TIMEOUT_MS: '90000' }
+      : {}
+  }
   // ci-unit's gates read none of these settings, while the inventory it runs
   // reads the same variables (run-gates.spec.ts builds coverage gates from
   // DSH_COVERAGE_PARTITIONS; the oxlint contract spawns run-oxlint, which

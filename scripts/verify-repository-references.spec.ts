@@ -116,12 +116,12 @@ describe('maintained repository reference policy', () => {
     remote.write('partial-clone/new.md', missing)
 
     expect(scanRepositoryReferences(clone)).toEqual([])
-    expect(execFileSync('git', ['cat-file', '--batch-check'], {
+    // Object enumeration observes local state without triggering a promisor fetch.
+    expect(execFileSync('git', ['cat-file', '--batch-all-objects', '--batch-check=%(objectname)'], {
       cwd: clone,
       encoding: 'utf8',
       env: { ...process.env, GIT_NO_LAZY_FETCH: '1' },
-      input: `${missing}\n`,
-    }).trim()).toBe(`${missing} missing`)
+    }).trim().split('\n')).not.toContain(missing)
   })
 
   it('accepts blobs, trees, unknown hex, long digests, and identifiers embedded in alphanumeric words', (test) => {
