@@ -5,7 +5,7 @@
  * that are already showing, so a default set from one converges the other.
  */
 
-import { Context } from '@deepseek-ai/cordis'
+import { Context, type Fiber } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
 import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
@@ -303,6 +303,89 @@ async function settingsWithoutChip(initialPreset: string, settingsRosterGate?: P
 }
 
 describe('ui-agent-preset apply', () => {
+  it.each(['hero', 'header'] as const)('follows delayed Conversation declarations with %s first', async (first) => {
+    const { ctx, slots } = await bench()
+    try {
+      slots.register({
+        name: 'root',
+        children: {
+          'settings.section': { kind: 'list', scope: 'root' },
+          'hero-owner': { kind: 'single', scope: 'root' },
+          'header-owner': { kind: 'single', scope: 'root' },
+        },
+      } as never, () => null)
+      const withdrawService = ctx.provide('conversation', {} as never)
+      ctx.provide('sessions', sessionsDouble(ctx, { byId: {} }) as never)
+      ctx.provide('uiWorkspace', uiWorkspaceDouble() as never)
+      let owner: Context | undefined
+      const children: Fiber[] = []
+      ctx.on('internal/plugin', (child) => {
+        if (child.parent.fiber === owner?.fiber) children.push(child)
+      })
+      const feature = ctx.plugin({ inject: [...inject], apply(scope) { owner = scope; apply(scope) } })
+      await feature.await()
+      expect(children).toHaveLength(1)
+      await children[0]!.await()
+      const creator = (): unknown => slots.entries('settings.section')[0]?.inject?.().startCreatorDraft
+      expect(creator()).toBeTypeOf('function')
+      const declare = {
+        hero: () => slots.register({
+          name: 'hero-owner',
+          children: { 'conversation.hero.agentPreset': { kind: 'single', scope: 'session-maybe' } },
+        } as never, () => null),
+        header: () => slots.register({
+          name: 'header-owner',
+          children: { 'conversation.session.header.actions': { kind: 'list', scope: 'session' } },
+        } as never, () => null),
+      }
+      const keys = { hero: 'conversation.hero.agentPreset', header: 'conversation.session.header.actions' } as const
+      const second = first === 'hero' ? 'header' : 'hero'
+      expect(slots.entries(keys.hero)).toHaveLength(0)
+      expect(slots.entries(keys.header)).toHaveLength(0)
+      const removeFirst = declare[first]()
+      expect(slots.entries(keys[first])).toHaveLength(1)
+      expect(slots.entries(keys[second])).toHaveLength(0)
+      const removeSecond = declare[second]()
+      expect(slots.entries(keys[second])).toHaveLength(1)
+      const firstEntry = slots.entries(keys[first])[0]
+      removeFirst()
+      expect(slots.entries(keys[first])).toHaveLength(0)
+      expect(slots.entries(keys[second])).toHaveLength(1)
+      expect(creator()).toBeTypeOf('function')
+      const removeFirstAgain = declare[first]()
+      expect(slots.entries(keys[first])).toHaveLength(1)
+      expect(slots.entries(keys[first])[0]).not.toBe(firstEntry)
+      removeSecond()
+      expect(slots.entries(keys[second])).toHaveLength(0)
+      const removeSecondAgain = declare[second]()
+      expect(slots.entries(keys[second])).toHaveLength(1)
+      await withdrawService()
+      expect(creator()).toBeUndefined()
+      expect(slots.entries(keys.hero)).toHaveLength(0)
+      expect(slots.entries(keys.header)).toHaveLength(0)
+      removeFirstAgain()
+      removeSecondAgain()
+      const removeHero = declare.hero()
+      const removeHeader = declare.header()
+      expect(slots.entries(keys.hero)).toHaveLength(0)
+      expect(slots.entries(keys.header)).toHaveLength(0)
+      ctx.provide('conversation', {} as never)
+      await children[0]!.await()
+      expect(slots.entries(keys.hero)).toHaveLength(1)
+      expect(slots.entries(keys.header)).toHaveLength(1)
+      expect(creator()).toBeTypeOf('function')
+      removeHero()
+      removeHeader()
+      await feature.dispose()
+      declare.hero()
+      declare.header()
+      expect(slots.entries(keys.hero)).toHaveLength(0)
+      expect(slots.entries(keys.header)).toHaveLength(0)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
   const settingsActions = [
     { action: 'makeDefault', initial: 'standard', selected: 'minimal', run: (section: AgentPresetSectionInjected) => section.makeDefault('minimal') },
   ]

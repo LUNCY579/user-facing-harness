@@ -68,6 +68,7 @@ export const inject = [
 
 /**
  * Mount the roster surfaces: hero chip, session-header label, settings section.
+ * Each Conversation contribution follows its slot declaration while the Conversation service is active.
  * @param ctx - the browser plugin context.
  */
 export function apply(ctx: ClientContext): void {
@@ -223,25 +224,23 @@ export function apply(ctx: ClientContext): void {
 
     scope.effect(() => {
       creatorDraft = startCreatorDraft
-      const chip = scope.slots.register({
-        name: 'conversation.hero.agentPreset',
-        locale: 'settings.agentPreset',
-        inject: seatInjected,
-      }, AgentPresetSeat)
-      const label = scope.slots.register({
-        name: 'conversation.session.header.actions',
-        id: 'agent-preset',
-        // Static session context occupies the header's leading negative-order band.
-        order: -10,
-        locale: 'settings.agentPreset',
-        inject: labelInjected,
-      }, AgentPresetLabel)
-      return () => {
-        creatorDraft = undefined
-        chip()
-        label()
-      }
-    }, 'ui-agent-preset: new-session chip and header label')
+      return () => { creatorDraft = undefined }
+    }, 'ui-agent-preset: Creator flow')
+
+    scope.slots.inject('conversation.hero.agentPreset', () => scope.slots.register({
+      name: 'conversation.hero.agentPreset',
+      locale: 'settings.agentPreset',
+      inject: seatInjected,
+    }, AgentPresetSeat))
+
+    scope.slots.inject('conversation.session.header.actions', () => scope.slots.register({
+      name: 'conversation.session.header.actions',
+      id: 'agent-preset',
+      // Static session context occupies the header's leading negative-order band.
+      order: -10,
+      locale: 'settings.agentPreset',
+      inject: labelInjected,
+    }, AgentPresetLabel))
 
     scope.slots.inject('plugins.add.actions', () => scope.slots.register({
       name: 'plugins.add.actions',
