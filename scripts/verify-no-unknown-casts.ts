@@ -8,6 +8,9 @@ import ts from 'typescript'
 
 const root = resolve(import.meta.dirname, '..')
 const baselinePath = 'scripts/no-unknown-casts.baseline.json'
+// Imported source keeps its upstream ownership, including recorded local adaptations.
+// Channel-pack's [NOTICE](../plugins/dsh-our-free-model/vendor/channel-pack/NOTICE.md) records its pin and adaptations.
+const vendoredSourceRoots = ['vendor/', 'plugins/dsh-our-free-model/vendor/channel-pack/']
 
 /** Existing assertion counts, keyed by repository path and syntax fingerprint. */
 export type UnknownCastBaseline = Record<string, Record<string, number>>
@@ -67,7 +70,7 @@ export function findUnknownCasts(file: string, text: string): UnknownCast[] {
 
 function isSource(file: string): boolean {
   return /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(file)
-    && !file.startsWith('vendor/')
+    && !vendoredSourceRoots.some(directory => file.startsWith(directory))
     && !file.startsWith('.agents/notes/archived/')
 }
 

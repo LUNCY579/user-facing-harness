@@ -1,8 +1,11 @@
 /** Recorded npm evidence stays intact while authored files and exact edits remain checked. */
 
-import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { exactEditState, isRescopeExcluded, rescopeText } from './rescope-vendor.ts'
+import { exactEditState, isRescopeExcluded, rescopeText, trackedRescopeFiles } from './rescope-vendor.ts'
 
 const ANCHOR = '\n## Sync procedure'
 const INSERTED = `\n15. **rescope**: one log entry.\n${ANCHOR}`
@@ -14,8 +17,33 @@ function expectRoundTrip(file: string, text: string, scoped: string, lines: numb
 }
 
 describe('rescope file selection', () => {
+  it('reads an index larger than one MiB without losing paths or bypassing exclusions', () => {
+    const repoRoot = mkdtempSync(join(tmpdir(), 'dsh-rescope-index-'))
+    try {
+      execFileSync('git', ['init', '--quiet'], { cwd: repoRoot })
+      const blob = execFileSync('git', ['hash-object', '-w', '--stdin'], { cwd: repoRoot, input: '', encoding: 'utf8' }).trim()
+      const paths = Array.from({ length: 8_000 }, (_, index) => `src/${String(index).padStart(5, '0')}-${'r'.repeat(150)}.ts`)
+      paths.push('src/unicode-中文.ts', 'src/tab\tline\nname.ts')
+      const excluded = 'scripts/dependency-catalog/package-lock.json'
+      const indexEntries = [...paths, excluded].map(path => `100644 ${blob}\t${path}\0`).join('')
+      execFileSync('git', ['update-index', '-z', '--index-info'], { cwd: repoRoot, input: indexEntries })
+      expect(Buffer.byteLength(paths.join('\0'))).toBeGreaterThan(1024 * 1024)
+      const actual = trackedRescopeFiles(repoRoot)
+      expect(actual).toHaveLength(paths.length)
+      expect(new Set(actual)).toEqual(new Set(paths))
+      expect(actual).not.toContain(excluded)
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true, maxRetries: 3 })
+    }
+  })
+
   it('preserves the recorded npm resolution', () => {
     expect(isRescopeExcluded('scripts/dependency-catalog/package-lock.json')).toBe(true)
+    expect(isRescopeExcluded('plugins/dsh-our-free-model/package-lock.json')).toBe(true)
+  })
+
+  it('preserves the separately pinned channel-pack import', () => {
+    expect(isRescopeExcluded('plugins/dsh-our-free-model/vendor/channel-pack/src/zcode-captcha.ts')).toBe(true)
   })
 
   it.each([
@@ -24,6 +52,9 @@ describe('rescope file selection', () => {
     'scripts/other/package-lock.json',
     'packages/example/src/index.ts',
     'packages/example/package.json',
+    'plugins/dsh-our-free-model/src/index.ts',
+    'plugins/dsh-our-free-model/package.json',
+    'plugins/dsh-our-free-model/vendor/other/src/index.ts',
   ])('keeps %s subject to upstream package-name checks', (file) => {
     expect(isRescopeExcluded(file)).toBe(false)
   })

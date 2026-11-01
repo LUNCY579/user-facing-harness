@@ -14,7 +14,7 @@ Status: implemented
 
 第一方 JavaScript 和 TypeScript 禁止新增直接断言到 `unknown` 的表达式，范围包括测试、fixture、基准测试和脚本。规则覆盖 `as unknown` 和 `<unknown>` 两种语法，也覆盖带括号的目标类型，以及直接包含 `unknown` 成员的联合目标类型。`unknown` 声明仍然有效：外部数据可以通过 `const value: unknown = JSON.parse(text)` 进入，再交给其声明的解析器处理后使用。同进程内已有类型的值仍遵循不得添加不必要运行时校验的现有规则。
 
-[检查器](../../../../scripts/verify-no-unknown-casts.ts)通过 `pnpm run verify-no-unknown-casts` 运行，使用 TypeScript 语法树。它扫描已跟踪的源文件和未被忽略的未跟踪源文件；vendored 源码和已冻结的归档 Agent Notes 保留各自维护规则要求的排除项。检查器忽略注释、字符串和 `unknown` 声明。
+[检查器](../../../../scripts/verify-no-unknown-casts.ts)通过 `pnpm run verify-no-unknown-casts` 运行，使用 TypeScript 语法树。它扫描已跟踪的源文件和未被忽略的未跟踪源文件。`vendor/` 下的[框架导入源码](../../../../vendor/README.md)、[固定版本的 channel-pack 导入源码](../../../../plugins/dsh-our-free-model/vendor/channel-pack/NOTICE.md)，以及已冻结的归档 Agent Notes 保留各自维护规则要求的排除项。本地维护的插件封装、适配器、测试，以及其他名为 `vendor` 的嵌套目录仍在检查范围内。检查器忽略注释、字符串和 `unknown` 声明。
 
 现有断言使用精确基线记录，键由仓库相对路径、断言语法 token 的 SHA-256 摘要及出现次数组成。基线修改只能删除条目或减少次数；审查者必须拒绝新增文件、新增指纹和增加次数。基线之外新增或变化的断言以及陈旧的基线条目都会使检查失败；整个文件的放行或数量预算不能授权替换成新的技术债。`--prune` 机械地删除条目或减少次数，存在新增违规时拒绝写入。没有可添加新例外的命令。
 

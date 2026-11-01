@@ -30,6 +30,7 @@ Cordis 框架及其基础库以源码形式 vendored 在 [`vendor/`](../vendor/R
 - **上游运行时标识符**，例如 Schemastery 的 `Symbol.for('schemastery')` 及其 `vendor:` 元数据字段。
 - **产品标识符。** `GENERIC_SKIPS` 列出的文件保留所列上游名称对应的 preset ID、事件名、目录分组名，以及 locale 或输入来源键。同一文件中的 import、export、模块声明和 JSDoc import 类型仍会双向改名，JavaScript/TypeScript 围栏内也如此。YAML 插件的 `name:` 值同样改名。所列名称的其他字符串用法保持不变，其他库名仍受检查。
 - **改名测试夹具。** `scripts/rescope-vendor.spec.ts` 和 `scripts/gen-third-party-notices.spec.ts` 保留两种包名拼写作为测试数据。
+- **记录的外部元数据与导入源码。** 插件的 `package-lock.json` 保留已发布的 npm 元数据，包括可执行文件名。单独固定版本的 [`vendor/channel-pack/`](../plugins/dsh-our-free-model/vendor/channel-pack/NOTICE.md) 保留导入文本及已记录的适配。维护中的插件包装代码与其他嵌套 vendor 目录仍接受检查。
 - **`docs/` 之外的散文。** `vendor/*/README.md`、各包 README 与 Agent Note 保留写作当时的名字；那里的裸 `cordis` 也可能是 Python SDK 的选项名或某个 agent-preset 的 id。`docs/` 之内的散文和 Markdown 围栏按 token 规则改名，上述经过核对的标识符除外。
 
 ## 你的代码要改什么
@@ -53,3 +54,5 @@ pnpm run rescope-vendor --apply --reverse   # return to the upstream names
 ```
 
 上游 sync 之后重跑它（[流程](../vendor/README.md)），并接上它打印的重生成：`pnpm install` 重生成 lockfile、`pnpm run gen-third-party-notices`、以及对它触及的双语对跑 `pnpm run verify-translation-pairing --write`。
+
+检查使用 NUL 分隔符从 Git 读取已跟踪路径，输出上限为 16 MiB。大型索引可能超过 Node 默认的 1 MiB 捕获上限；包含 Unicode、制表符或换行符的文件名仍保持独立。

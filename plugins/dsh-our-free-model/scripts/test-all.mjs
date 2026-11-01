@@ -13,10 +13,19 @@
  * (issue #1), and nothing else fails when that happens.
  */
 import { spawn } from 'node:child_process'
+import { realpathSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const scriptsDir = fileURLToPath(new URL('.', import.meta.url))
+// Managed-storage fixtures reject symlink ancestors, including OS-provided temporary-directory aliases.
+const temporaryRoot = realpathSync(tmpdir())
+const suiteEnvironment = { ...process.env }
+for (const key of Object.keys(suiteEnvironment)) {
+  if (/^(TMPDIR|TEMP|TMP)$/i.test(key)) delete suiteEnvironment[key]
+}
+Object.assign(suiteEnvironment, { TMPDIR: temporaryRoot, TEMP: temporaryRoot, TMP: temporaryRoot })
 const options = { mode: 'all', only: null }
 for (let index = 2; index < process.argv.length; index += 1) {
   const flag = process.argv[index]
@@ -89,6 +98,7 @@ const suites = [
   ['standalone-settings-host', 'standalone-settings-host-test.mjs', []],
   ['standalone-login-terminal', 'standalone-login-terminal-test.mjs', []],
   ['standalone-package', 'standalone-package-test.mjs', ['--sources-only']],
+  ['plugin-package', 'plugin-package-test.mjs', []],
   ['egress', 'egress-test.mjs', []],
   ['egress-availability', 'egress-availability-test.mjs', []],
   ['effort', 'effort-test.mjs', []],
@@ -164,6 +174,7 @@ function runSuite(script, args) {
   return new Promise(resolve => {
     const child = spawn(process.execPath, [path.join(scriptsDir, script), ...args], {
       stdio: ['ignore', 'pipe', 'pipe'],
+      env: suiteEnvironment,
     })
     let stdout = ''
     let stderr = ''

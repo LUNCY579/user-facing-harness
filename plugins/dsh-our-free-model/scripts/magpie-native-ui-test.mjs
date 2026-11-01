@@ -14,6 +14,7 @@ import { promisify } from 'node:util'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { setTimeout as delay } from 'node:timers/promises'
+import { packPlugin } from './pack-plugin.mjs'
 
 const repository = fileURLToPath(new URL('../', import.meta.url))
 const require = createRequire(import.meta.url)
@@ -103,12 +104,7 @@ async function processes() {
 }
 async function packagePlugin() {
   const npm = process.env.OFM_NPM_CLI ?? 'D:/nodejs/node_modules/npm/bin/npm-cli.js'
-  const { stdout } = await runFile(process.execPath, [npm, 'pack', '--json', '--ignore-scripts', '--pack-destination', scratch], {
-    cwd: repository, windowsHide: true, timeout: 120000, maxBuffer: 8 * 1024 * 1024,
-    env: { ...process.env, npm_config_cache: path.join(scratch, 'npm-cache'), npm_config_update_notifier: 'false' },
-  })
-  const packed = JSON.parse(stdout)[0]
-  const archive = path.join(scratch, packed.filename)
+  const archive = packPlugin({ root: repository, destination: scratch, packageManager: npm })
   const extraction = path.join(scratch, 'extracted')
   fs.mkdirSync(extraction)
   await runFile('tar.exe', ['-xf', archive, '-C', extraction], { windowsHide: true, timeout: 30000 })

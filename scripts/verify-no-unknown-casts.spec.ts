@@ -185,6 +185,7 @@ describe('unknown assertion inventory', () => {
     ['parent path', '{"../input.ts":{"HASH":1}}'],
     ['backslash path', JSON.stringify({ 'packages\\input.ts': { HASH: 1 } })],
     ['excluded path', '{"vendor/input.ts":{"HASH":1}}'],
+    ['excluded imported plugin path', '{"plugins/dsh-our-free-model/vendor/channel-pack/src/input.ts":{"HASH":1}}'],
     ['empty file counts', '{"input.ts":{}}'],
     ['array counts', '{"input.ts":[]}'],
     ['invalid fingerprint', '{"input.ts":{"invalid":1}}'],
@@ -203,6 +204,27 @@ describe('unknown assertion inventory', () => {
 })
 
 describe('unknown assertion source discovery', () => {
+  it('excludes the pinned channel-pack import while enforcing maintained plugin source', () => {
+    const root = fixture()
+    write(root, 'plugins/dsh-our-free-model/vendor/channel-pack/src/input.ts', assertion)
+    write(root, 'plugins/dsh-our-free-model/vendor/channel-pack/pack.js', assertion)
+    expect(scanUnknownCasts(root)).toEqual([])
+    expect(verifyNoUnknownCasts(root)).toBe(0)
+
+    const maintained = [
+      'plugins/dsh-our-free-model/src/input.ts',
+      'plugins/dsh-our-free-model/adapter/input.js',
+      'plugins/dsh-our-free-model/tests/input.ts',
+      'plugins/dsh-our-free-model/vendor/channel-pack-adapter/input.ts',
+      'plugins/example/vendor/input.ts',
+      'packages/example/vendor/input.ts',
+    ]
+    for (const file of maintained) write(root, file, assertion)
+    expect(scanUnknownCasts(root).map(cast => cast.file)).toEqual(maintained.toSorted())
+    for (const file of maintained) expect(() => verifyNoUnknownCasts(root)).toThrow(`${file}:1`)
+    expect(readFileSync(join(root, baselinePath), 'utf8')).toBe('{}\n')
+  })
+
   it('checks tracked source across areas, extensions, tests and root configuration', () => {
     const root = fixture()
     const files = [

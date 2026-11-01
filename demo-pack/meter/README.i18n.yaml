@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write demo-pack/meter/README.md
+/bill-audit-meter-demo-copy:
+  en: af8468df312b3e22
+  zh: 73afc8fd5079719f
+/bill-audit-meter-demo-copy/files:
+  en: 11b4671956a00e30
+  zh: 42b4a79c4ca3532a
+/bill-audit-meter-demo-copy/this-copy-vs-the-original:
+  en: d5d5d318ef18e05d
+  zh: effaf8f441b7732c
+/bill-audit-meter-demo-copy/run-cheng-on-receipt:
+  en: 2d8fb77e6b2d5246
+  zh: d81bb11e96070c4d

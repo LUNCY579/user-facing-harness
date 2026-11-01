@@ -30,6 +30,7 @@ Subpath exports keep their path: `@cordisjs/plugin-loader/repository` becomes `@
 - **Upstream runtime identifiers**, such as Schemastery's `Symbol.for('schemastery')` and its `vendor:` metadata field.
 - **Product identifiers.** Files in `GENERIC_SKIPS` keep preset IDs, event names, directory group names, and locale or input-source keys for the listed upstream name. Source imports, exports, module declarations and JSDoc import types still change in both directions, including in JavaScript/TypeScript fences. YAML plugin `name:` values also change. Other string uses of the listed name stay intact; other library names remain checked.
 - **Rewrite fixtures.** `scripts/rescope-vendor.spec.ts` and `scripts/gen-third-party-notices.spec.ts` keep both package spellings as test data.
+- **Recorded external metadata and imports.** The plugin's `package-lock.json` preserves published npm metadata, including executable names. Its separately pinned [`vendor/channel-pack/`](../plugins/dsh-our-free-model/vendor/channel-pack/NOTICE.md) keeps its imported text and recorded adaptations. Maintained plugin wrappers and other nested vendor directories remain checked.
 - **Prose outside `docs/`.** `vendor/*/README.md`, package READMEs, and Agent Notes keep the names they were written with; a bare `cordis` there can also be the Python SDK's option name or an agent-preset id. Inside `docs/`, prose and Markdown fences follow the token rule except for the audited identifiers above.
 
 ## What your code has to change
@@ -53,3 +54,5 @@ pnpm run rescope-vendor --apply --reverse   # return to the upstream names
 ```
 
 Re-apply it after an upstream sync ([procedure](../vendor/README.md)), and follow it with the regeneration it prints: `pnpm install` for the lockfile, `pnpm run gen-third-party-notices`, and `pnpm run verify-translation-pairing --write` for the bilingual pairs it touched.
+
+The check reads tracked paths from Git with NUL separators and a 16 MiB output limit. Large indexes can exceed Node's default 1 MiB capture limit; filenames containing Unicode, tabs, or newlines remain distinct.

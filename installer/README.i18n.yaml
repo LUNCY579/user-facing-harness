@@ -1,0 +1,34 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write installer/README.md
+/testingplatform-setup-installer-plain-language-guide:
+  en: 5a33c16a0ed2bf36
+  zh: abc7f6292f91578f
+/testingplatform-setup-installer-plain-language-guide/download-the-clean-way:
+  en: bc338a5a5d5d9995
+  zh: 548e078b81043f25
+/testingplatform-setup-installer-plain-language-guide/before-you-start:
+  en: 3860da8e89ed2ada
+  zh: 534ef82ef964ef5f
+/testingplatform-setup-installer-plain-language-guide/mac:
+  en: 145263d45bbd1da2
+  zh: dad33142343a8789
+/testingplatform-setup-installer-plain-language-guide/windows:
+  en: 1d1f64cba6914de1
+  zh: 91c0e54155392464
+/testingplatform-setup-installer-plain-language-guide/where-it-installs:
+  en: 046b2f1b9ec22edc
+  zh: 6fc16db016d0252b
+/testingplatform-setup-installer-plain-language-guide/what-the-installer-checks:
+  en: 569451e65617dd99
+  zh: a1e7d9fb771cd33c
+/testingplatform-setup-installer-plain-language-guide/node-problems-the-most-common-setup-failure:
+  en: 792b8c3f6257fcff
+  zh: 1b726f6758a137c3
+/testingplatform-setup-installer-plain-language-guide/what-the-installer-deliberately-does-not-do:
+  en: 255023f826ca180a
+  zh: ab6f49dacc618b4e
+/testingplatform-setup-installer-plain-language-guide/if-setup-fails:
+  en: 1eade465f6d8aa80
+  zh: 23f740a759ef791c

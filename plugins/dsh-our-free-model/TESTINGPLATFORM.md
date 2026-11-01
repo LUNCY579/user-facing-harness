@@ -18,6 +18,19 @@ pnpm --dir plugins/dsh-our-free-model run test:contributor
 
 Contributor mode checks code against local substitutes without consuming model quota. The original release checks and signed manifests describe the upstream distribution; they do not attest to this modified checkout. `npm run selftest` is a separate live-provider operation.
 
+## Packing the plugin
+
+After installing this workspace, create a managed-installation tarball with the explicit plugin packer, from the TestingPlatform root:
+
+```sh
+pnpm --dir plugins/dsh-our-free-model run pack:plugin --pack-destination /absolute/output/directory
+pnpm --dir plugins/dsh-our-free-model run test:plugin-package
+```
+
+The packer copies the package manager's selected files into a temporary directory, restores the plugin's existing external peer compatibility ranges, omits development dependencies, and packs with lifecycle scripts disabled. The source manifest keeps `workspace:*` DSH peers and `workspace:~` framework peers. Direct `npm pack` retains those workspace references; direct `pnpm pack` replaces them with the checkout's versions and narrows external compatibility. Use `pack:plugin` for an external host and the upstream README's managed `file:` installation steps for the resulting archive. An existing output archive is never replaced. The package remains private to prevent accidental npm publication.
+
+This tarball contains the current checkout's plugin code. Its creation neither regenerates nor signs the frozen upstream feed and catalog metadata; use package-manager updates with `distribution: managed` as described above. The standalone service and desktop builders retain their separate packaging commands.
+
 ## Gemini OAuth configuration
 
 TestingPlatform does not embed Google OAuth client secrets in its JavaScript or TypeScript source or generated channel bundles. The two Gemini integrations use different OAuth clients, so each requires the secret matching its own client ID. Public client IDs remain as defaults and can be overridden for a configured client.

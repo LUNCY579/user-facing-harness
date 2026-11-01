@@ -12,6 +12,8 @@
     "./locale/*.json": "./locale/*.json"
   },
   "scripts": {
+    "pack:plugin": "node scripts/pack-plugin.mjs",
+    "test:plugin-package": "node scripts/plugin-package-test.mjs",
     "pack:standalone": "node scripts/pack-standalone.mjs",
     "test:package": "node scripts/standalone-package-test.mjs",
     "start:standalone": "node packages/standalone/cli.mjs",
@@ -67,13 +69,14 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-commands": "^0.1.2-rc.1 || ^0.1.7-rc.2 || ^0.2.0-rc.1",
-    "@deepseek-ai/dsh-credentials": "^0.1.2-rc.1 || ^0.1.7-rc.2 || ^0.2.0-rc.1",
-    "@deepseek-ai/dsh-llm": "^0.1.2-rc.1 || ^0.1.7-rc.2 || ^0.2.0-rc.1",
-    "@deepseek-ai/schemastery": "^3.18.4"
+    "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/dsh-commands": "workspace:*",
+    "@deepseek-ai/dsh-credentials": "workspace:*",
+    "@deepseek-ai/dsh-llm": "workspace:*",
+    "@deepseek-ai/schemastery": "workspace:~"
   },
   "devDependencies": {
+    "tar": "^7.5.22",
     "undici": "8.11.2",
     "typescript": "^5.9.2",
     "@deepseek-ai/cordis": "workspace:~",

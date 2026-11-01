@@ -17057,6 +17057,9 @@ importers:
       esbuild:
         specifier: 0.25.12
         version: 0.25.12
+      tar:
+        specifier: ^7.5.22
+        version: 7.5.22
       typescript:
         specifier: ^5.9.2
         version: 5.9.3

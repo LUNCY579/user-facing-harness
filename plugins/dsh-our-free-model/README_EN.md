@@ -139,7 +139,7 @@ and installation contract rather than assuming every desktop shell shares this g
 
 To install manually as a real directory, use a trusted local tarball:
 
-1. Create `<DSH_HOME>/profiles/<profile>/vendor/`. From the reviewed repository, run `npm pack --ignore-scripts --pack-destination "<DSH_HOME>/profiles/<profile>/vendor"`, or place an official same-version release tarball from this repository there. Local packing does not publish to npm.
+1. Create `<DSH_HOME>/profiles/<profile>/vendor/`. From the reviewed plugin directory, run `pnpm run pack:plugin --pack-destination "<DSH_HOME>/profiles/<profile>/vendor"`, or place an official same-version release tarball from this repository there. The [TestingPlatform packaging guide](TESTINGPLATFORM.md#packing-the-plugin) explains external peer compatibility. Local packing does not publish to npm.
 2. Add `"dsh-our-free-model": "file:./vendor/dsh-our-free-model-2.7.1.tgz"` to the profile's `package.json` dependencies, then use the host's installation flow to resolve it. Keep the filename version aligned with this repository's `package.json`; do not substitute a same-named npm registry version.
 3. Append `"dsh-our-free-model"` to `dsh.profile.bundles`.
 
