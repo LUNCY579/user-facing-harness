@@ -137,7 +137,7 @@ it.each([
               await expect.poll(() => inputSection.evaluate(element => element.scrollTop)).toBe(0)
             } finally {
               try {
-                await endScroll.evaluate(state => state.controller.abort())
+                await endScroll.evaluate((state) => { state.controller.abort() })
               } finally {
                 await endScroll.dispose()
               }

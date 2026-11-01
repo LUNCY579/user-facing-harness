@@ -27,6 +27,10 @@ function fixture(test: TestContext, source: string): { root: string; options: Pa
 
 afterEach(() => { vi.restoreAllMocks() })
 
+function hasActivation(value: unknown): value is { enable(): unknown } {
+  return typeof value === 'object' && value !== null && 'enable' in value && typeof value.enable === 'function'
+}
+
 it('packs disabled native retrieval and rejects its explicit SDK import with a platform error', async (test) => {
   const { options } = fixture(test, "export const disabled = true; export async function enable() { return import('@zvec/zvec') }")
   const report = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -38,7 +42,7 @@ it('packs disabled native retrieval and rejects its explicit SDK import with a p
   const vfs = loadVfsImage(gunzipSync(packed.image))
   const loader = new WorkerModuleLoader({ vfs, root: '/dsh', staticModules: table })
   const subject = loader.createRequire('/dsh/')(SUBJECT)
-  if (typeof subject !== 'object' || subject === null || !('enable' in subject) || typeof subject.enable !== 'function') {
+  if (!hasActivation(subject)) {
     throw new Error('packed fixture did not export its SDK activation function')
   }
   expect(subject).toHaveProperty('disabled', true)
