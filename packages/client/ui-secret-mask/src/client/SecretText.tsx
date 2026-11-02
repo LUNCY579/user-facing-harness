@@ -23,17 +23,19 @@ function EyeGlyph({ path }: { readonly path: string }) {
 /**
  * Keep the same text fragments in masked and revealed states. Mask runs keep
  * their characters for copying and assistive technology but draw centered marks,
- * because a font's own asterisk sits near the cap height.
+ * because a font's own asterisk sits near the cap height. Each mark corresponds
+ * to one original Unicode code point.
  */
 function SecretValue({ masked, raw, revealed }: { readonly masked: string; readonly raw: string; readonly revealed: boolean }) {
+  const original = revealed ? Array.from(raw) : undefined
   let offset = 0
   return masked.split(MASK_RUNS).map((part) => {
     const key = offset
-    offset += part.length
+    offset += Array.from(part).length
     if (part === '') return null
     return (
       <span key={key} className={!revealed && part.startsWith(MASK) ? css.mask : undefined}>
-        {revealed ? raw.slice(key, offset) : part}
+        {original === undefined ? part : original.slice(key, offset).join('')}
       </span>
     )
   })
