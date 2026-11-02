@@ -1,9 +1,1493 @@
 {
   "schema_version": 1,
-  "status": "validation in progress",
+  "status": "Local deterministic validation complete: all 76 canonical repository gates, maintained full Web inventory, full lint, documentation checks, application smokes and post-Web aggregate type checks pass. Live model validation remains pending by user choice. Earlier intermittent browser failures remain unclassified in retained history; no stability or infrastructure attribution is claimed.",
   "branch": "feat/local-retrieval-readiness",
-  "scope": "Canonical local check:all aggregate and current TestingPlatform CI workflow commands; live provider checks remain pending by user choice.",
-  "checks": [],
+  "scope": "Canonical local check:all aggregate, complete Web lane, and current TestingPlatform CI workflow commands. Live provider checks remain pending by user choice.",
+  "checks": [
+    {
+      "label": "repository-artifacts",
+      "command": [
+        "pnpm",
+        "run",
+        "build:artifacts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 29.02,
+      "completed_utc": "2026-11-01T20:57:10.779575+00:00",
+      "private_log": ".testingplatform/repository-artifacts.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-check-all",
+      "command": [
+        "pnpm",
+        "run",
+        "check:all"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 1581.107,
+      "completed_utc": "2026-11-01T21:24:19.007502+00:00",
+      "private_log": ".testingplatform/repository-check-all.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TEST_TURBOVEC_PYTHON": "<repo>/.testingplatform/retrieval-python/bin/python",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-memory-fixture",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/experimental/ptc-runtime-python/tests/runtime.spec.ts",
+        "-t",
+        "flushes logs before framing the value",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 7.824,
+      "completed_utc": "2026-11-01T21:34:25.210471+00:00",
+      "private_log": ".testingplatform/repository-memory-fixture.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+      }
+    },
+    {
+      "label": "repository-clean",
+      "command": [
+        "pnpm",
+        "run",
+        "clean"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 4.258,
+      "completed_utc": "2026-11-01T21:35:43.970617+00:00",
+      "private_log": ".testingplatform/repository-clean.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-clean-artifacts",
+      "command": [
+        "pnpm",
+        "run",
+        "build:artifacts"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 108.654,
+      "completed_utc": "2026-11-01T21:39:00.979548+00:00",
+      "private_log": ".testingplatform/repository-clean-artifacts.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-client-build-check",
+      "command": [
+        "pnpm",
+        "run",
+        "build:check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 219.348,
+      "completed_utc": "2026-11-01T21:44:19.824317+00:00",
+      "private_log": ".testingplatform/repository-client-build-check.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 216.182,
+      "completed_utc": "2026-11-01T21:46:18.562147+00:00",
+      "private_log": ".testingplatform/repository-lint.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-links",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-md-links"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 11.252,
+      "completed_utc": "2026-11-01T21:46:50.007430+00:00",
+      "private_log": ".testingplatform/repository-links.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-links-final",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-md-links"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 16.252,
+      "completed_utc": "2026-11-01T21:50:42.887537+00:00",
+      "private_log": ".testingplatform/repository-links-final.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-platform-integration-final",
+      "command": [
+        "pnpm",
+        "run",
+        "test:integration"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 9.27,
+      "completed_utc": "2026-11-01T21:52:50.148872+00:00",
+      "private_log": ".testingplatform/repository-platform-integration-final.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-plugin-types-final",
+      "command": [
+        "pnpm",
+        "--dir",
+        "plugins/dsh-our-free-model",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 6.436,
+      "completed_utc": "2026-11-01T21:53:05.110399+00:00",
+      "private_log": ".testingplatform/repository-plugin-types-final.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-plugin-contributor-final",
+      "command": [
+        "pnpm",
+        "--dir",
+        "plugins/dsh-our-free-model",
+        "run",
+        "test:contributor"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 104.16,
+      "completed_utc": "2026-11-01T21:55:26.700974+00:00",
+      "private_log": ".testingplatform/repository-plugin-contributor-final.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-replay",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:built"
+      ],
+      "exit_code": 130,
+      "duration_seconds": 656.704,
+      "completed_utc": "2026-11-01T21:59:07.114340+00:00",
+      "private_log": ".testingplatform/repository-web-replay.log",
+      "environment": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "1"
+      },
+      "result_status": "interrupted",
+      "reason": "Stopped serial214-file browser inventory with SIGINT to rerun the complete inventory through the maintained CI runner with2browser workers and serial HMR owners; no pass claimed."
+    },
+    {
+      "label": "repository-web-ci-final",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 78.839,
+      "completed_utc": "2026-11-01T22:01:11.783406+00:00",
+      "private_log": ".testingplatform/repository-web-ci-final.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-platform-smoke-final",
+      "command": [
+        "pnpm",
+        "run",
+        "smoke:platform"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 5.767,
+      "completed_utc": "2026-11-01T22:02:05.416310+00:00",
+      "private_log": ".testingplatform/repository-platform-smoke-final.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint-final",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 688.522,
+      "completed_utc": "2026-11-01T22:02:18.326507+00:00",
+      "private_log": ".testingplatform/repository-lint-final.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-retrieval-smoke-final",
+      "command": [
+        "node",
+        "testing-platform/smoke.mjs",
+        "--retrieval"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.844,
+      "completed_utc": "2026-11-01T22:03:11.898474+00:00",
+      "private_log": ".testingplatform/repository-retrieval-smoke-final.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "conversation-hmr-negative-control",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "packages/client/ui-conversation/tests/apply-wiring.client.spec.tsx",
+        "-t",
+        "publishes composer inject faces|withdraws provider-owned shell entries",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "result_status": "negative control reproduced",
+      "reported_suite_duration_seconds": 1.87,
+      "tests": {
+        "failed_as_intended": 2,
+        "filtered": 7
+      },
+      "private_log": ".testingplatform/conversation-hmr-negative.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+      }
+    },
+    {
+      "label": "conversation-hmr-positive",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "packages/client/ui-conversation/tests/apply-wiring.client.spec.tsx",
+        "packages/client/ui-conversation/tests/apply-inject.client.spec.tsx",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "reported_suite_duration_seconds": 3.47,
+      "tests": {
+        "files": 2,
+        "passed": 25
+      },
+      "private_log": ".testingplatform/conversation-hmr-positive.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+      }
+    },
+    {
+      "label": "conversation-hmr-fixed-web",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/hmr-live.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "reported_suite_duration_seconds": 25.17,
+      "tests": {
+        "files": 1,
+        "passed": 1
+      },
+      "private_log": ".testingplatform/conversation-hmr-fixed-web.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000",
+        "DSH_SNAPSHOT": "replay"
+      }
+    },
+    {
+      "label": "conversation-hmr-scoped-lint",
+      "command": [
+        "node",
+        "--import",
+        "tsx/esm",
+        "scripts/run-oxlint.ts",
+        "packages/client/ui-conversation/src/client/apply.ts",
+        "packages/client/ui-conversation/tests/apply-wiring.client.spec.tsx"
+      ],
+      "exit_code": 0,
+      "private_log": ".testingplatform/conversation-hmr-lint.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2"
+      }
+    },
+    {
+      "label": "repository-check-all-after-repairs",
+      "command": [
+        "pnpm",
+        "run",
+        "check:all"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 1058.712,
+      "completed_utc": "2026-11-01T22:30:20.602845+00:00",
+      "private_log": ".testingplatform/repository-check-all-after-repairs.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "VITEST_MAX_WORKERS": "4",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TEST_TURBOVEC_PYTHON": "<repo>/.testingplatform/retrieval-python/bin/python",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_SNAPSHOT_MAX_WORKERS": "1",
+        "DSH_SNAPSHOT_MAX_CONCURRENCY": "2"
+      }
+    },
+    {
+      "label": "repository-client-typecheck-after-hmr-tests",
+      "command": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "-p",
+        "tsconfig.client.json"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 18.867,
+      "completed_utc": "2026-11-01T22:34:09.881723+00:00",
+      "private_log": ".testingplatform/repository-client-typecheck-after-hmr-tests.log",
+      "environment": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "conversation-hmr-types-unit",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "packages/client/ui-conversation/tests/apply-wiring.client.spec.tsx",
+        "packages/client/ui-conversation/tests/apply-inject.client.spec.tsx",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "reported_suite_duration_seconds": 3.63,
+      "tests": {
+        "files": 2,
+        "passed": 25
+      },
+      "private_log": ".testingplatform/conversation-hmr-types-unit.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+      }
+    },
+    {
+      "label": "conversation-hmr-types-lint",
+      "command": [
+        "node",
+        "--import",
+        "tsx/esm",
+        "scripts/run-oxlint.ts",
+        "packages/client/ui-conversation/src/client/apply.ts",
+        "packages/client/ui-conversation/tests/apply-wiring.client.spec.tsx"
+      ],
+      "exit_code": 0,
+      "private_log": ".testingplatform/conversation-hmr-types-lint.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2"
+      }
+    },
+    {
+      "label": "repository-web-ci-after-lifecycle",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 1.767,
+      "completed_utc": "2026-11-01T22:36:21.236422+00:00",
+      "private_log": ".testingplatform/repository-web-ci-after-lifecycle.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      },
+      "failure_reason": "Harness prerequisite missing: previous failed aggregate build removed the complete client build record. No browser interaction ran; complete build is being restored before rerun."
+    },
+    {
+      "label": "client-catalog-scoped-tests",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "scripts/gen-client-catalog.spec.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "reported_suite_duration_seconds": 2.32,
+      "tests": {
+        "passed": 36
+      },
+      "private_log": ".testingplatform/client-catalog-scoped-tests.log"
+    },
+    {
+      "label": "client-catalog-scoped-lint",
+      "command": [
+        "pnpm",
+        "exec",
+        "tsx",
+        "scripts/run-oxlint.ts",
+        "scripts/slot-walk.ts",
+        "scripts/gen-client-catalog.spec.ts"
+      ],
+      "exit_code": 0,
+      "private_log": ".testingplatform/client-catalog-scoped-lint.log"
+    },
+    {
+      "label": "client-catalog-scoped-generate",
+      "command": [
+        "pnpm",
+        "gen-client-catalog"
+      ],
+      "exit_code": 0,
+      "result": "Generated metadata byte-identical to committed output.",
+      "private_log": ".testingplatform/client-catalog-scoped-generate.log"
+    },
+    {
+      "label": "client-catalog-before-check",
+      "command": [
+        "/usr/bin/time",
+        "-p",
+        "pnpm",
+        "verify-client-catalog"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "duration_seconds": 3.1,
+      "result_status": "negative control reproduced",
+      "private_log": ".testingplatform/client-catalog-before-check.log"
+    },
+    {
+      "label": "client-catalog-scoped-check",
+      "command": [
+        "/usr/bin/time",
+        "-p",
+        "pnpm",
+        "verify-client-catalog"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.82,
+      "private_log": ".testingplatform/client-catalog-scoped-check.log"
+    },
+    {
+      "label": "client-catalog-scoped-proof",
+      "command": [
+        "node",
+        "--import",
+        "tsx/esm",
+        ".testingplatform/client-catalog-scoped-registry/proof.mjs"
+      ],
+      "exit_code": 0,
+      "result": "Compared old walker and corrected candidate; old labels factory child as built-in, corrected candidate retains factory ownership.",
+      "private_log": ".testingplatform/client-catalog-scoped-registry-proof.log"
+    },
+    {
+      "label": "client-catalog-shadow-before",
+      "command": [
+        "node",
+        "--import",
+        "tsx/esm",
+        ".testingplatform/client-catalog-scoped-registry/shadow-proof.mjs",
+        "--expect-rejected"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "result_status": "negative control reproduced against initial private scope resolver",
+      "private_log": ".testingplatform/client-catalog-scoped-shadow-before.log"
+    },
+    {
+      "label": "client-catalog-shadow-after",
+      "command": [
+        "node",
+        "--import",
+        "tsx/esm",
+        ".testingplatform/client-catalog-scoped-registry/shadow-proof.mjs",
+        "--expect-rejected"
+      ],
+      "exit_code": 0,
+      "result": "All three shadowed receiver arrays empty.",
+      "private_log": ".testingplatform/client-catalog-scoped-shadow-after.log"
+    },
+    {
+      "label": "repository-build-after-final-repairs",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 31.33,
+      "completed_utc": "2026-11-01T22:38:51.792628+00:00",
+      "private_log": ".testingplatform/repository-build-after-final-repairs.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint-after-final-repairs",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 86.28,
+      "completed_utc": "2026-11-01T22:40:43.871461+00:00",
+      "private_log": ".testingplatform/repository-lint-after-final-repairs.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-question-failure-reproduction",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/question-composer.e2e.ts",
+        "-t",
+        "asks through the composer, answers, and completes with the answer logged",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 8.044,
+      "completed_utc": "2026-11-01T22:48:18.755306+00:00",
+      "private_log": ".testingplatform/repository-question-failure-reproduction.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-preview-failure-reproduction",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/preview-boot.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 5.978,
+      "completed_utc": "2026-11-01T22:48:59.988232+00:00",
+      "private_log": ".testingplatform/repository-preview-failure-reproduction.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-fold-failure-reproduction",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/fold-blank-matrix.e2e.ts",
+        "-t",
+        "main/other-tab/steps",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 9.561,
+      "completed_utc": "2026-11-01T22:50:33.199319+00:00",
+      "private_log": ".testingplatform/repository-fold-failure-reproduction.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-present-failure-reproduction",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/present.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 15.679,
+      "completed_utc": "2026-11-01T22:54:19.656788+00:00",
+      "private_log": ".testingplatform/repository-present-failure-reproduction.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-ci-complete-build",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 1248.077,
+      "completed_utc": "2026-11-01T23:01:36.552578+00:00",
+      "private_log": ".testingplatform/repository-web-ci-complete-build.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-repair-unit-tests",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "packages/client/ui-agent-preset/tests/apply.client.spec.ts",
+        "packages/client/ui-chat/tests/fold-follow.client.spec.ts",
+        "packages/experimental/webworker-packer/tests/native-retrieval.spec.ts",
+        "--maxWorkers=2"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 4.838,
+      "completed_utc": "2026-11-01T23:04:11.983582+00:00",
+      "private_log": ".testingplatform/repository-web-repair-unit-tests.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-after-browser-repairs",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 54.273,
+      "completed_utc": "2026-11-01T23:07:30.307430+00:00",
+      "private_log": ".testingplatform/repository-build-after-browser-repairs.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-browser-root-cause-checks",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/question-composer.e2e.ts",
+        "apps/web/tests/preview-boot.e2e.ts",
+        "apps/web/tests/fold-blank-matrix.e2e.ts",
+        "-t",
+        "asks through the composer, answers, and completes with the answer logged|boots the packed worker deployment to an interactive page|main/other-tab/steps",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 46.913,
+      "completed_utc": "2026-11-01T23:09:32.885878+00:00",
+      "private_log": ".testingplatform/repository-browser-root-cause-checks.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-secret-mask-failure-reproduction",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/user-text-secret-mask.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 7.02,
+      "completed_utc": "2026-11-01T23:13:30.410711+00:00",
+      "private_log": ".testingplatform/repository-secret-mask-failure-reproduction.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-secret-mask-unit-tests",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "packages/client/ui-secret-mask/tests/secret-text.client.spec.tsx",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 3.268,
+      "completed_utc": "2026-11-01T23:16:14.327727+00:00",
+      "private_log": ".testingplatform/repository-secret-mask-unit-tests.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-build-baseline-fold-and-secret-fix",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 32.916,
+      "completed_utc": "2026-11-01T23:17:57.247436+00:00",
+      "private_log": ".testingplatform/repository-build-baseline-fold-and-secret-fix.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-secret-mask-browser-fixed",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/user-text-secret-mask.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 5.101,
+      "completed_utc": "2026-11-01T23:19:06.253157+00:00",
+      "private_log": ".testingplatform/repository-secret-mask-browser-fixed.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-cua-scroll-owner-browser-fixed",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/cua-permissions.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 46.366,
+      "completed_utc": "2026-11-01T23:20:58.317356+00:00",
+      "private_log": ".testingplatform/repository-cua-scroll-owner-browser-fixed.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-reader-flow-candidate",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 36.466,
+      "completed_utc": "2026-11-01T23:24:54.737731+00:00",
+      "private_log": ".testingplatform/repository-build-reader-flow-candidate.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-fold-reader-flow-browser-check",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/fold-blank-matrix.e2e.ts",
+        "-t",
+        "main/other-tab/steps",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 9.248,
+      "completed_utc": "2026-11-01T23:26:09.402688+00:00",
+      "private_log": ".testingplatform/repository-fold-reader-flow-browser-check.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-shell-keyboard-browser-fixed",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/shell-command-details.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 26.233,
+      "completed_utc": "2026-11-01T23:28:51.503127+00:00",
+      "private_log": ".testingplatform/repository-shell-keyboard-browser-fixed.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-cua-scroll-owner-browser-final",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/cua-permissions.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 56.303,
+      "completed_utc": "2026-11-01T23:29:21.572549+00:00",
+      "private_log": ".testingplatform/repository-cua-scroll-owner-browser-final.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-catalog-after-browser-repairs",
+      "command": [
+        "pnpm",
+        "run",
+        "verify-client-catalog"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 3.611,
+      "completed_utc": "2026-11-01T23:29:29.665558+00:00",
+      "private_log": ".testingplatform/repository-catalog-after-browser-repairs.log",
+      "environment": {}
+    },
+    {
+      "label": "repository-cua-current-component-browser-check",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/cua-permissions.e2e.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 20.151,
+      "completed_utc": "2026-11-01T23:32:57.779546+00:00",
+      "private_log": ".testingplatform/repository-cua-current-component-browser-check.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-final-source",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 45.421,
+      "completed_utc": "2026-11-01T23:42:13.865780+00:00",
+      "private_log": ".testingplatform/repository-build-final-source.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint-final-validation",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 104.317,
+      "completed_utc": "2026-11-01T23:45:53.757260+00:00",
+      "private_log": ".testingplatform/repository-lint-final-validation.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint-fixture-unit-checks",
+      "command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "packages/client/ui-agent-preset/tests/apply.client.spec.ts",
+        "packages/experimental/webworker-packer/tests/native-retrieval.spec.ts",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 6.949,
+      "completed_utc": "2026-11-01T23:48:51.437030+00:00",
+      "private_log": ".testingplatform/repository-lint-fixture-unit-checks.log",
+      "environment": {
+        "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+      }
+    },
+    {
+      "label": "repository-lint-typed-fixtures-corrected",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 382.032,
+      "completed_utc": "2026-11-01T23:55:06.522612+00:00",
+      "private_log": ".testingplatform/repository-lint-typed-fixtures-corrected.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint-final-ready",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 112.216,
+      "completed_utc": "2026-11-01T23:58:41.178914+00:00",
+      "private_log": ".testingplatform/repository-lint-final-ready.log",
+      "environment": {
+        "DSH_OXLINT_THREADS": "2",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-check-final-ready",
+      "command": [
+        "pnpm",
+        "run",
+        "build:check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 13.864,
+      "completed_utc": "2026-11-02T00:00:21.369098+00:00",
+      "private_log": ".testingplatform/repository-build-check-final-ready.log",
+      "environment": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_TELEMETRY_DISABLED": "1"
+      }
+    },
+    {
+      "label": "repository-web-ci-final-validation",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 130,
+      "duration_seconds": 301.21,
+      "completed_utc": "2026-11-02T00:05:22.618284+00:00",
+      "private_log": ".testingplatform/repository-web-ci-final-validation.log",
+      "environment": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "3"
+      },
+      "outcome": "Intentionally interrupted after review found supported Unicode truncation and a cached Creator action lifecycle defect; no full-pool verdict. Serial HMR and client-plugin owners passed before interruption."
+    },
+    {
+      "label": "repository-build-reviewed-fixes",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 60.481,
+      "completed_utc": "2026-11-02T00:22:24.589773+00:00",
+      "private_log": ".testingplatform/repository-build-reviewed-fixes.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-creator-fixtures-corrected",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 54.132,
+      "completed_utc": "2026-11-02T00:24:55.573162+00:00",
+      "private_log": ".testingplatform/repository-build-creator-fixtures-corrected.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-reviewed-browser-owners",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/user-text-secret-mask.e2e.ts",
+        "apps/web/tests/agent-preset-authoring.e2e.ts",
+        "apps/web/tests/developer-tools-settings.e2e.ts",
+        "apps/web/tests/queue-actions.e2e.ts",
+        "apps/web/tests/steering.e2e.ts",
+        "--fileParallelism",
+        "--maxWorkers=2"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 47.062,
+      "completed_utc": "2026-11-02T00:25:50.376586+00:00",
+      "private_log": ".testingplatform/repository-reviewed-browser-owners.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-waiter-forced-failures",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        ".testingplatform/web-waiter-followup/control.config.ts",
+        "-t",
+        "across button stop|steers directly \\(reconnect\\).*uses Cmd\\+Enter",
+        "--maxWorkers=1"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 72.468,
+      "completed_utc": "2026-11-02T00:27:17.278672+00:00",
+      "private_log": ".testingplatform/repository-web-waiter-forced-failures.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      },
+      "expected_exit_code": 1,
+      "outcome": "Two deliberately injected failures and replay-underconsumption teardown diagnostics; no unhandled promise rejection after the 31-second failure observation hooks. Eleven unselected cases are filter skips, not product skips."
+    },
+    {
+      "label": "repository-lint-reviewed-source",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 314.84,
+      "completed_utc": "2026-11-02T00:32:48.119194+00:00",
+      "private_log": ".testingplatform/repository-lint-reviewed-source.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_OXLINT_THREADS": "2"
+      }
+    },
+    {
+      "label": "repository-web-ci-reviewed-source",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 986.162,
+      "completed_utc": "2026-11-02T00:49:14.390965+00:00",
+      "private_log": ".testingplatform/repository-web-ci-reviewed-source.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "3"
+      }
+    },
+    {
+      "label": "repository-web-timeout-owner-controls",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/question-composer.e2e.ts",
+        "apps/web/tests/models-settings-recovery.e2e.ts",
+        "apps/web/tests/reference-composer.e2e.ts",
+        "--fileParallelism",
+        "--maxWorkers=2"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 19.185,
+      "completed_utc": "2026-11-02T00:50:48.875125+00:00",
+      "private_log": ".testingplatform/repository-web-timeout-owner-controls.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-ci-two-worker-validation",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 1260.777,
+      "completed_utc": "2026-11-02T01:13:22.872028+00:00",
+      "private_log": ".testingplatform/repository-web-ci-two-worker-validation.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "2"
+      }
+    },
+    {
+      "label": "repository-check-all-post-browser-inventory",
+      "command": [
+        "pnpm",
+        "run",
+        "check:all"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 1495.264,
+      "completed_utc": "2026-11-02T01:40:52.604644+00:00",
+      "private_log": ".testingplatform/repository-check-all-post-browser-inventory.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_GATE_VERBOSE": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "VITEST_MAX_WORKERS": "4",
+        "DSH_SNAPSHOT_MAX_WORKERS": "1",
+        "DSH_SNAPSHOT_MAX_CONCURRENCY": "2",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TEST_TURBOVEC_PYTHON": "<repo>/.testingplatform/retrieval-python/bin/python",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-python-probe-and-rescope-fixes",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 1,
+      "duration_seconds": 31.365,
+      "completed_utc": "2026-11-02T01:51:50.216477+00:00",
+      "private_log": ".testingplatform/repository-build-python-probe-and-rescope-fixes.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-build-rescope-tuple-types-corrected",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 30.04,
+      "completed_utc": "2026-11-02T01:53:51.462054+00:00",
+      "private_log": ".testingplatform/repository-build-rescope-tuple-types-corrected.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-search-native-owner-diagnostics",
+      "command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        ".testingplatform/focused-owner-diagnostic/control.config.ts",
+        "--fileParallelism",
+        "--maxWorkers=2"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 69.4,
+      "completed_utc": "2026-11-02T01:56:21.700547+00:00",
+      "private_log": ".testingplatform/repository-web-search-native-owner-diagnostics.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-lint-post-startup-fixes",
+      "command": [
+        "pnpm",
+        "run",
+        "lint"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 86.65,
+      "completed_utc": "2026-11-02T02:00:43.660374+00:00",
+      "private_log": ".testingplatform/repository-lint-post-startup-fixes.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-doc-quick-post-startup-fixes",
+      "command": [
+        "pnpm",
+        "run",
+        "test:docs"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 61.817,
+      "completed_utc": "2026-11-02T02:01:45.563074+00:00",
+      "private_log": ".testingplatform/repository-doc-quick-post-startup-fixes.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-doc-sync-post-startup-fixes",
+      "command": [
+        "pnpm",
+        "run",
+        "doc-sync"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 182.637,
+      "completed_utc": "2026-11-02T02:04:48.231128+00:00",
+      "private_log": ".testingplatform/repository-doc-sync-post-startup-fixes.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-full-diagnostic-post-startup-fixes",
+      "command": [
+        "node",
+        ".testingplatform/focused-owner-diagnostic/run-full.mjs"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1043.481,
+      "completed_utc": "2026-11-02T02:23:27.413080+00:00",
+      "private_log": ".testingplatform/repository-web-full-diagnostic-post-startup-fixes.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-check-all-after-probe-rescope-fixes",
+      "command": [
+        "pnpm",
+        "run",
+        "check:all"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1173.623,
+      "completed_utc": "2026-11-02T02:51:00.187476+00:00",
+      "private_log": ".testingplatform/repository-check-all-after-probe-rescope-fixes.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "DSH_GATE_VERBOSE": "1",
+        "DSH_OXLINT_THREADS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "VITEST_MAX_WORKERS": "4",
+        "DSH_SNAPSHOT_MAX_WORKERS": "1",
+        "DSH_SNAPSHOT_MAX_CONCURRENCY": "2",
+        "DSH_SNAPSHOT": "replay",
+        "DSH_TEST_TURBOVEC_PYTHON": "<repo>/.testingplatform/retrieval-python/bin/python",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-web-ci-final-published-path",
+      "command": [
+        "pnpm",
+        "run",
+        "test:web:ci"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1089.84,
+      "completed_utc": "2026-11-02T03:10:46.628731+00:00",
+      "private_log": ".testingplatform/repository-web-ci-final-published-path.log",
+      "environment": {
+        "DSH_SNAPSHOT": "replay",
+        "DSH_WEB_SNAPSHOT_WORKERS": "2",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
+    {
+      "label": "repository-retrieval-smoke-published-source",
+      "command": [
+        "node",
+        "testing-platform/smoke.mjs",
+        "--retrieval"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.612,
+      "completed_utc": "2026-11-02T03:12:01.079138+00:00",
+      "private_log": ".testingplatform/repository-retrieval-smoke-published-source.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1"
+      }
+    },
+    {
+      "label": "repository-platform-smoke-published-source",
+      "command": [
+        "pnpm",
+        "run",
+        "smoke:platform"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 2.199,
+      "completed_utc": "2026-11-02T03:12:01.666125+00:00",
+      "private_log": ".testingplatform/repository-platform-smoke-published-source.log",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1"
+      }
+    },
+    {
+      "label": "repository-build-check-after-final-web",
+      "command": [
+        "pnpm",
+        "run",
+        "build:check"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 12.514,
+      "completed_utc": "2026-11-02T03:15:00.908332+00:00",
+      "private_log": ".testingplatform/repository-build-check-after-final-web.log",
+      "environment": {
+        "DSH_GATE_CONCURRENCY": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    }
+  ],
   "negative_controls": [
     {
       "subject": "Rescope Git index above1MiB",
@@ -14,6 +1498,1142 @@
       "subject": "Pinned import vs maintained-source assertion checks",
       "old_result": "Pinned-import regression failed as intended.",
       "fixed_result": "71tests pass; baseline unchanged; maintained source still rejected."
+    },
+    {
+      "subject": "Static client resources with repaired code ownership",
+      "old_classification": "23violations when resource handling is disabled",
+      "fixed_classification": "0violations;13positive/negative graph tests pass, including rejection of code under assets/locales."
+    },
+    {
+      "subject": "Conversation provider admission and withdrawal",
+      "old_result": "Both new lifecycle regressions fail on unchanged production source: composer publishes before provider activation; shell entries survive provider withdrawal.",
+      "fixed_result": "25 focused wiring tests pass; unchanged browser HMR test passes.",
+      "private_log": ".testingplatform/conversation-hmr-negative.log"
+    },
+    {
+      "subject": "Scoped registry catalog ownership",
+      "old_result": "Existing workspace assertion and freshness check fail when the scoped registry helper is omitted.",
+      "fixed_result": "36 generator tests pass, including the unchanged workspace factory assertion; regenerated metadata is byte-identical.",
+      "private_log": ".testingplatform/client-catalog-scoped-registry-proof.log"
+    },
+    {
+      "subject": "Receiver shadowing in the initial private alias resolver",
+      "old_result": "Expected rejection proof failed for imported, loop-scoped, and named-function bindings.",
+      "fixed_result": "One-source TypeScript symbol lookup rejects all three; expanded unit cases include import variants, loops, hoisted var, and expression shadowing.",
+      "private_log": ".testingplatform/client-catalog-scoped-shadow-after.log"
     }
-  ]
+  ],
+  "first_aggregate": {
+    "passed_gates": 72,
+    "failed_gates": [
+      "client domain graph",
+      "test",
+      "Issue management policy",
+      "test:snapshot"
+    ],
+    "unit": {
+      "files_failed": 22,
+      "files_passed": 2274,
+      "files_skipped": 22,
+      "failed": 84,
+      "passed": 47403,
+      "expected_fail": 1,
+      "skipped": 244
+    },
+    "unit_failure_names": [
+      "|thread-safe| scripts/ci-compatible-selfhosted.spec.ts [ scripts/ci-compatible-selfhosted.spec.ts ]",
+      "|thread-safe| scripts/desktop-publish-workflow.spec.ts [ scripts/desktop-publish-workflow.spec.ts ]",
+      "|thread-safe| scripts/macos-package-workflow.spec.ts [ scripts/macos-package-workflow.spec.ts ]",
+      "|thread-safe| scripts/preview-workflow.spec.ts [ scripts/preview-workflow.spec.ts ]",
+      "|thread-safe| scripts/windows-package-workflow.spec.ts [ scripts/windows-package-workflow.spec.ts ]",
+      "|thread-safe| scripts/tests/ci-release-selfhosted.spec.ts [ scripts/tests/ci-release-selfhosted.spec.ts ]",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > keeps at most ten worker jobs active across PR workflows while Python runtime targets follow the SDK suite",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > keeps the union of required PR verdicts equal to the pre-split blocking set",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > retains aggregate diagnostics in required builds and protected publication",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > selects artifact builds only for PR release and API rehearsals",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > selects PR artifact compilation inside the Python executable builder",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > prepares confinement before Node compatibility smokes",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > ci.yml cancels superseded validation runs without crossing workflow or ref boundaries",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > ci-master.yml cancels superseded validation runs without crossing workflow or ref boundaries",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > e2e.yml cancels superseded validation runs without crossing workflow or ref boundaries",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > release.yml cancels superseded validation runs without crossing workflow or ref boundaries",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > release-vendor.yml cancels superseded validation runs without crossing workflow or ref boundaries",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > cancels reusable CI builds without cancelling release-owned builds",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > does not cancel protected publication or deployment transactions",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > skips coverage-history uploads on cancellation but retains Wine cleanup",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > reuses node-24-coverage coverage timings only within its platform and runner pool",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > reuses windows-coverage coverage timings only within its platform and runner pool",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > isolates every pnpm action setup destination per runner",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > node-24 keeps tool and fixture temporary files under runner cleanup",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > node-24-coverage keeps tool and fixture temporary files under runner cleanup",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > node-24-consumers keeps tool and fixture temporary files under runner cleanup",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > isolates the python SDK exe pnpm setup destination per job",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > keeps split native Windows PR jobs with failover in their own workflow, plus a master-only standby",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > runs the darwin unit parity inventory at the coverage lanes' test budget",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > gates standalone keyless blacksmith jobs and benchmark tiers on the failover variables",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > runs required benchmarks on standard hosted Linux independently of failover",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > always restores the hosted benchmark pnpm cache",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > bounds the complete benchmark job to twenty minutes",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > publishes the scaled benchmark report even when a budget fails",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > cancels superseded master runs without changing the post-merge job inventory",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > redirects the Node compile cache to the data-volume runner temp before the first pnpm call",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > requires release-shaped Python runtime validation on Linux and Windows x64 in CI Python",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > builds SSH executables only for explicit manual or release requests",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > requires SSH helper acceptance before uploading artifacts or publishing",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > validates any ref by default but refuses publication without the matching SSH release tag",
+      "|thread-safe| scripts/ci-workflow.spec.ts > CI workflow > validates the SSH native matrix before allocating runners",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Runtime and LLM e2e Blacksmith routing > routes DeepSeek e2e only through the Linux Blacksmith switch",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Runtime and LLM e2e Blacksmith routing > keeps native release and dispatch builders hosted while routing x64 CI by platform",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Runtime and LLM e2e Blacksmith routing > routes runtime plan only for non-release CI",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Runtime and LLM e2e Blacksmith routing > routes runtime sdk-wheel only for non-release CI",
+      "|thread-safe| scripts/ci-workflow.spec.ts > DeepSeek e2e workflow > prepares bubblewrap from the pinned payload without a package transaction",
+      "|thread-safe| scripts/ci-workflow.spec.ts > DeepSeek e2e workflow > bounds profile subprocess fan-out to the tested e2e default",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Python release workflows > keeps complete wheel validation separate from protected public publication",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Python release workflows > exposes the native wheel builder to the release caller with normalized versions",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Weighted approval workflow > publishes from the trusted default branch after pull request and review updates",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Issue lifecycle workflow > allocates lifecycle runners only for events that can change the board",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Issue lifecycle workflow > mints Project credentials only after preflight and always revalidates current metadata",
+      "|thread-safe| scripts/ci-workflow.spec.ts > npm release workflows > passes the optional vendor channel as a quoted argument while preserving default publication",
+      "|thread-safe| scripts/ci-workflow.spec.ts > npm release workflows > keeps publication dispatch-only and pack in the PR workflow",
+      "|thread-safe| scripts/ci-workflow.spec.ts > npm release workflows > runs dependency policy and npm layout checks in the DSH release workflow",
+      "|thread-safe| scripts/ci-workflow.spec.ts > Documentation site publication > keeps Pages deployment dispatch-only from a dsh-v* tag",
+      "|thread-safe| scripts/client-build-environment.client.spec.ts > client build environment > keeps public client values out of workflow-wide environments",
+      "|thread-safe| scripts/desktop-package-source.spec.ts > macos packaging accepts test branches but preserves production and tag restrictions",
+      "|thread-safe| scripts/desktop-package-source.spec.ts > windows packaging accepts test branches but preserves production and tag restrictions",
+      "|thread-safe| scripts/verify-repository-references.spec.ts > maintained repository reference policy > does not fetch missing commits from a partial clone's promisor remote",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci.yml all-checks-passed reports success dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci.yml all-checks-passed reports failure dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci.yml all-checks-passed reports skipped dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci.yml all-checks-passed reports cancelled dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-windows.yml windows-checks-passed reports success dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-windows.yml windows-checks-passed reports failure dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-windows.yml windows-checks-passed reports skipped dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-windows.yml windows-checks-passed reports cancelled dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-python.yml python-checks-passed reports success dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-python.yml python-checks-passed reports failure dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-python.yml python-checks-passed reports skipped dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > ci-python.yml python-checks-passed reports cancelled dependencies in active runs but never starts a cancelled-run verdict",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > distinguishes the obsolete always verdict from the cancellable status guard",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > keeps the required Python PR verdict and its two x64 targets in CI Python",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > runs all three deferred carriers on master pushes with fail-loud API credentials",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > runs Wine once on hosted master CI and seeds its own apt cache",
+      "|thread-safe| scripts/tests/ci-master-platforms.spec.ts > master-only platform scheduling > retains the complete release matrix independently of CI scheduling",
+      "|thread-safe| apps/desktop/tests/desktop-publish-local-preflight.spec.ts > runs the local preflight before dependency installation in both self-hosted jobs",
+      "|thread-safe| apps/desktop/tests/prepare-runtime-patches.spec.ts > classifies the current workspace and shares only runtime patch bytes",
+      "|thread-safe| packages/boot/plugin-manager/tests/manager.spec.ts > installs github:acme/connected through real Git and pnpm with private repository SSH fallback",
+      "|thread-safe| packages/boot/plugin-manager/tests/manager.spec.ts > offers approval for a real git-hosted package pnpm refused to prepare",
+      "|thread-safe| packages/boot/plugin-market/tests/repository-cache.spec.ts > refuses a repository that a completed fetch left past its limit",
+      "|thread-safe| packages/client/connection/tests/binary-rpc.host.spec.ts > Connection binary RPC > preserves none configuration through the HTTP bridge",
+      "|thread-safe| packages/client/ui-sidebar-documentpreview/tests/document-preview-license-bundle.client.spec.ts > published document preview licenses > keeps bundled licenses in the packed lazy chunks",
+      "|thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > boots every shipped tool package and harvests its model-facing schemas",
+      "|thread-safe| packages/experimental/ptc-runtime-python/tests/runtime.spec.ts > PythonPtcRuntime \u2014 hostile peer > flushes logs before framing the value so their peaks do not add against RLIMIT_AS",
+      "|thread-safe| packages/experimental/worktree/tests/checkout-safety.spec.ts > worktree checkout Git configuration > disables required clean and smudge filters named x=y without changing repository configuration",
+      "|thread-safe| packages/experimental/worktree/tests/checkout-safety.spec.ts > worktree checkout Git configuration > uses the selected checkout attributes instead of an inherited attribute tree",
+      "|thread-safe| packages/experimental/worktree/tests/worktree.spec.ts > creating and entering retained worktrees > refuses missing partial-clone objects without fetching from the available local remote",
+      "|thread-safe| packages/retrieval/retrieval-tools/tests/tools.spec.ts > retrieval tools over the native store > searches indexed workspace files and cites path plus line range"
+    ],
+    "snapshot": {
+      "failed": 4,
+      "passed": 235,
+      "skipped": 2,
+      "cause": "Matching Playwright browser executables absent; installed through apps/web package CLI.",
+      "failure_names": [
+        "apps/web/tests/code-language.snapshot.ts > replays highlighted Python stubs, PowerShell and CSV reads with their document previews",
+        "apps/web/tests/minimal-preset.snapshot.ts > minimal agent preset > expands the completed persistent Bash call in the Web conversation",
+        "apps/web/tests/minimal-preset.snapshot.ts > minimal manual compaction > renders the manual compaction card and its summary",
+        "apps/web/tests/minimal-preset.snapshot.ts > minimal image reading > renders the existing image tool card and preview"
+      ]
+    }
+  },
+  "toolchain": {
+    "node": "24.22.1",
+    "git": "2.56.0",
+    "git_install": "Homebrew; prior Apple Git2.39.3 does not meet documented no-lazy-fetch requirements",
+    "browsers": "apps/web pinned Playwright Chromium and WebKit installed"
+  },
+  "focused_repairs": {
+    "script_suites": {
+      "files": 5,
+      "tests": 277
+    },
+    "workflow_reference_suites": {
+      "files": 11,
+      "passed": 197,
+      "windows_skips": 3
+    },
+    "issue_policy": {
+      "passed": 51
+    },
+    "browser": {
+      "files": 12,
+      "passed": 46
+    },
+    "preview_source": {
+      "files": 57,
+      "passed": 595
+    },
+    "preview_packed_license": {
+      "files": 1,
+      "passed": 1,
+      "duration_seconds": 7.39
+    },
+    "chat_conversation_account": {
+      "files": 134,
+      "passed": 2165
+    },
+    "worktree_security": {
+      "passed": 2,
+      "filtered": 28
+    },
+    "conversation_lifecycle": {
+      "files": 2,
+      "passed": 25,
+      "browser_hmr_passed": 1
+    },
+    "client_catalog": {
+      "tests": 36,
+      "generated_metadata": "byte-identical to committed output"
+    }
+  },
+  "second_aggregate": {
+    "passed_gates": 68,
+    "failed_gates": [
+      "test",
+      "build",
+      "client catalog"
+    ],
+    "skipped_gates": [
+      "test:snapshot",
+      "test:expected",
+      "publint",
+      "node-next types",
+      "doc-typecheck:contracts-ready"
+    ],
+    "skip_reason": "Build-dependent checks blocked by new regression-test typing errors; not counted as passed.",
+    "unit": {
+      "files_failed": 1,
+      "files_passed": 2295,
+      "files_skipped": 22,
+      "failed": 1,
+      "passed": 47614,
+      "expected_fail": 1,
+      "skipped": 247
+    },
+    "unit_failure": "scripts/gen-client-catalog.spec.ts: factory conversation.content declaration mislabeled as runtime built-in after a scoped registry alias.",
+    "build_failure": "Four client aggregate diagnostics in the new apply-wiring test: three incompatible erased-callback return assertions and one boolean-returning cleanup callback.",
+    "resolved_worker_defaults": {
+      "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+    }
+  },
+  "first_complete_web_inventory": {
+    "serial": {
+      "files_passed": 2,
+      "tests_passed": 7
+    },
+    "pool": {
+      "files_failed": 35,
+      "files_passed": 176,
+      "files_skipped": 1,
+      "tests_failed": 52,
+      "tests_passed": 760,
+      "tests_skipped": 20,
+      "unhandled_errors": 2
+    },
+    "failure_blocks": [
+      "apps/web/tests/lifecycle-chrome.e2e.ts > web e2e: lifecycle & chrome (workspace flow / reload / dark mode)",
+      "apps/web/tests/lifecycle-chrome.e2e.ts > web e2e: lifecycle & chrome (workspace flow / reload / dark mode)",
+      "apps/web/tests/official-subagent-bundle.e2e.ts > web snapshot: Official native subagent bundle",
+      "apps/web/tests/official-subagent-bundle.e2e.ts > web snapshot: Official native subagent bundle",
+      "apps/web/tests/official-subagent-bundle.e2e.ts > web snapshot: Official native subagent bundle",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly",
+      "apps/web/tests/standalone-string-editor.e2e.ts > web snapshot: standalone string editor through PTC",
+      "apps/web/tests/standalone-string-editor.e2e.ts > web snapshot: standalone string editor through PTC",
+      "apps/web/tests/standalone-string-editor.e2e.ts > web snapshot: standalone string editor through PTC",
+      "apps/web/tests/steering.e2e.ts > web e2e: mid-turn steering lands durably and visibly",
+      "apps/web/tests/steering.e2e.ts > web e2e: mid-turn steering lands durably and visibly",
+      "apps/web/tests/subagent-interrupt-ui.e2e.ts > web e2e: composer interrupt for a running continuable child",
+      "apps/web/tests/agent-preset-authoring.e2e.ts > web e2e: preset roster guidance > starts a Creator-mode task from the section entry",
+      "apps/web/tests/agent-preset-authoring.e2e.ts > web e2e: preset roster guidance > runs without page errors or model calls",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > clears an unapplied hidden pick and creates a Standard session with the roster editable in Settings",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > names every preset and what it is for",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > applies the staged pick to the blank session, and the host honors it",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > omits eagerly failed presets from selection and retains their diagnostics",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > re-reads the slash catalog through the composition the switch installed",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > preserves the current mode until New Session reuses its blank under the reset Standard default",
+      "apps/web/tests/agent-preset-selection.e2e.ts > web e2e: agent-preset selection > labels a resumed session with the preset it was created under",
+      "apps/web/tests/cua-permissions.e2e.ts > keeps system requests pending until fresh observation and persists application revocation",
+      "apps/web/tests/deepseek-messages-chat.e2e.ts > web e2e: DeepSeek Messages conversation > replays the historical Messages provider while displaying DeepSeek in the model selector",
+      "apps/web/tests/default-workspace.e2e.ts > web e2e: default Workspace > prepares a blank Session on startup, reuses it after reload, and sends through the ordinary composer",
+      "apps/web/tests/developer-tools-settings.e2e.ts > persists Coding Tools and limits the built-in PTC and Minimal choices in sessions and Settings",
+      "apps/web/tests/feedback-command.e2e.ts > web e2e: /feedback command acknowledgement > records feedback and renders the acknowledgement with session and anonymous user ids",
+      "apps/web/tests/feedback-release.e2e.ts > web e2e: feedback release for deepseek-official > records feedback locally and acknowledges its session and anonymous user ids",
+      "apps/web/tests/file-upload-round.e2e.ts > web e2e: generic file upload through the real assembly > renders the durable file card beside the settled answer",
+      "apps/web/tests/fold-blank-matrix.e2e.ts > web e2e: blank area after next-message folding > main/other-tab/steps",
+      "apps/web/tests/github-ready-review.e2e.ts > web e2e: GitHub ready-for-review > isolates ingress and creates a browsable Workspace Session",
+      "apps/web/tests/goal-command-presentation.e2e.ts > web e2e: /goal human transcript presentation > completes with Tab and shows the bare input and result without a model turn",
+      "apps/web/tests/goal-multi-turn-actions.e2e.ts > web e2e: Goal keeps one assistant action row per completed turn > keeps actions on both completed Goal turn tails",
+      "apps/web/tests/lifecycle-chrome.e2e.ts > web e2e: lifecycle & chrome (workspace flow / reload / dark mode) > sends the first prompt from the empty-state hero (all modes)",
+      "apps/web/tests/lifecycle-chrome.e2e.ts > web e2e: lifecycle & chrome (workspace flow / reload / dark mode) > materialized a real Workspace and Session over the wire",
+      "apps/web/tests/lifecycle-chrome.e2e.ts > web e2e: lifecycle & chrome (workspace flow / reload / dark mode) > pins an open Think header to the conversation scrollport (real layout)",
+      "apps/web/tests/lifecycle-chrome.e2e.ts > web e2e: lifecycle & chrome (workspace flow / reload / dark mode) > recovers the whole surface across a reload from the log alone",
+      "apps/web/tests/minimal-preset.snapshot.ts > minimal agent preset > expands the completed persistent Bash call in the Web conversation",
+      "apps/web/tests/plan-review.e2e.ts > web e2e: plan review takeover round trip > reviews the plan on a decision card and approves through it",
+      "apps/web/tests/present.e2e.ts > web e2e: explicit file delivery > opens current source files after edits and reload, and reports deletion without downloading",
+      "apps/web/tests/preview-boot.e2e.ts > boots the packed worker deployment to an interactive page",
+      "apps/web/tests/ptc-round.e2e.ts > web e2e: PTC mode round renders nested sub-calls > matches the expanded conversation aria golden with stable anchors",
+      "apps/web/tests/ptc-round.e2e.ts > web e2e: PTC mode round renders nested sub-calls > renders the same recorded tool round in Japanese without translating model or tool data",
+      "apps/web/tests/question-composer.e2e.ts > web e2e: resident question composer round trip > asks through the composer, answers, and completes with the answer logged",
+      "apps/web/tests/queue-actions.e2e.ts > web e2e: queue row actions > edits and removes exact occurrences and preserves Queue across button stop",
+      "apps/web/tests/queue-actions.e2e.ts > web e2e: queue row actions > edits and removes exact occurrences and preserves Queue across button stop",
+      "apps/web/tests/queue-actions.e2e.ts > web e2e: queue row actions > runs a prompt sent after Stop when a Goal round was queued behind stopped work",
+      "apps/web/tests/queue-image.e2e.ts > web e2e: queued image submission > queues a text-plus-image submission with a thumbnail and delivers it as the next turn",
+      "apps/web/tests/queue-image.e2e.ts > web e2e: queued image submission > queues a text-plus-image submission with a thumbnail and delivers it as the next turn",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly > drives the recorded prompt to a settled turn (all modes)",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly > keeps value-free Web guidance in the system prompt and process values in runtime context",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly > rendered the settled turn: markdown, tool row, composer restore",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly > matches the conversation aria golden with stable anchors",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly > omits system prompt rows even when the Turn process is expanded",
+      "apps/web/tests/replay-round-trip.e2e.ts > web e2e: fresh round trip through the real assembly > expands and collapses the reasoning fold from its click target",
+      "apps/web/tests/session-replay-reload.e2e.ts > web session replay > 'Chromium' restores an active stream, a completed turn, and a reopened session",
+      "apps/web/tests/shell-command-details.e2e.ts > expands 'background-long-token' to wrapped commands with only foreground output",
+      "apps/web/tests/shell-command-details.e2e.ts > expands 'foreground-multiline' to wrapped commands with only foreground output",
+      "apps/web/tests/skill-user-invoke.e2e.ts > web e2e: user-explicit skill invocation through the composer > claims /name args into a gesture bubble, logged instructions, and a replayed answer",
+      "apps/web/tests/steering.e2e.ts > web e2e: mid-turn steering lands durably and visibly > strictly steers one queued row; the interjection is logged, rendered, and obeyed",
+      "apps/web/tests/streaming-fence-highlight.e2e.ts > web e2e: streaming code-fence highlighting > renders the growing fence through shiki and preserves its token tree when the turn settles",
+      "apps/web/tests/subagent-conversation.e2e.ts > web e2e: persisted subagent conversation and human continuation > matches the settled addressed-conversation aria golden and stays clean",
+      "apps/web/tests/subagent-interrupt-ui.e2e.ts > web e2e: composer interrupt for a running continuable child > interrupts the live child through the parent-offline composer",
+      "apps/web/tests/subagent-interrupt-ui.e2e.ts > web e2e: composer interrupt for a running continuable child > interrupts through subagents/interruptByParent, parks the follow-up, and resumes it FIFO",
+      "apps/web/tests/user-text-secret-mask.e2e.ts > web e2e: credential mask in user text > masks the credential in the bubble and reveals it from its own control",
+      "apps/web/tests/voice-input.e2e.ts > guides voice setup, records from standby and submits only the reviewed transcript through Session replay",
+      "apps/web/tests/voice-input.e2e.ts > guides voice setup, records from standby and submits only the reviewed transcript through Session replay",
+      "apps/web/tests/voice-input.e2e.ts > guides voice setup, records from standby and submits only the reviewed transcript through Session replay",
+      "apps/web/tests/web-search-round.e2e.ts > web e2e: opt-in Search API web search > matches the settled search card aria golden"
+    ],
+    "notes": [
+      "Detailed output includes failing setup/teardown hooks in addition to52test failures.",
+      "Question and presented-file narrow reproductions confirm missing Standard/PTC labels. Preset registrations now wait on their actual slot declarations.",
+      "Preview reproduction confirms optional native Zvec import was unresolved in the Worker image; exact native-package refusal replacement added.",
+      "Fold reproduction confirms2over-limit frames versus1allowed, with settled12px gaps; budget unchanged.",
+      "Remaining keyboard-scroll/geometry preconditions are under investigation.",
+      "At that stage of the repair, all discovered root causes now have targeted positive browser evidence; full fresh inventory remains pending. The rejected opacity-only fold candidate is not part of the final code."
+    ]
+  },
+  "supplemental_controls": {
+    "preset_declarations": {
+      "node_version": "24.22.1",
+      "command_base": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        ".testingplatform/agent-preset-declaration/vitest.config.ts"
+      ],
+      "focused_args": [
+        "-t",
+        "follows delayed Conversation declarations"
+      ],
+      "config_workers": 1,
+      "runs": [
+        {
+          "source": "old private source",
+          "exit_code": 1,
+          "expected_exit_code": 1,
+          "reported_suite_duration_seconds": 3.06,
+          "failed_as_intended": 2,
+          "filtered": 93,
+          "private_log": ".testingplatform/agent-preset-declaration-negative.log"
+        },
+        {
+          "source": "fixed private source",
+          "exit_code": 0,
+          "reported_suite_duration_seconds": 3.22,
+          "passed": 2,
+          "filtered": 93,
+          "private_log": ".testingplatform/agent-preset-declaration-positive.log"
+        },
+        {
+          "source": "fixed private source, base command without focused args",
+          "exit_code": 0,
+          "reported_suite_duration_seconds": 4.25,
+          "passed": 95,
+          "private_log": ".testingplatform/agent-preset-declaration-scratch-all.log"
+        }
+      ],
+      "candidate_type_probe": {
+        "command": [
+          "node",
+          ".testingplatform/agent-preset-declaration/check-candidate.mjs"
+        ],
+        "exit_code": 0,
+        "scope": "Two in-memory candidate files using client compiler settings; not a whole-program check.",
+        "private_log": ".testingplatform/agent-preset-declaration-types.log"
+      }
+    },
+    "reader_fold": {
+      "node_version": "24.22.1",
+      "old_condition": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          ".testingplatform/fold-reader-coverage/vitest.config.ts",
+          ".testingplatform/fold-reader-coverage/packages/client/ui-chat/tests/fold-follow.client.spec.ts",
+          "-t",
+          "later closing row|fully above the reader"
+        ],
+        "exit_code": 1,
+        "expected_exit_code": 1,
+        "reported_suite_duration_seconds": 0.828,
+        "failed_as_intended": 1,
+        "passed": 1,
+        "filtered": 13,
+        "private_log": ".testingplatform/fold-reader-flow-unit-old-control.log"
+      },
+      "fixed_live": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "packages/client/ui-chat/tests/fold-follow.client.spec.ts",
+          "packages/client/ui-chat/tests/flow-motion.client.spec.tsx",
+          "packages/client/ui-chat/tests/flow-motion-scope.client.spec.tsx",
+          "packages/client/ui-chat/tests/chat-viewport.client.spec.ts",
+          "packages/client/ui-chat/tests/chat-scroll.client.spec.tsx",
+          "packages/client/ui-chat/tests/chat-scroll-overflow.client.spec.ts",
+          "--maxWorkers=1"
+        ],
+        "exit_code": 0,
+        "reported_suite_duration_seconds": 3.39,
+        "files": 6,
+        "passed": 173,
+        "private_log": ".testingplatform/fold-reader-flow-owning-suites.log"
+      },
+      "baseline_dom_diagnostic": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          ".testingplatform/fold-dom-diagnostic/vitest.config.ts",
+          "-t",
+          "main/other-tab/steps$"
+        ],
+        "environment": {
+          "DSH_SNAPSHOT": "replay",
+          "FOLDMX_EVIDENCE": "1"
+        },
+        "exit_code": 1,
+        "reported_suite_duration_seconds": 8.0,
+        "reason": "Same frame-budget failure; later closing box translated out of its shrinking flow position.",
+        "private_log": ".testingplatform/fold-dom-diagnostic/run.log",
+        "private_artifact": ".testingplatform/fold-dom-diagnostic/evidence/foldmx-main-other-tab-steps.json"
+      },
+      "rejected_candidate": {
+        "description": "Initial top-crossing opacity-only candidate passed private unit controls but failed the actual browser gap assertion; all its source/test/doc changes were reverted.",
+        "controls_command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          ".testingplatform/fold-reader-coverage/vitest.config.ts",
+          ".testingplatform/fold-reader-coverage/packages/client/ui-chat/tests/fold-follow.client.spec.ts",
+          "-t",
+          "off-bottom reader"
+        ],
+        "old_exit_code": 1,
+        "candidate_exit_code": 0,
+        "private_logs": [
+          ".testingplatform/fold-reader-unit-old.log",
+          ".testingplatform/fold-reader-unit-fixed.log",
+          ".testingplatform/fold-reader-owning-suites.log"
+        ],
+        "browser_failure_check_label": "repository-browser-root-cause-checks",
+        "final_fix_proof": false
+      }
+    },
+    "native_worker_replacement": {
+      "command_capture": "Invocation bodies reconstructed from saved configs; original shell transcript and actual Node version were not recorded.",
+      "node_version": "not recorded",
+      "candidate_command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        ".testingplatform/preview-native-zvec.vitest.config.mjs"
+      ],
+      "old_control_environment": {
+        "DSH_PREVIEW_NATIVE_CONTROL": "old"
+      },
+      "runs": [
+        {
+          "label": "candidate",
+          "exit_code": 0,
+          "passed": 3,
+          "reported_suite_duration_seconds": 0.947,
+          "private_log": ".testingplatform/preview-native-zvec-candidate.log"
+        },
+        {
+          "label": "old control",
+          "exit_code": 1,
+          "expected_exit_code": 1,
+          "failed_as_intended": 2,
+          "passed": 1,
+          "reported_suite_duration_seconds": 0.816,
+          "private_log": ".testingplatform/preview-native-zvec-old-control.log"
+        }
+      ],
+      "existing_owner_suites": {
+        "command": [
+          "pnpm",
+          "exec",
+          "vitest",
+          "run",
+          "--config",
+          ".testingplatform/preview-native-zvec-existing.vitest.config.mjs"
+        ],
+        "exit_code": 0,
+        "files": 13,
+        "passed": 267,
+        "includes_new_cases": 3,
+        "reported_suite_duration_seconds": 4.62,
+        "private_log": ".testingplatform/preview-native-zvec-existing.log"
+      },
+      "scoped_strict_probe": {
+        "command": [
+          "pnpm",
+          "exec",
+          "tsc",
+          "-p",
+          ".testingplatform/preview-native-zvec-strict.json",
+          "--pretty",
+          "false"
+        ],
+        "exit_code": 0,
+        "private_log": ".testingplatform/preview-native-zvec-strict.log"
+      }
+    },
+    "native_scroll_completion": {
+      "node_version": "not recorded",
+      "node_selection": "Codex bundled runtime PATH; private invocation did not capture its version. Primary live seven-case verification uses the pinned repository Node.",
+      "environment": {
+        "DSH_TELEMETRY_DISABLED": "1",
+        "DSH_SNAPSHOT": "replay"
+      },
+      "baseline_command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        ".testingplatform/shell-key-trace.vitest.config.mjs",
+        ".testingplatform/shell-key-trace.e2e.ts",
+        "-t",
+        "expands.*background-long-token",
+        "--maxWorkers=1"
+      ],
+      "baseline_exit_code": 1,
+      "baseline_private_log": ".testingplatform/shell-key-trace-baseline.log",
+      "baseline_reported_suite_duration_seconds": 5.41,
+      "evidence": "Home was dispatched before the preceding End scrollend; focus stayed on the header and neither key was prevented.",
+      "positive_command": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        ".testingplatform/shell-key-trace-scrollend.vitest.config.mjs",
+        ".testingplatform/shell-key-trace-scrollend.e2e.ts",
+        "-t",
+        "expands.*background-long-token",
+        "--maxWorkers=1"
+      ],
+      "positive_exit_code": 0,
+      "positive_passed": 1,
+      "positive_filtered": 6,
+      "positive_reported_suite_duration_seconds": 8.55,
+      "positive_private_log": ".testingplatform/shell-key-trace-scrollend.log"
+    },
+    "waiter_failure_ownership": {
+      "node_version": "24.22.1",
+      "normal_command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.web.config.ts",
+        "apps/web/tests/steering.e2e.ts",
+        "apps/web/tests/queue-actions.e2e.ts",
+        "-t",
+        "strictly steers one queued row|edits and removes exact occurrences and preserves Queue across .* stop",
+        "--maxWorkers=1"
+      ],
+      "environment": {
+        "DSH_SNAPSHOT": "replay"
+      },
+      "normal_exit_code": 0,
+      "normal_passed": 3,
+      "normal_filtered": 10,
+      "normal_reported_suite_duration_seconds": 21.27,
+      "normal_private_log": ".testingplatform/web-waiter-ownership-normal.log",
+      "forced_command": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        ".testingplatform/web-waiter-ownership/control.config.ts",
+        "-t",
+        "strictly steers one queued row|edits and removes exact occurrences and preserves Queue across .* stop",
+        "--maxWorkers=1"
+      ],
+      "forced_exit_code": 1,
+      "expected_forced_exit_code": 1,
+      "forced_reported_suite_duration_seconds": 137.9,
+      "forced_cases": 3,
+      "filtered_tests": 836,
+      "filtered_files": 212,
+      "no_unhandled_error_block_observed": true,
+      "observation_seconds_before_steering_teardown": 31,
+      "forced_private_log": ".testingplatform/web-waiter-ownership-forced-failure.log",
+      "notes": "Forced golden mismatches also trigger expected replay-consumption/match teardown assertions. No forced failures or golden changes are maintained."
+    },
+    "secret_unicode": {
+      "node_version": "24.22.1",
+      "old_renderer": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "packages/client/ui-secret-mask/tests/secret-text.client.spec.tsx",
+          "--maxWorkers=1"
+        ],
+        "exit_code": 1,
+        "expected_exit_code": 1,
+        "failed_as_intended": 6,
+        "passed": 6,
+        "reported_suite_duration_seconds": 2.35,
+        "private_log": ".testingplatform/secret-unicode-renderer-old.log"
+      },
+      "fixed_owner": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "packages/client/ui-secret-mask/tests",
+          "--maxWorkers=1"
+        ],
+        "exit_code": 0,
+        "files": 4,
+        "passed": 67,
+        "reported_suite_duration_seconds": 4.44,
+        "private_log": ".testingplatform/secret-unicode-owning-tests.log"
+      },
+      "scope": "Producer-backed astral and lone-surrogate passwords, Unicode private-key bodies, CRLF, joined ranges, exact reveal/hide, masked DOM, and stable ASCII fragment elements. Unicode glyph width stability is not guaranteed."
+    },
+    "cached_creator_settings": {
+      "node_version": "24.22.1",
+      "old_renderer": {
+        "command": [
+          "pnpm",
+          "exec",
+          "vitest",
+          "run",
+          "--config",
+          ".testingplatform/creator-flow-cache.vitest.config.mjs",
+          ".testingplatform/creator-flow-cache/b/packages/client/ui-agent-preset/tests/creator-flow.client.spec.tsx",
+          "--maxWorkers=1"
+        ],
+        "environment": {
+          "DSH_CREATOR_FLOW_CONTROL": "old"
+        },
+        "exit_code": 1,
+        "expected_exit_code": 1,
+        "failed_as_intended": 2,
+        "reported_suite_duration_seconds": 3.35,
+        "private_log": ".testingplatform/creator-flow-cache-old-control.log"
+      },
+      "fixed_owner": {
+        "command": [
+          "pnpm",
+          "exec",
+          "vitest",
+          "run",
+          "packages/client/ui-agent-preset/tests",
+          "--maxWorkers=1"
+        ],
+        "exit_code": 0,
+        "files": 9,
+        "passed": 223,
+        "reported_suite_duration_seconds": 11.19,
+        "private_log": ".testingplatform/creator-flow-cache-live-units.log",
+        "rerun_reason": "Retested after aggregate compilation exposed erased mock-injection typing errors; fixture types repaired without removing the injection-count or lifecycle assertions."
+      },
+      "scope": "Real cached renderer injection in both initial declaration orders; provider activation, withdrawal and replacement retain the same Settings entry and DOM, and call entry.inject once."
+    },
+    "remaining_browser_waiters": {
+      "node_version": "24.22.1",
+      "synchronous_action_failure": {
+        "command": [
+          "node",
+          ".testingplatform/web-waiter-followup/check-action-throw.mjs"
+        ],
+        "exit_code": 0,
+        "private_log": ".testingplatform/web-waiter-followup-sync-throw.log",
+        "old_unhandled_rejections": 1,
+        "fixed_unhandled_rejections": 0,
+        "scope": "Extracts and transpiles the actual old and fixed settleQueueAction helper. Both propagate the original synchronous callback error; only the fixed helper owns the later response rejection."
+      },
+      "static_assertion_preservation": {
+        "command": [
+          "node",
+          ".testingplatform/web-waiter-followup/check-syntax.mjs"
+        ],
+        "exit_code": 0,
+        "private_log": ".testingplatform/web-waiter-followup-deferred-static.log",
+        "steering_matcher_calls": 68,
+        "queue_matcher_calls": 72,
+        "scope": "Valid TypeScript syntax; matcher call order and expected arguments preserved."
+      },
+      "scoped_lint": {
+        "command": [
+          "node",
+          "--import",
+          "tsx/esm",
+          "scripts/run-oxlint.ts",
+          "apps/web/tests/steering.e2e.ts",
+          "apps/web/tests/queue-actions.e2e.ts"
+        ],
+        "environment": {
+          "DSH_OXLINT_THREADS": "2"
+        },
+        "exit_code": 0,
+        "private_log": ".testingplatform/web-waiter-followup-deferred-lint.log"
+      },
+      "browser_forced_failures": {
+        "check_label": "repository-web-waiter-forced-failures",
+        "files": 2,
+        "failed_as_intended": 2,
+        "filtered": 11,
+        "unhandled_rejections": 0,
+        "replay_underconsumption": "Expected because both scenarios deliberately stop before consuming their remaining replayed model calls."
+      }
+    },
+    "native_startup_error_wrapping": {
+      "node_version": "24.22.1",
+      "command": [
+        "node",
+        "--import",
+        "tsx/esm",
+        ".testingplatform/cua-startup-error-proof/deferred-write.mjs"
+      ],
+      "exit_code": 0,
+      "private_log": ".testingplatform/cua-startup-error-proof/deferred-write.log",
+      "scope": "Actual NativeClient with only in-memory streams; spawn throws if called. An injected NATIVE_CONNECT_TIMEOUT becomes outer NATIVE_IO Writing a helper request failed, preserving original cause identity. Streams are destroyed and connection closes once.",
+      "limitation": "Proves wrapping only; does not identify the deleted full Web failure cause. No production teardown finding established."
+    },
+    "python_probe_budget": {
+      "node_version": "24.22.1",
+      "production_default_ms": 5000,
+      "fixture_probe_budget_ms": 60000,
+      "fixture_case_budget_ms": 90000,
+      "configuration": "Validated pythonProbeTimeoutMs; finite positive integer no greater than 2147483647. SIGKILL, isolated environment and output cap retained. Execution limits unchanged.",
+      "mocked_boundary": {
+        "command": [
+          "pnpm",
+          "exec",
+          "vitest",
+          "run",
+          "packages/experimental/ptc-runtime-python/tests/python-probe.spec.ts",
+          "--maxWorkers=1"
+        ],
+        "environment": {
+          "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+        },
+        "exit_code": 0,
+        "passed": 11,
+        "reported_suite_duration_seconds": 0.565,
+        "private_log": ".testingplatform/python-probe-budget-unit.log"
+      },
+      "real_owners": {
+        "command": [
+          "pnpm",
+          "exec",
+          "vitest",
+          "run",
+          "packages/experimental/ptc-runtime-python/tests/runtime.spec.ts",
+          "packages/experimental/ptc-runtime-python/tests/sandbox.spec.ts",
+          "--maxWorkers=1"
+        ],
+        "environment": {
+          "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+        },
+        "exit_code": 0,
+        "files": 2,
+        "passed": 280,
+        "skipped": 2,
+        "skip_reason": "Existing Darwin inherited/configured RLIMIT_AS cases; address-space limit unavailable on Darwin.",
+        "reported_suite_duration_seconds": 127.77,
+        "private_log": ".testingplatform/python-probe-budget-real-owners.log"
+      },
+      "scoped_lint": {
+        "exit_code": 0,
+        "private_log": ".testingplatform/python-probe-budget-lint.log",
+        "scope": "Source and four owning test/helper files."
+      },
+      "documentation": {
+        "config_generation_exit_code": 0,
+        "named_pairing_exit_code": 0,
+        "named_pairs": 2,
+        "private_logs": [
+          ".testingplatform/python-probe-budget-config-generation.log",
+          ".testingplatform/python-probe-budget-pairing-check.log"
+        ]
+      }
+    },
+    "preset_rescope_retirement": {
+      "node_version": "24.22.1",
+      "scope": "Retire obsolete exact import edit; keep syntax-aware module rewriting active for both preset fixtures while preserving product IDs. Neither fixture is excluded from validation.",
+      "actual_owner_negative_controls": {
+        "command": [
+          "node",
+          ".testingplatform/rescope-edit-retirement/negative-control-both.mjs"
+        ],
+        "exit_code": 0,
+        "expected_child_exit_code": 1,
+        "owners": [
+          "packages/client/ui-agent-preset/tests/apply.client.spec.ts",
+          "packages/client/ui-agent-preset/tests/creator-flow.client.spec.tsx"
+        ],
+        "scope": "Each actual owner temporarily receives one upstream module import; CLI rejects exactly that owner, and original bytes are restored in finally and verified.",
+        "private_log": ".testingplatform/rescope-edit-retirement-negative-both-control.log"
+      },
+      "focused": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "scripts/rescope-vendor.spec.ts",
+          "--maxWorkers=1"
+        ],
+        "environment": {
+          "DSH_COVERAGE_TEST_TIMEOUT_MS": "90000"
+        },
+        "exit_code": 0,
+        "passed": 78,
+        "reported_suite_duration_seconds": 0.957,
+        "private_log": ".testingplatform/rescope-edit-retirement-specs.log"
+      },
+      "repository_check": {
+        "command": [
+          "node",
+          "--import",
+          "tsx/esm",
+          "scripts/rescope-vendor.ts",
+          "--check"
+        ],
+        "exit_code": 0,
+        "tracked_files": 13478,
+        "private_log": ".testingplatform/rescope-edit-retirement-check.log"
+      },
+      "scoped_lint": {
+        "exit_code": 0,
+        "private_log": ".testingplatform/rescope-cua-final-focused-lint.log",
+        "scope": "Both rescope files and the final Cua diagnostic fixture; later explicit string annotation is checked by the complete build and remains subject to final lint."
+      }
+    },
+    "cua_failure_evidence_retention": {
+      "node_version": "24.22.1",
+      "platform": "darwin-arm64",
+      "command": [
+        "node",
+        ".testingplatform/focused-owner-diagnostic/run-retention-control.mjs"
+      ],
+      "wrapper_exit_code": 0,
+      "expected_child_exit_code": 1,
+      "child_exit_code": 1,
+      "child_signal": null,
+      "duration_seconds": 22.867302,
+      "scope": "One intentionally tagged failure after ordinary UI/native assertions and before the toggle trace. Exactly one evidence directory retains all three nonempty files; original fixture root removed, maintained source bytes unchanged, no additional teardown or unhandled errors.",
+      "artifact_directory": ".artifacts/cua-permissions-failure-GSBBLM",
+      "retained_bytes": {
+        "page.png": 129637,
+        "helper-events.jsonl": 2979,
+        "permissions.json": 298
+      },
+      "private_log": ".testingplatform/cua-retention-negative-control.log",
+      "private_summary": ".testingplatform/focused-owner-diagnostic/retention-control-summary.json"
+    }
+  },
+  "private_tooling_failures": [
+    {
+      "scope": "Rejected fold candidate harness",
+      "reason": "Initial private React lookup failed before tests; private dependency symlink corrected.",
+      "private_log": ".testingplatform/fold-reader-unit-setup-failure.log"
+    },
+    {
+      "scope": "Fold DOM diagnostic harness",
+      "reason": "Initial private Playwright lookup failed before browser launch; private dependency symlink corrected.",
+      "private_log": ".testingplatform/fold-dom-diagnostic/collection-failure.log"
+    },
+    {
+      "scope": "Native replacement owner harness",
+      "reason": "Initial private source aliases/decorator configuration missed Cordis const-enum lowering; canonical test setup restored before267passing cases."
+    },
+    {
+      "scope": "Native replacement strict harness",
+      "reason": "Initial private compiler options conflicted with noEmit rewriting; canonical rewriteRelativeImportExtensions setting restored before passing diagnostic."
+    },
+    {
+      "scope": "Shell diagnostic harness",
+      "reason": "Initial private Playwright lookup failed before browser launch; explicit installed-package alias added."
+    },
+    {
+      "scope": "Waiter optional type probe",
+      "command": [
+        "node",
+        ".testingplatform/web-waiter-ownership/check-types.mjs"
+      ],
+      "exit_code": 134,
+      "reason": "Full Host inventory exceeded default approximately2GiB heap. Inconclusive private tooling result; not product type evidence.",
+      "private_log": ".testingplatform/web-waiter-ownership-types-full-program-oom.log"
+    },
+    {
+      "scope": "Narrowed waiter optional type probe",
+      "command": [
+        "node",
+        ".testingplatform/web-waiter-ownership/check-types.mjs"
+      ],
+      "exit_code": 1,
+      "reason": "Private roots lacked existing project/ambient merges (TS6307,TS2339,TS2345); probe versions were not sealed. Required repository build checks own type validation.",
+      "private_log": ".testingplatform/web-waiter-ownership-types.log"
+    }
+  ],
+  "web_inventory_after_source_repairs": {
+    "check_label": "repository-web-ci-reviewed-source",
+    "serial": {
+      "files_passed": 2,
+      "tests_passed": 7
+    },
+    "pool": {
+      "files_failed": 1,
+      "files_passed": 208,
+      "files_skipped": 1,
+      "files_not_started": 2,
+      "tests_failed": 0,
+      "tests_passed": 807,
+      "tests_skipped": 17,
+      "unhandled_errors": 2
+    },
+    "suite_failure": "question-composer.e2e.ts cancelled-question beforeAll: workspace tree row click did not become stable within the unchanged 30-second Playwright action deadline; its one child test was skipped, not passed.",
+    "startup_failures": [
+      "models-settings-recovery.e2e.ts",
+      "reference-composer.e2e.ts"
+    ],
+    "startup_error": "Vitest fork worker did not respond before its startup deadline; these files did not execute.",
+    "notes": [
+      "The two unhandled errors are worker startup errors, not the previously repaired orphan promise rejections.",
+      "A lower-concurrency owner control and fresh complete inventory are required before publication. No assertion or deadline is changed."
+    ],
+    "lower_concurrency_owner_control": {
+      "check_label": "repository-web-timeout-owner-controls",
+      "files": 3,
+      "passed": 19,
+      "workers": 2,
+      "source_changes": false,
+      "assertion_or_deadline_changes": false
+    }
+  },
+  "two_worker_web_inventory": {
+    "check_label": "repository-web-ci-two-worker-validation",
+    "serial": {
+      "files_passed": 2,
+      "tests_passed": 7
+    },
+    "pool": {
+      "files_failed": 2,
+      "files_passed": 209,
+      "files_skipped": 1,
+      "tests_failed": 2,
+      "tests_passed": 814,
+      "tests_skipped": 16,
+      "unhandled_errors": 0
+    },
+    "failures": [
+      {
+        "owner": "chat-scroll-contract.e2e.ts:322",
+        "case": "visible-steps",
+        "observed": "Sidebar search produced zero results after 60 seconds; screenshot shows pending loading rows. No motion.json was written, so fold geometry was not measured.",
+        "secondary_teardown": "Replay-underconsumption is expected because the scenario failed before sending its prompt; preserve the replay assertion. Nested aggregate errors require separate inspection before alleging other cleanup failure."
+      },
+      {
+        "owner": "cua-permissions.e2e.ts:202",
+        "observed": "Error trace contained Could not check permissions: NATIVE_IO: Writing a helper request failedRetry during plugin toggling.",
+        "diagnostic_gap": "onTestFinished closes the browser and removes the fixture before onTestFailed; no failure screenshot/audit retained. Fixing diagnostic ownership without changing assertions."
+      }
+    ]
+  },
+  "third_aggregate": {
+    "check_label": "repository-check-all-post-browser-inventory",
+    "passed_gates": 74,
+    "failed_gates": [
+      "test",
+      "vendor rescope"
+    ],
+    "skipped_gates": [],
+    "unit": {
+      "files_failed": 1,
+      "files_passed": 2297,
+      "files_skipped": 22,
+      "failed": 11,
+      "passed": 47636,
+      "expected_fail": 1,
+      "skipped": 247
+    },
+    "unit_failure": "One Python PTC runtime file: ten CPython version probes exceeded their independent hardcoded five-second subprocess deadline; the cold program case exceeded its explicit fifteen-second case timeout. Neither consumed the ninety-second lane budget.",
+    "vendor_rescope_failure": "Obsolete exact import edit expected Context alone after the maintained test imported Context and type Fiber. The existing syntax-aware module rewrite already covers this file; retirement needs real-file residue rejection and round-trip proofs.",
+    "snapshots": {
+      "files_passed": 9,
+      "passed": 239,
+      "skipped": 2
+    },
+    "expected_outputs": {
+      "files_passed": 22,
+      "passed": 132
+    },
+    "build": {
+      "gates_passed": 10,
+      "failed": 0
+    }
+  },
+  "latest_complete_web": {
+    "check_label": "repository-web-ci-final-published-path",
+    "command": [
+      "pnpm",
+      "run",
+      "test:web:ci"
+    ],
+    "inventory_files": 214,
+    "serial": {
+      "files_passed": 2,
+      "tests_passed": 7
+    },
+    "pool": {
+      "files_passed": 211,
+      "files_skipped": 1,
+      "tests_passed": 816,
+      "tests_skipped": 16,
+      "failed": 0,
+      "unhandled_errors": 0
+    },
+    "total": {
+      "files_passed": 213,
+      "files_skipped": 1,
+      "tests_passed": 823,
+      "tests_skipped": 16,
+      "failed": 0
+    },
+    "execution": "Maintained runner and configuration with two pool workers; no private diagnostic transforms or helper prelude. HMR and client-plugin files ran serially before the full remaining inventory. Existing assertions, deadlines, replay inputs and goldens retained.",
+    "duration_seconds": 1089.84,
+    "limits": "The earlier intermittent browser failures did not reproduce. Their causes remain unclassified; passing reruns do not establish infrastructure attribution or a production-race repair."
+  },
+  "final_aggregate": {
+    "check_label": "repository-check-all-after-probe-rescope-fixes",
+    "passed_gates": 76,
+    "failed_gates": [],
+    "skipped_gates": [],
+    "unit": {
+      "files_passed": 2299,
+      "files_skipped": 22,
+      "files_failed": 0,
+      "passed": 47663,
+      "expected_fail": 1,
+      "skipped": 247,
+      "failed": 0
+    },
+    "snapshots": {
+      "files_passed": 9,
+      "passed": 239,
+      "skipped": 2
+    },
+    "expected_outputs": {
+      "files_passed": 22,
+      "passed": 132
+    },
+    "build": {
+      "gates_passed": 10,
+      "failed": 0
+    },
+    "vendor_rescope": "Passed with syntax-aware module validation and product-ID preservation.",
+    "aggregate_reported_duration_seconds": 1166.7
+  },
+  "diagnostic_web_inventory": {
+    "check_label": "repository-web-full-diagnostic-post-startup-fixes",
+    "inventory_files": 214,
+    "serial": {
+      "files_passed": 2,
+      "tests_passed": 7
+    },
+    "pool": {
+      "files_passed": 211,
+      "files_skipped": 1,
+      "tests_passed": 816,
+      "tests_skipped": 16,
+      "failed": 0,
+      "unhandled_errors": 0
+    },
+    "total": {
+      "files_passed": 213,
+      "files_skipped": 1,
+      "tests_passed": 823,
+      "tests_skipped": 16,
+      "failed": 0
+    },
+    "execution": "Same serial HMR and client-plugin files, followed by the complete remaining 212-file two-worker inventory. Existing assertions, deadlines, replay inputs and goldens retained. Private diagnostic runner/config add observations and copied synthetic helper stderr only.",
+    "canonical_equivalent_command": [
+      "DSH_SNAPSHOT=replay",
+      "DSH_WEB_SNAPSHOT_WORKERS=2",
+      "pnpm",
+      "run",
+      "test:web:ci"
+    ],
+    "canonical_equivalent_note": "Provided for reproduction without the private observations; the command actually executed is retained in the named check record.",
+    "diagnostic_limits": [
+      "Native fixture helper-copy instrumentation executed and logged eight clean server starts/exits.",
+      "Source Vite transforms of NativeClient and SessionController do not establish Host coverage because the profile loads built modules.",
+      "Exact page pathname filtering can miss mount prefixes; absent search logs establish neither an unsent request nor a blocked Host search.",
+      "Earlier native/search failures were not reproduced in the focused and full runs. Their original causes remain unclassified; no infrastructure or production-race fix is claimed."
+    ]
+  },
+  "final_application_smokes": {
+    "default": {
+      "check_label": "repository-platform-smoke-published-source",
+      "exit_code": 0
+    },
+    "retrieval_enabled": {
+      "check_label": "repository-retrieval-smoke-published-source",
+      "exit_code": 0
+    },
+    "scope": "Authenticated combined Web application, local plugin assets, saved provider discovery and streamed plugin completion against local synthetic fixtures. No external model completion requested."
+  },
+  "live_model_validation": {
+    "status": "pending",
+    "reason": "No usable model connection available; user explicitly chose to finish deterministic validation and leave live-model scenarios pending."
+  },
+  "current_passing_checks": [
+    "repository-check-all-after-probe-rescope-fixes",
+    "repository-web-ci-final-published-path",
+    "repository-lint-post-startup-fixes",
+    "repository-doc-quick-post-startup-fixes",
+    "repository-doc-sync-post-startup-fixes",
+    "repository-platform-smoke-published-source",
+    "repository-retrieval-smoke-published-source",
+    "repository-build-check-after-final-web"
+  ],
+  "post_web_artifact_consumer_check": {
+    "check_label": "repository-build-check-after-final-web",
+    "passed_gates": 2,
+    "failed": 0
+  }
 }
