@@ -20,7 +20,7 @@ function view(partial: Partial<AgentPresetSectionState> = {}, startCreatorDraft?
   const actions = { load: vi.fn(async () => {}), view: vi.fn(async () => {}), closeView: vi.fn(), makeDefault: vi.fn(async () => {}),
     close: vi.fn() }
   const props: AgentPresetSectionProps = { ...actions,
-    ...(startCreatorDraft === undefined ? {} : { startCreatorDraft }),
+    useCreatorDraft: bindSnapshotSelector(createSnapshotStore(startCreatorDraft === undefined ? null : { start: startCreatorDraft })),
     usePanelInfo: unusedHook, useSessions: unusedHook, useSessionStatus: unusedHook, useSessionRetainInfo: unusedHook,
     useWorkspaces: unusedHook, useResource: unusedHook,
     ...allowAllAccess,

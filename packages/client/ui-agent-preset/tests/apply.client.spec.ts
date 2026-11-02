@@ -326,7 +326,12 @@ describe('ui-agent-preset apply', () => {
       await feature.await()
       expect(children).toHaveLength(1)
       await children[0]!.await()
-      const creator = (): unknown => slots.entries('settings.section')[0]?.inject?.().startCreatorDraft
+      const creator = () => {
+        const factory = slots.entries('settings.section')[0]!.inject
+        if (factory === undefined) throw new Error('Settings entry has no inject factory')
+        const face = factory() as AgentPresetSectionInjected & Record<string, unknown>
+        return face.hooks.creatorDraft.getSnapshot()?.start
+      }
       expect(creator()).toBeTypeOf('function')
       const declare = {
         hero: () => slots.register({
@@ -1150,12 +1155,12 @@ describe('ui-agent-preset apply', () => {
     const seat = injectSeat()
 
     await section.load()
-    section.startCreatorDraft?.()
+    section.hooks.creatorDraft.getSnapshot()?.start()
 
     // The pick is staged on the chip's own controller — the session the
     // workspace start produces is what the stage lands on — and exactly one
     // new-session flow began.
-    expect(section.startCreatorDraft).toBeDefined()
+    expect(section.hooks.creatorDraft.getSnapshot()?.start).toBeDefined()
     expect(seat.hooks.agentPresetSeat.getSnapshot().current).toBe('cordis')
     expect(uiWorkspace.starts).toEqual([{ workspaceId: undefined, options: { clearPreviousDraft: false, agentPreset: 'cordis' } }])
 
@@ -1191,7 +1196,7 @@ describe('ui-agent-preset apply', () => {
 
     await seat.load()
     await section.load()
-    section.startCreatorDraft?.()
+    section.hooks.creatorDraft.getSnapshot()?.start()
     expect(uiWorkspace.starts).toEqual([{ workspaceId: undefined, options: { clearPreviousDraft: false, agentPreset: 'cordis' } }])
 
     // Navigation opens another blank for Creator, so the Standard main blank is neither staged nor switched.
@@ -1204,7 +1209,7 @@ describe('ui-agent-preset apply', () => {
     // A blank whose listed preset is already Creator is staged and follows its projection.
     state.byId.s1 = { id: 's1', blank: true, projectionValues: { agentPreset: 'cordis' } }
     sessions.notify()
-    section.startCreatorDraft?.()
+    section.hooks.creatorDraft.getSnapshot()?.start()
     await vi.waitFor(() => { expect(seat.hooks.agentPresetSeat.getSnapshot().current).toBe('cordis') })
     expect(seat.hooks.agentPresetSeat.getSnapshot().introduce).toBe(true)
     expect(calls).not.toContain('select:cordis')
@@ -1235,7 +1240,7 @@ describe('ui-agent-preset apply', () => {
     const unboundSeat = injectSeat()
 
     await section.load()
-    section.startCreatorDraft?.()
+    section.hooks.creatorDraft.getSnapshot()?.start()
     state.current = 's1'
     state.byId['s1'] = { id: 's1', blank: true }
     sessions.notify()
@@ -1272,10 +1277,9 @@ describe('ui-agent-preset apply', () => {
 
     await ctx.plugin({ inject: [...inject], apply }).await()
 
-    // No conversation scope mounted: the face omits the affordance and the
-    // section hides its button rather than staging into nowhere.
+    // The settings entry remains available without a Conversation provider.
     const section = (slots.entries('settings.section')[0]!.inject as unknown as () => AgentPresetSectionInjected)()
-    expect(section.startCreatorDraft).toBeUndefined()
+    expect(section.hooks.creatorDraft.getSnapshot()).toBeNull()
   })
 })
 

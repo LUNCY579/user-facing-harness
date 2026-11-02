@@ -18,9 +18,9 @@ export interface AgentPresetSectionInjected {
     agentPresetSection: SnapshotStore<AgentPresetSectionState>
     /** Shared Coding Tools preference; off hides the built-in PTC and Minimal cards. */
     developerTools: ObservableSnapshot<boolean>
+    /** Current Creator action; absent while its Conversation flow is unavailable. */
+    creatorDraft: ObservableSnapshot<{ readonly start: () => void } | null>
   }
-  /** Stage the `cordis` preset and start a Creator-mode task; absent without a conversation flow. */
-  startCreatorDraft?: () => void
   load: () => Promise<void>
   /** Open one preset's declared composition in the read-only viewer. */
   view: (id: string) => Promise<void>
@@ -62,11 +62,12 @@ function CardDescription({ text }: { text: string }): ReactNode {
  * @returns The preset settings section.
  */
 export function AgentPresetSection({
-  useAgentPresetSection, load, view, closeView, makeDefault, startCreatorDraft,
+  useAgentPresetSection, load, view, closeView, makeDefault, useCreatorDraft,
   close: closeSettings, useDeveloperTools, t,
 }: AgentPresetSectionProps) {
   const state = useAgentPresetSection(value => value)
   const developerTools = useDeveloperTools(enabled => enabled)
+  const startCreatorDraft = useCreatorDraft(flow => flow?.start)
   const [guide, setGuide] = useState<{
     content: NonNullable<ReturnType<typeof presetGuide>>
     page: PresetGuidePage

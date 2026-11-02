@@ -21,6 +21,7 @@
 import type { SessionBinding } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { WeakMapWithValues } from '@deepseek-ai/dsh-util-values'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 // Type-only: pulls the ctx.remote merge and the forwarded-event key face
@@ -176,12 +177,8 @@ export function apply(ctx: ClientContext): void {
     }
   }, 'ui-agent-preset: settings refresh')
 
-  // The settings section's conversational authoring entry: stage the
-  // self-referential preset and land a new session on it. Bound inside the
-  // conversation scope below (the seat and the session flow live there) and
-  // unbound with it, so the section's face reads the current binding per
-  // render and simply hides the button while no flow exists.
-  let creatorDraft: (() => void) | undefined
+  // Settings retains its entry while the available Creator action follows its provider.
+  const creatorDraft = createSnapshotStore<{ readonly start: () => void } | null>(null)
   ctx.inject(['slots', 'conversation', 'sessions', 'uiWorkspace'], (scope: ClientContext) => {
     const seatInjected = (sessionId: SessionId | undefined): AgentPresetSeatInjected => {
       const binding = sessionId === undefined ? undefined : ctx.sessions.binding(sessionId)
@@ -223,8 +220,8 @@ export function apply(ctx: ClientContext): void {
     }
 
     scope.effect(() => {
-      creatorDraft = startCreatorDraft
-      return () => { creatorDraft = undefined }
+      creatorDraft.set({ start: startCreatorDraft })
+      return () => { creatorDraft.set(null) }
     }, 'ui-agent-preset: Creator flow')
 
     scope.slots.inject('conversation.hero.agentPreset', () => scope.slots.register({
@@ -269,11 +266,10 @@ export function apply(ctx: ClientContext): void {
   }
 
   const sectionInjected = (): AgentPresetSectionInjected => ({
-    hooks: { agentPresetSection: section.store, developerTools: ctx.configForms.developerTools.enabled },
+    hooks: { agentPresetSection: section.store, developerTools: ctx.configForms.developerTools.enabled, creatorDraft },
     load: () => section.load(),
     view: (id: string) => section.view(id),
     closeView: () => { section.closeView() },
-    ...creatorDraft === undefined ? {} : { startCreatorDraft: creatorDraft },
     makeDefault: (id: string) => section.makeDefault(id, captureBlankSessionSync()),
   })
 
