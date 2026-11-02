@@ -1,28 +1,52 @@
 /** Built permission UI talks to the real provider; the isolated helper substitutes only macOS privilege observations. */
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
-import { chromium, type Browser } from 'playwright'
-import { expect, it, onTestFailed, onTestFinished, vi } from 'vitest'
+import { chromium, type Browser, type Page } from 'playwright'
+import { expect, it, onTestFinished, vi } from 'vitest'
 import { captureStableAria, compareOrRefreshGolden, launchWebScaffold, webSnapshotMode, watchConsole, type WebScaffold } from './scaffold.ts'
-import { connectFreshWorkspace, newEnglishPage, PLUGIN_TOGGLE_SETTLE_MS, saveFailureShot } from './support.ts'
+import { connectFreshWorkspace, newEnglishPage, PLUGIN_TOGGLE_SETTLE_MS } from './support.ts'
 import { installNativeFixture, startFixtureHost } from '../../../packages/experimental/cua-macos/tests/native-fixture.ts'
 
 const bundle = fileURLToPath(new URL('../../../packages/experimental/cua-bundle', import.meta.url))
 const expected = fileURLToPath(new URL('./expected/cua-permissions/missing.expected.md', import.meta.url))
 
+/** Retain the browser and native-fixture evidence before the test-owned resources close. */
+async function retainFailureEvidence(root: string, page: Page | undefined): Promise<void> {
+  const artifacts = fileURLToPath(new URL('../../../.artifacts', import.meta.url))
+  await mkdir(artifacts, { recursive: true })
+  const directory = await mkdtemp(join(artifacts, 'cua-permissions-failure-'))
+  const copies = ['helper-events.jsonl', 'permissions.json'].map(name => async () => {
+    await copyFile(join(root, name), join(directory, name))
+  })
+  if (page !== undefined) copies.push(async () => { await page.screenshot({ path: join(directory, 'page.png'), fullPage: true }) })
+  const outcomes = await Promise.allSettled(copies.map(copy => Promise.resolve().then(copy)))
+  const failures = outcomes.filter(result => result.status === 'rejected').map((result): unknown => result.reason)
+  console.info(`Cua failure evidence: ${directory}`)
+  if (failures.length > 0) console.warn('Cua failure evidence is incomplete:', failures)
+}
+
 // System-permission onboarding belongs to the macOS-only bundle; rendering and policy units remain portable.
 it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fresh observation and persists application revocation', async () => {
   const root = await mkdtemp(join(tmpdir(), 'dsh-cua-permissions-web-'))
-  const resources: { scaffold?: WebScaffold; browser?: Browser; closeFixture?: () => Promise<void> } = {}
-  onTestFinished(async () => {
-    try { await resources.browser?.close() } finally {
-      try { await resources.scaffold?.close() } finally {
-        try { await resources.closeFixture?.() } finally { await rm(root, { recursive: true, force: true }) }
+  const resources: { scaffold?: WebScaffold; browser?: Browser; page?: Page; closeFixture?: () => Promise<void> } = {}
+  onTestFinished(async ({ task }) => {
+    try {
+      if (task.result?.state === 'fail') {
+        try { await retainFailureEvidence(root, resources.page) } catch (error) {
+          // Evidence is best-effort; its failure must not prevent the original failure's cleanup.
+          console.warn('Cua failure evidence could not be retained:', error)
+        }
+      }
+    } finally {
+      try { await resources.browser?.close() } finally {
+        try { await resources.scaffold?.close() } finally {
+          try { await resources.closeFixture?.() } finally { await rm(root, { recursive: true, force: true }) }
+        }
       }
     }
   })
@@ -47,7 +71,7 @@ it.skipIf(process.platform !== 'darwin')('keeps system requests pending until fr
   const browser = await chromium.launch()
   resources.browser = browser
   const page = await newEnglishPage(browser), tripwire = watchConsole(page)
-  onTestFailed(() => saveFailureShot(page, 'web-e2e-cua-permissions'))
+  resources.page = page
   await page.goto(scaffold.authenticatedUrl)
   await connectFreshWorkspace(page, scaffold.workspaceCwd)
   const agent = scaffold.ctx.agents.list()[0]!
