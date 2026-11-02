@@ -12,7 +12,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import type { ConfinedArgv, SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import type { Config } from '../src/index.ts'
 import { PythonPtcRuntime } from '../src/index.ts'
-import { createRuntimeContext } from './setup.ts'
+import { createRuntimeContext, pythonFixtureConfig, runtimeTestBudget } from './setup.ts'
 
 /** Probe the provider independently so a Python launch regression cannot skip confinement tests. */
 const sandboxUsable = await (async () => {
@@ -34,7 +34,7 @@ async function setup(mode: SandboxMode = 'read-only', config: Config = {}) {
   await mkdir(cwd)
   const ctx = await createRuntimeContext({ mode, workspaceRoot: cwd })
   onTestFinished(async () => { await ctx.fiber.dispose(); await rm(root, { recursive: true, force: true }) })
-  const fiber = await ctx.plugin(PythonPtcRuntime, config)
+  const fiber = await ctx.plugin(PythonPtcRuntime, pythonFixtureConfig(config, runtimeTestBudget))
   const runtime = ctx.ptcRuntime as PythonPtcRuntime
   const run = (program: string) => runtime.run(runtime.resolve({ program, bindings: [] }))
   return { ctx, fiber, runtime, root, cwd, run }

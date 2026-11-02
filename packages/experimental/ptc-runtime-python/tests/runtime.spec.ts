@@ -4,7 +4,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, relative, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createRuntimeContext } from './setup.ts'
+import { createRuntimeContext, pythonFixtureConfig, runtimeTestBudget } from './setup.ts'
 import { PythonPtcRuntime, hostFrameParseCeiling, readProcessStart, resolvePythonBin } from '../src/index.ts'
 import { logTruncationMarker } from '../src/protocol.ts'
 import type { Config } from '../src/index.ts'
@@ -37,7 +37,7 @@ vi.mock('node:fs', async (importOriginal) => {
 /** Real CPython processes; packaged-source read failures use the narrow fs mock above. */
 async function setup(config: Config = {}) {
   const ctx = await createRuntimeContext()
-  const fiber = await ctx.plugin(PythonPtcRuntime, config)
+  const fiber = await ctx.plugin(PythonPtcRuntime, pythonFixtureConfig(config, runtimeTestBudget))
   const runtime = ctx.ptcRuntime as PythonPtcRuntime
   return { ctx, fiber, runtime }
 }
@@ -971,10 +971,8 @@ describe('PythonPtcRuntime — programs and bindings', () => {
     // `print` in Python emits: text, ' ', text, '\n'. Concat the captured
     // fragments and assert the model-visible message survives.
     expect(result.logs.join('')).toContain('hello 42')
-    // 15s: this is usually the suite's first real subprocess — a cold python3
-    // start (interpreter + asyncio import) on a loaded CI runner can exceed
-    // the 5s default alone; later tests reuse the warm page cache.
-  }, 15_000)
+    // A cold interpreter and asyncio import consume the lane's startup budget.
+  }, runtimeTestBudget ?? 15_000)
 
   it('exposes only the platform temp directory from the host environment', async () => {
     const { runtime } = await setup()

@@ -1198,10 +1198,15 @@ export interface Config {
   graceMs?: number
   /**
    * Absolute path, relative path, or basename of a CPython 3.10+ interpreter.
-   * Resolved and validated once at plugin load under a five-second force-kill
-   * deadline; a basename searches `PATH`.
+   * Resolved and validated once at plugin load within `pythonProbeTimeoutMs`;
+   * a basename searches `PATH`.
    */
   pythonBin?: string
+  /**
+   * Load-time interpreter-probe deadline in milliseconds, a positive integer
+   * at most 2_147_483_647. Defaults to 5000. Timeout force-kills the probe and fails activation.
+   */
+  pythonProbeTimeoutMs?: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-ptc-runtime-python -->

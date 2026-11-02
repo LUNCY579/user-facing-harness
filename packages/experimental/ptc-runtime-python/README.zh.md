@@ -41,7 +41,7 @@ The program is the body of an async Python function. Top-level await and return 
 
 ### 你得到什么
 
-包的默认导出是 `PythonPtcRuntime` 插件。其公开面还重新导出宿主侧协议词汇：`validateChildFrame`（重建每条入站帧）、无损 JSON codec 与计量器（`encodeJsonPlain`、`checkDoneValue`、`hasUnsafeIntegerToken`、`hasNonLosslessNumber`）、`logTruncationMarker`（共享截断标记文本），以及 `resolvePythonBin`（对照当前 `PATH` 的解释器查找）、`readProcessStart`（供测试用的进程启动统计）、`detachResidual`（已结算运行的资源清理测试 seam）与 `hostFrameParseCeiling`（给定堆上限可容纳的堆推导帧解析上限）。每个上限都是带默认值并经校验的 `Config` 字段：`cpuSeconds`（60）、`maxWallMs`（600000）、`addressSpaceMb`（512，Darwin 上不生效）、`maxLogBytes`（65536）、`maxValueBytes`（32768）、`graceMs`（3000）与 `pythonBin`（`python3`，在加载期解析、检查可执行性，在五秒强制终止期限内探测版本并固定）。每个子进程只接收 `TMPDIR`；环境中的凭证、`PATH`、`HOME` 与其他宿主状态均不可见。
+包的默认导出是 `PythonPtcRuntime` 插件。其公开面还重新导出宿主侧协议词汇：`validateChildFrame`（重建每条入站帧）、无损 JSON codec 与计量器（`encodeJsonPlain`、`checkDoneValue`、`hasUnsafeIntegerToken`、`hasNonLosslessNumber`）、`logTruncationMarker`（共享截断标记文本），以及 `resolvePythonBin`（对照当前 `PATH` 的解释器查找）、`readProcessStart`（供测试用的进程启动统计）、`detachResidual`（已结算运行的资源清理测试 seam）与 `hostFrameParseCeiling`（给定堆上限可容纳的堆推导帧解析上限）。每个上限都是带默认值并经校验的 `Config` 字段：`cpuSeconds`（60）、`maxWallMs`（600000）、`addressSpaceMb`（512，Darwin 上不生效）、`maxLogBytes`（65536）、`maxValueBytes`（32768）、`graceMs`（3000）、`pythonBin`（`python3`，在加载期解析、检查可执行性并固定）与 `pythonProbeTimeoutMs`（5000，必须为正整数的解释器验证期限）。每个子进程只接收 `TMPDIR`；环境中的凭证、`PATH`、`HOME` 与其他宿主状态均不可见。
 
 ### wire
 
@@ -67,7 +67,7 @@ The program is the body of an async Python function. Top-level await and return 
 
 单向信任：宿主把每条入站帧都视为敌意（模型代码可以在 fd 3 上伪造任何内容）并逐字段重建后才读取；Python 侧信任宿主回复。bootstrap（`py/bootstrap.py`）把程序作为 async 函数体执行，因此顶层 `await` 与 `return` 都可用；binding 调用经 fd 3 以 JSON-lines 往返，回复在 pump 中限速，以免大量大回复钉住宿主的 fd-3 可写缓冲。
 
-已发布的 bootstrap 与 protocol 源码以 UTF-8 JSON 通过可信二进制 stdin 传入解释器，不依赖沙箱中的临时目录挂载或 locale 文本编码。模型程序与 binding 通信使用 fd 3。宿主在启动前解析沙箱 runner，子进程环境中只保留 `TMPDIR`。经过时间截止包含沙箱准备。所配置解释器的加载期版本探测在约束之外运行，不执行模型代码。
+已发布的 bootstrap 与 protocol 源码以 UTF-8 JSON 通过可信二进制 stdin 传入解释器，不依赖沙箱中的临时目录挂载或 locale 文本编码。模型程序与 binding 通信使用 fd 3。宿主在启动前解析沙箱 runner，子进程环境中只保留 `TMPDIR`。经过时间截止包含沙箱准备。所配置解释器的加载期版本探测在约束之外同步运行，不执行模型代码。`pythonProbeTimeoutMs` 包含进程启动时间；超时会通过 SIGKILL 强制终止探测并使插件启用失败。这一启动预算与限制模型执行的 `maxWallMs` 分开。操作系统延迟解释器启动时，可以配置更大的启动预算。
 
 ### wire 契约
 

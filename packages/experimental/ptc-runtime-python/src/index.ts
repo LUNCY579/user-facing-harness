@@ -93,10 +93,15 @@ export interface Config {
   graceMs?: number
   /**
    * Absolute path, relative path, or basename of a CPython 3.10+ interpreter.
-   * Resolved and validated once at plugin load under a five-second force-kill
-   * deadline; a basename searches `PATH`.
+   * Resolved and validated once at plugin load within `pythonProbeTimeoutMs`;
+   * a basename searches `PATH`.
    */
   pythonBin?: string
+  /**
+   * Load-time interpreter-probe deadline in milliseconds, a positive integer
+   * at most 2_147_483_647. Defaults to 5000. Timeout force-kills the probe and fails activation.
+   */
+  pythonProbeTimeoutMs?: number
 }
 
 /** {@link Config} with all defaults filled. */
@@ -436,16 +441,13 @@ export function resolvePythonBin(bin: string): string | undefined {
 /** Lowest CPython version supported by the bootstrap and its traceback behavior. */
 const MIN_CPYTHON = { major: 3, minor: 10 } as const
 
-/** Fixed load-time probe bound; a configured executable must not hang plugin activation. */
-const PYTHON_PROBE_TIMEOUT_MS = 5_000
-
 /** The only host environment fact exposed to the child. */
 function pythonEnvironment(): NodeJS.ProcessEnv {
   return { TMPDIR: tmpdir() }
 }
 
 /** Fail load unless `bin` is a responsive CPython 3.10+ interpreter. */
-function validatePythonBin(bin: string): void {
+function validatePythonBin(bin: string, timeoutMs: number): void {
   let output: string
   try {
     output = execFileSync(bin, [
@@ -455,7 +457,7 @@ function validatePythonBin(bin: string): void {
     ], {
       encoding: 'utf8',
       env: pythonEnvironment(),
-      timeout: PYTHON_PROBE_TIMEOUT_MS,
+      timeout: timeoutMs,
       // The configured executable is outside our control. Force-kill it at the
       // deadline so a wrapper that ignores SIGTERM cannot block plugin load.
       killSignal: 'SIGKILL',
@@ -751,6 +753,7 @@ export class PythonPtcRuntime extends PtcRuntime {
     maxValueBytes: z.number().default(32_768),
     graceMs: z.number().default(3_000),
     pythonBin: z.string().default('python3'),
+    pythonProbeTimeoutMs: z.number().default(5_000),
   })
 
   readonly language = 'python'
@@ -789,6 +792,12 @@ export class PythonPtcRuntime extends PtcRuntime {
       if (typeof value === 'number' && !(Number.isFinite(value) && value > 0)) {
         throw new Error(`dsh-ptc-runtime-python: config.${key} must be a positive number, got ${String(value)}`)
       }
+    }
+    if (!Number.isSafeInteger(this.config.pythonProbeTimeoutMs)) {
+      throw new Error(`dsh-ptc-runtime-python: config.pythonProbeTimeoutMs must be a positive integer, got ${String(this.config.pythonProbeTimeoutMs)}`)
+    }
+    if (this.config.pythonProbeTimeoutMs > MAX_TIMER_DELAY_MS) {
+      throw new Error(`dsh-ptc-runtime-python: config.pythonProbeTimeoutMs must not exceed ${MAX_TIMER_DELAY_MS}, got ${String(this.config.pythonProbeTimeoutMs)}`)
     }
     // cpuSeconds crosses to the child's setrlimit(RLIMIT_CPU) raw; a float
     // raises TypeError inside every child (a late per-run failure). Reject it
@@ -950,7 +959,7 @@ export class PythonPtcRuntime extends PtcRuntime {
       const explicit = isAbsolute(this.config.pythonBin) || this.config.pythonBin.includes('/')
       throw new Error(`dsh-ptc-runtime-python: config.pythonBin ${JSON.stringify(this.config.pythonBin)} ${explicit ? 'is not an executable regular file' : 'does not resolve on PATH'}`)
     }
-    validatePythonBin(pythonBin)
+    validatePythonBin(pythonBin, this.config.pythonProbeTimeoutMs)
     this.pythonBin = pythonBin
     ctx.effect(() => () => this.teardown(), 'python ptc-runtime teardown')
   }
