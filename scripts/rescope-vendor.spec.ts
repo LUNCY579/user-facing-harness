@@ -107,6 +107,8 @@ describe('product identifiers', () => {
     'packages/client/ui-agent-preset/src/client/CreatePluginMenuItem.tsx',
     'packages/client/ui-agent-preset/src/client/analytics.ts',
     'packages/client/ui-agent-preset/tests/analytics.client.spec.ts',
+    'packages/client/ui-agent-preset/tests/apply.client.spec.ts',
+    'packages/client/ui-agent-preset/tests/creator-flow.client.spec.tsx',
     'packages/client/ui-agent-preset/tests/components.client.spec.tsx',
     'packages/client/ui-agent-preset/tests/create-plugin-menu-item.client.spec.tsx',
     'packages/client/ui-agent-preset/tests/section-store.client.spec.ts',
@@ -146,6 +148,7 @@ describe('product identifiers', () => {
 
   it.each([
     ['import', "import { Context } from 'cordis'", "import { Context } from '@deepseek-ai/cordis'"],
+    ['mixed value/type import', "import { Context, type Fiber } from 'cordis'", "import { Context, type Fiber } from '@deepseek-ai/cordis'"],
     ['multiline import', "import {\n  Context,\n} from 'cordis'", "import {\n  Context,\n} from '@deepseek-ai/cordis'"],
     ['side-effect import', "import 'cordis'", "import '@deepseek-ai/cordis'"],
     ['export', "export { Context } from 'cordis/subpath'", "export { Context } from '@deepseek-ai/cordis/subpath'"],
@@ -167,6 +170,8 @@ describe('product identifiers', () => {
 
   it.each([
     ['apps/cli/tests/optional-bundle-transitions.e2e.ts', 1],
+    ['packages/client/ui-agent-preset/tests/apply.client.spec.ts', 1],
+    ['packages/client/ui-agent-preset/tests/creator-flow.client.spec.tsx', 1, "import type { Context } from '@deepseek-ai/cordis'\n"],
     ['packages/client/ui-conversation/src/client/input/submission-analytics.ts', 1],
     ['packages/client/ui-conversation/tests/service-orchestration.client.spec.ts', 1],
     ['packages/client/ui-entry-customization/src/client/index.ts', 1],
@@ -175,8 +180,8 @@ describe('product identifiers', () => {
     ['packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts', 2],
     ['snapshots/session/cordis-inspect-liveness/client-fixture.mjs', 1],
     ['snapshots/session/cordis-inspect-timeout/client-fixture.mjs', 2],
-  ] as const)('reverses real package references in %s and restores them', (file, lines) => {
-    const scoped = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+  ] as const)('reverses package references in %s without changing product data', (file, lines, prefix: string = '') => {
+    const scoped = prefix + readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
     const text = scoped.replaceAll("'@deepseek-ai/cordis'", "'cordis'")
     expect(text).not.toBe(scoped)
     expectRoundTrip(file, text, scoped, lines)
