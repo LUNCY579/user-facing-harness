@@ -51,5 +51,10 @@ native/system/test/bin/
 # TestingPlatform local profiles, credentials, sessions, and logs.
 /.testingplatform/
 
+# Generated installer state and platform launchers.
+/.installer-node-version
+/start-demo.command
+/start-demo.bat
+
 # Restored from the checksummed archive in testing-platform/assets.
 /plugins/dsh-our-free-model/vendor/magpie/bin/magpie-win32-x64.exe
