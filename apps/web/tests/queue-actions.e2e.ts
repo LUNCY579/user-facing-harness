@@ -73,9 +73,11 @@ describe('web e2e: queue row actions', () => {
 
   /** Wait for the exact queue mutation response before observing its unlocked actions. */
   async function settleQueueAction(action: () => Promise<void>, remainingText: string): Promise<void> {
-    const response = page.waitForResponse('**/api/session/updateQueue')
-    await action()
-    expect((await response).ok()).toBe(true)
+    const [response] = await Promise.all([
+      page.waitForResponse('**/api/session/updateQueue'),
+      Promise.resolve().then(action),
+    ])
+    expect(response.ok()).toBe(true)
     const row = page.locator('[data-queue-dock] li', { hasText: remainingText })
     await expect.poll(() => row.getByRole('button', { name: 'Edit queued message' }).isEnabled()).toBe(true)
     await expect.poll(() => row.getByRole('button', { name: 'Remove queued message' }).isEnabled()).toBe(true)
@@ -107,7 +109,6 @@ describe('web e2e: queue row actions', () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-queue-actions'))
 
     const input = page.locator('[data-composer-input]').first()
-    const firstSettled = scaffold.whenTurnSettled()
     await input.fill(ACTIVE_PROMPT)
     await input.press('Enter')
     await expect.poll(() => existsSync(readyFile), { timeout: 15_000 }).toBe(true)
@@ -296,13 +297,17 @@ describe('web e2e: queue row actions', () => {
     const stopButton = page.getByRole('button', { name: 'Stop generating' })
     await stopButton.hover()
     await page.getByRole('tooltip', { name: 'Stop generating Esc Esc', exact: true }).waitFor()
-    if (method === 'button') await stopButton.click()
-    else {
-      await input.focus()
-      await page.keyboard.press('Escape')
-      await page.keyboard.press('Escape')
-    }
-    await firstSettled
+    await Promise.all([
+      scaffold.whenTurnSettled(),
+      (async () => {
+        if (method === 'button') await stopButton.click()
+        else {
+          await input.focus()
+          await page.keyboard.press('Escape')
+          await page.keyboard.press('Escape')
+        }
+      })(),
+    ])
     await expect.poll(() => page.getByRole('button', { name: 'Stop generating' }).count())
       .toBe(0)
     await expect.poll(() => page.getByRole('button', { name: 'Remove queued message' }).count())
@@ -319,10 +324,8 @@ describe('web e2e: queue row actions', () => {
     )
     await compareOrRefreshGolden(PRESERVED_EXPANDED_EXPECTED, expanded, MODE)
 
-    const settled = scaffold.whenTurnSettled()
     await input.fill(WAKE)
-    await input.press('Enter')
-    await settled
+    await Promise.all([scaffold.whenTurnSettled(), input.press('Enter')])
     await expect.poll(() => turnEndReasons(sessionEvents), { timeout: 15_000 })
       .toEqual(['aborted', 'completed', 'completed', 'completed'])
     expect(sessionEvents.flatMap(event => event.type === 'user/message' && event.data.source.kind === 'user'
@@ -351,7 +354,6 @@ describe('web e2e: queue row actions', () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-context-layout'))
 
     const input = page.locator('[data-composer-input]').first()
-    const settled = scaffold.whenTurnSettled()
     await page.locator('[data-composer-input][contenteditable="true"]').first().waitFor({ timeout: 10_000 })
     await input.fill('/goal Keep the composer context panels aligned')
     await input.press('Enter')
@@ -418,8 +420,10 @@ describe('web e2e: queue row actions', () => {
     await expect.poll(() => page.locator('[data-queue-dock]').count(), { timeout: 10_000 }).toBe(0)
     await page.getByRole('button', { name: 'Clear goal' }).click()
     await expect.poll(() => page.locator('[data-goal-bar]').count(), { timeout: 10_000 }).toBe(0)
-    await page.getByRole('button', { name: 'Stop generating' }).click()
-    await settled
+    await Promise.all([
+      scaffold.whenTurnSettled(),
+      page.getByRole('button', { name: 'Stop generating' }).click(),
+    ])
 
     expect(turnEndReasons(sessionEvents)).toEqual(['aborted'])
     expect(tripwire.pageErrors).toEqual([])
@@ -474,11 +478,9 @@ describe('web e2e: queue row actions', () => {
     await expect.poll(() => stop.count(), { timeout: 10_000 }).toBe(0)
     await expect.poll(() => page.locator('[data-queue-dock]').count(), { timeout: 10_000 }).toBe(0)
 
-    const settled = scaffold.whenTurnSettled()
     await editable.waitFor({ timeout: 10_000 })
     await input.fill(WAKE)
-    await input.press('Enter')
-    await settled
+    await Promise.all([scaffold.whenTurnSettled(), input.press('Enter')])
     await expect.poll(() => turnEndReasons(sessionEvents), { timeout: 15_000 })
       .toEqual(['aborted', 'aborted', 'completed'])
     expect(sessionEvents.flatMap(event => event.type === 'user/message' && event.data.source.kind === 'user'

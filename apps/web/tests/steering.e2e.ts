@@ -397,7 +397,6 @@ describe.each(['reconnect', 'delayed-inbox'] as const)('web e2e: composer shortc
     expect(fixtureUserPrompts(await readFile(FIXTURE, 'utf8'))).toEqual([PROMPT, STEER])
     const input = page.locator('[data-composer-input]').first()
     await input.waitFor({ timeout: 10_000 })
-    const settled = scaffold.whenTurnSettled(30_000)
     await page.locator('[data-composer-input][contenteditable="true"]').first().waitFor({ timeout: 10_000 })
     await input.fill(PROMPT)
     await input.press('Enter')
@@ -423,38 +422,44 @@ describe.each(['reconnect', 'delayed-inbox'] as const)('web e2e: composer shortc
       }
       return next()
     })
-    try {
-      holdInbox = handoff === 'delayed-inbox'
-      await composer.getByRole('radio', { name: 'Yes' }).click()
-      await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
-      await expect.poll(() => claimed, { timeout: 10_000 }).toBe(true)
-      await page.evaluate(() => new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => { resolve() }))
-      }))
-      expect(await page.getByText(STEER, { exact: true }).count()).toBe(1)
-      expect(await page.locator('[data-submission-echo]').filter({ hasText: STEER }).count()).toBe(1)
-      if (handoff === 'reconnect') {
-        const socket = remoteSocket
-        if (socket === undefined) throw new Error('steering page has no Remote connection')
-        const warningStart = tripwire.warnings.length
-        await socket.close({ code: 1012, reason: 'steering reconnect checkpoint' })
-        await expect.poll(() => remoteSocket !== socket, { timeout: 10_000 }).toBe(true)
-        await expect.poll(() => page.locator('[data-submission-echo]').count(), { timeout: 10_000 }).toBe(0)
-        expect(await page.getByText(STEER, { exact: true }).count()).toBe(0)
-        acknowledgeReloadConnectionLoss(tripwire, warningStart)
-      } else {
-        await expect.poll(() => heldControl.length, { timeout: 10_000 }).toBeGreaterThan(0)
-        admission.resolve(undefined)
-        await page.locator('[data-chat-flow-kind="steering"]').filter({ hasText: STEER }).waitFor({ timeout: 10_000 })
-        expect(await page.getByText(STEER, { exact: true }).count()).toBe(1)
-        expect(await pendingSteering.count()).toBe(0)
-      }
-    } finally {
-      admission.resolve(undefined)
-      releaseInbox()
-      stopHolding()
-      await settled
-    }
+    const settled = scaffold.whenTurnSettled(30_000)
+    await Promise.all([
+      settled,
+      (async () => {
+        try {
+          holdInbox = handoff === 'delayed-inbox'
+          await composer.getByRole('radio', { name: 'Yes' }).click()
+          await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
+          await expect.poll(() => claimed, { timeout: 10_000 }).toBe(true)
+          await page.evaluate(() => new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => { resolve() }))
+          }))
+          expect(await page.getByText(STEER, { exact: true }).count()).toBe(1)
+          expect(await page.locator('[data-submission-echo]').filter({ hasText: STEER }).count()).toBe(1)
+          if (handoff === 'reconnect') {
+            const socket = remoteSocket
+            if (socket === undefined) throw new Error('steering page has no Remote connection')
+            const warningStart = tripwire.warnings.length
+            await socket.close({ code: 1012, reason: 'steering reconnect checkpoint' })
+            await expect.poll(() => remoteSocket !== socket, { timeout: 10_000 }).toBe(true)
+            await expect.poll(() => page.locator('[data-submission-echo]').count(), { timeout: 10_000 }).toBe(0)
+            expect(await page.getByText(STEER, { exact: true }).count()).toBe(0)
+            acknowledgeReloadConnectionLoss(tripwire, warningStart)
+          } else {
+            await expect.poll(() => heldControl.length, { timeout: 10_000 }).toBeGreaterThan(0)
+            admission.resolve(undefined)
+            await page.locator('[data-chat-flow-kind="steering"]').filter({ hasText: STEER }).waitFor({ timeout: 10_000 })
+            expect(await page.getByText(STEER, { exact: true }).count()).toBe(1)
+            expect(await pendingSteering.count()).toBe(0)
+          }
+        } finally {
+          admission.resolve(undefined)
+          releaseInbox()
+          stopHolding()
+          await settled
+        }
+      })(),
+    ])
 
     const steerEvents = claimedMessages(sessionEvents, STEER)
     expect(steerEvents).toHaveLength(1)
@@ -500,7 +505,6 @@ describe('web e2e: composer shortcut follows the swapped busy behavior', () => {
     await page.keyboard.press('Escape')
 
     const input = page.locator('[data-composer-input]').first()
-    const settled = scaffold.whenTurnSettled(30_000)
     await page.locator('[data-composer-input][contenteditable="true"]').first().waitFor({ timeout: 10_000 })
     await input.fill(PROMPT)
     await input.press('Enter')
@@ -520,9 +524,13 @@ describe('web e2e: composer shortcut follows the swapped busy behavior', () => {
     await queuedRow.getByRole('button', { name: 'Remove queued message' }).click()
     const composer = page.locator('[data-question-key]')
     await composer.waitFor({ timeout: 30_000 })
-    await composer.getByRole('radio', { name: 'Yes' }).click()
-    await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
-    await settled
+    await Promise.all([
+      scaffold.whenTurnSettled(30_000),
+      (async () => {
+        await composer.getByRole('radio', { name: 'Yes' }).click()
+        await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
+      })(),
+    ])
     expect(tripwire.pageErrors).toEqual([])
     expect(tripwire.warnings).toEqual([])
   }, 90_000)
@@ -639,13 +647,16 @@ describe('web e2e: empty-draft Cmd+Enter steers the whole queue', () => {
 
     // Answer the question; the step closes, the loop drains both steerings
     // into one next-step request, and the final reply obeys both markers.
-    const settled = scaffold.whenTurnSettled(30_000)
     releaseQuestion.resolve(undefined)
     const composer = page.locator('[data-question-key]')
     await composer.waitFor({ timeout: 30_000 })
-    await composer.getByRole('radio', { name: 'Yes' }).click()
-    await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
-    await settled
+    await Promise.all([
+      scaffold.whenTurnSettled(30_000),
+      (async () => {
+        await composer.getByRole('radio', { name: 'Yes' }).click()
+        await composer.getByRole('radio', { name: 'Yes' }).press('Enter')
+      })(),
+    ])
 
     const first = claimedMessages(sessionEvents, STEER_ONE)
     const second = claimedMessages(sessionEvents, STEER_TWO)
