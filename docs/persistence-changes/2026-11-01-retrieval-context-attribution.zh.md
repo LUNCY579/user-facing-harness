@@ -27,20 +27,20 @@ id: 2026-11-01-retrieval-context-attribution
 baseline: false
 changes:
   - root: "event:agent/inbox/spliced"
-    previous: "2026-10-22-action-card-status"
-    after: "534115c0b4a9ae738f239bb2b3c30b25eaead4444f95f1ad628c729ea68ccc16"
+    previous: "2026-10-27-retry-control-input"
+    after: "f6f8afa331bdcaff254f7c46354069c3b9de9f46440c3115e2fce59c70fd7c8c"
     decision: same-version
   - root: "event:developer/message"
-    previous: "2026-10-22-action-card-status"
-    after: "559cdd40969a4e9fff241dc5e14ff6167535f3db3c9d107a23ca23acedb542d3"
+    previous: "2026-10-27-retry-control-input"
+    after: "d3357d6ae741e4c0560ed8068a649660127fbbd99173e1104702d9b9287753f8"
     decision: same-version
   - root: "event:session/title-llm-request"
-    previous: "2026-10-22-action-card-status"
-    after: "3d199555b38c8049773ac8fe7419eceea404b5ce8e5fabe22f96670ca0a444aa"
+    previous: "2026-10-27-retry-control-input"
+    after: "2427def41f689b7258b01a4eb1cda5d116b71c00f2d29834075b1dd9c18a4368"
     decision: same-version
   - root: "event:user/message"
-    previous: "2026-10-22-action-card-status"
-    after: "e84eff45b49dce0fcba735fe431a90154988fc6a56f7319544f098057d39a68d"
+    previous: "2026-10-27-retry-control-input"
+    after: "597ad688b9d8e880f0668a85359a3362f49e886c9bd3fddd77ea86d81921a0d9"
     decision: same-version
 ```
 

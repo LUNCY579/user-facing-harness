@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-retrieval-embed",
   "description": "Local and OpenAI-compatible embedding providers for the DeepSeek Harness retrieval seam",
-  "version": "0.2.1-rc.3",
+  "version": "0.2.2-rc.1",
   "publishConfig": {
     "access": "public"
   },

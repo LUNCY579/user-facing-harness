@@ -6,4 +6,10 @@ export interface FlowMotionRows {
   reveal(element: HTMLElement): void
   /** @param element - row whose active transition should be cancelled without hiding it. */
   cancelMotion(element: HTMLElement): void
+  /**
+   * Hide a row at once, outside a motion scope; the owning viewport measures the layout first.
+   * @param element - visible row.
+   * @param commit - applies the hidden state.
+   */
+  hideNow?(element: HTMLElement, commit: () => void): void
 }

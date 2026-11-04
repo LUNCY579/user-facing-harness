@@ -110,12 +110,14 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'apps/cli/tests/optional-bundle-transitions.e2e.ts', upstream: ['cordis'] },
   { file: 'apps/web/tests/agent-preset-selection.e2e.ts', upstream: ['cordis'] },
   { file: 'apps/web/tests/developer-tools-settings.e2e.ts', upstream: ['cordis'] },
-  { file: 'docs/subsystems/schedule.md', upstream: ['cordis'] },
-  { file: 'docs/subsystems/schedule.zh.md', upstream: ['cordis'] },
+  { file: 'docs/tool-catalog.md', upstream: ['cordis'] },
+  { file: 'docs/tool-catalog.zh.md', upstream: ['cordis'] },
   { file: 'docs/upgrade-guide/v0.2.0-rc.2/schedule-bundle-retired/guide.md', upstream: ['cordis'] },
   { file: 'docs/upgrade-guide/v0.2.0-rc.2/schedule-bundle-retired/guide.zh.md', upstream: ['cordis'] },
   { file: 'docs/upgrade-guide/v0.2.1-alpha.1/subagent-preset-composition/guide.md', upstream: ['cordis'] },
   { file: 'docs/upgrade-guide/v0.2.1-alpha.1/subagent-preset-composition/guide.zh.md', upstream: ['cordis'] },
+  { file: 'docs/upgrade-guide/v0.2.2-alpha.2/fs-observation-policy-default-off/guide.md', upstream: ['cordis'] },
+  { file: 'docs/upgrade-guide/v0.2.2-alpha.2/fs-observation-policy-default-off/guide.zh.md', upstream: ['cordis'] },
   { file: 'docs/user/guide/schedule.md', upstream: ['cordis'] },
   { file: 'docs/user/guide/schedule.zh.md', upstream: ['cordis'] },
   { file: 'packages/bundle/web-app/cordis.patch.yml', upstream: ['cordis'] },
@@ -130,6 +132,7 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'packages/client/ui-entry-customization/src/client/index.ts', upstream: ['cordis'] },
   { file: 'packages/client/ui-entry-customization/tests/menu.client.spec.tsx', upstream: ['cordis'] },
   { file: 'packages/client/ui-workspace/tests/workspaces-service.client.spec.ts', upstream: ['cordis'] },
+  { file: 'scripts/gen-tool-catalog.ts', upstream: ['cordis'] },
   // The preset-roster loop names the `cordis` preset id, not a package.
   { file: 'apps/cli/tests/windows-shell.spec.ts', upstream: ['cordis'] },
   // GROUP_ORDER holds `packages/<group>/` directory names, not package names.
@@ -193,7 +196,7 @@ const POSTCONDITIONS: readonly PostCondition[] = [
   { file: 'packages/boot/app-boot/tsdown.config.ts', text: '[\'@deepseek-ai/cordis-plugin-include\']', count: 1 },
   { file: 'tsconfig.base.json', text: '"@deepseek-ai/cordis-plugin-loader": ["./vendor/loader/src"]', count: 1 },
   // The vendored README owns this required entry; reject its deletion or duplication.
-  { file: 'vendor/README.md', text: '17. **`@deepseek-ai` rescope**', count: 1 },
+  { file: 'vendor/README.md', text: '**V17 · `@deepseek-ai` rescope**', count: 1 },
   { file: 'pnpm-workspace.yaml', text: 'cordis@4.0.0-rc.7', count: 0 },
   // The preset ids in this table are product data, not package names.
   { file: 'packages/client/ui-agent-preset/tests/locales.client.spec.ts', text: '[\'cordis\', \'presetCordisName\'', count: 1 },
@@ -660,12 +663,13 @@ export function exactEditState(text: string, find: string, replace: string, expe
 }
 
 /**
- * List tracked paths eligible for the rescope check, preserving Git's NUL-delimited names.
- * @param repoRoot - Git working directory whose index is inspected.
- * @returns Tracked paths after the rescope exclusions; Git output is bounded to 16 MiB.
+ * List tracked paths that the rescope checks or rewrites.
+ * @param repoRoot - Git working directory.
+ * @param env - Git's environment; omitted, Git inherits this process's environment.
+ * @returns eligible repository-relative paths, including large tracked corpora.
  */
-export function trackedRescopeFiles(repoRoot: string): string[] {
-  return execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
+export function listRescopeFiles(repoRoot: string, env?: NodeJS.ProcessEnv): string[] {
+  return execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, env, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
     .split('\0')
     .filter(file => file !== '' && !isRescopeExcluded(file))
 }
@@ -675,7 +679,7 @@ function main(): void {
   const mode = args.includes('--apply') ? 'apply' : args.includes('--check') ? 'check' : 'dry'
   const reverse = args.includes('--reverse')
   const all = patterns(reverse)
-  const files = trackedRescopeFiles(root)
+  const files = listRescopeFiles(root)
 
   const counts = new Map<string, { files: number; lines: number }>()
   const failures: string[] = []

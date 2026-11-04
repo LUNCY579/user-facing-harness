@@ -16,7 +16,6 @@ const SETTLE_SLACK_MS = 80
 const MOTION_SCOPE = '[data-chat-motion]'
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
-
 /** Geometry captured before one fold batch changes its boxes. */
 export interface InputFoldBox {
   readonly element: HTMLElement
@@ -128,9 +127,13 @@ interface OwnedBox {
  * Create animation coordination without cross-viewport broadcasts.
  * @param driver - the viewport's driver for the next batch; null while detached.
  * @param foldingChanged - disable or restore this viewport's native scroll anchoring.
+ * @param beforeInstantHide - measures the layout before a row hides at once outside a motion scope.
  * @returns stable callbacks and cleanup for this viewport's animations.
  */
-export function createFlowMotion(driver: () => InputFoldDriver | null, foldingChanged: (active: boolean) => void): FlowMotion {
+export function createFlowMotion(
+  driver: () => InputFoldDriver | null, foldingChanged: (active: boolean) => void,
+  beforeInstantHide?: (element: HTMLElement) => void,
+): FlowMotion {
   const running = new Map<HTMLElement, () => void>()
   let folding = 0
   const foldIdleListeners = new Set<() => void>()
@@ -469,8 +472,13 @@ export function createFlowMotion(driver: () => InputFoldDriver | null, foldingCh
     for (const cancel of [...running.values()]) cancel()
   }
 
+  function hideNow(element: HTMLElement, commit: () => void): void {
+    beforeInstantHide?.(element)
+    commit()
+  }
+
   return {
-    collapse, reveal, cancelMotion, foldActive, onFoldIdle, cancelInput, resumeInput, clear,
+    collapse, reveal, cancelMotion, foldActive, onFoldIdle, cancelInput, resumeInput, clear, hideNow,
     inputActive: () => batch || (batchScheduled && [...boxes.values()].some(box => box.closing && batchMember(box))),
   }
 }
@@ -488,6 +496,7 @@ function useFlowTransition(motion: FlowMotionRows | undefined, grow: boolean): H
     if (hidden) {
       if (hiddenOrCollapsing(element)) return
       if (mounted && element.closest(MOTION_SCOPE) !== null && motion !== undefined) motion.collapse(element, commit)
+      else if (mounted && motion?.hideNow !== undefined) motion.hideNow(element, commit)
       else commit()
       return
     }

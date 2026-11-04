@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.2-rc.1/creator-settings-hook/guide.md
+/:
+  en: 14a6c47da36592c6
+  zh: d464e4fbb0827bef
+/creator-availability-uses-an-injected-hook:
+  en: bd8c38abfc987472
+  zh: 0de78e8e89229f8c
+/creator-availability-uses-an-injected-hook/change:
+  en: ccd5b33abc4c7694
+  zh: 9f1207ba57b7db22
+/creator-availability-uses-an-injected-hook/migration:
+  en: a809cb9bdc2bdc27
+  zh: 4904570c64924a17

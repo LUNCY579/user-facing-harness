@@ -2,9 +2,21 @@
 
 [source-import.json](source-import.json) identifies the two exact commits imported into TestingPlatform. The harness retains its directory layout at the repository root. The complete plugin lives under `plugins/dsh-our-free-model`, including its standalone app, desktop app, worker, assets, native engine, tests, and licenses. Source history remains available in the two original repositories; TestingPlatform starts with a combined snapshot and its own subsequent commits.
 
+## Upstream synchronization
+
+The harness follows `master` of [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness). The `upstream_sync` entry in [source-import.json](source-import.json) records the most recent synchronized upstream commit. The first synchronization merged that commit using the imported snapshot as the merge base, and the merge commit has the upstream commit as its second parent, so later synchronizations are ordinary merges:
+
+```sh
+git remote add upstream https://github.com/deepseek-ai/deepseek-harness.git
+git fetch upstream master
+git merge upstream/master
+```
+
+Move every workflow that the merge adds under `.github/workflows` into [upstream-workflows](upstream-workflows) and update the `upstream_workflows` count; `scripts/ci-workflow.spec.ts` checks both. Regenerate generated catalogs and `*.i18n.yaml` pairing records with their `pnpm run gen-*` and `verify-translation-pairing --write` commands instead of resolving them by hand. Then run `pnpm install`, `pnpm run build`, and the checks in the [TestingPlatform checks](../.github/workflows/testing-platform-ci.yml) workflow, and update `upstream_sync`.
+
 ## Workflows
 
-The 27 original harness workflows are preserved byte for byte in [upstream-workflows](upstream-workflows). They require upstream enterprise runners, release credentials, publishing settings, or repository policies, so they are kept as reference files. Upstream documentation references to `.github/workflows` refer to the corresponding files in this archive.
+The 32 upstream harness workflows, as of the most recent synchronization, are preserved byte for byte in [upstream-workflows](upstream-workflows). They require upstream enterprise runners, release credentials, publishing settings, or repository policies, so they are kept as reference files. Upstream documentation references to `.github/workflows` refer to the corresponding files in this archive.
 
 The active [TestingPlatform checks](../.github/workflows/testing-platform-ci.yml) workflow runs on manual request and uses a standard Ubuntu runner. It installs the pinned dependency graph, builds the harness, checks plugin types, runs offline plugin regressions, and checks the combined application. It does not call model providers. The [source import](../.github/workflows/import-sources.yml) workflow performs the initial import only. Once `source-import.json` exists with `completed: true`, rerunning the importer makes no changes.
 

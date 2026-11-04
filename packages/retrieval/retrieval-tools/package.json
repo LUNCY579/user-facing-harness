@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-retrieval-tools",
   "description": "Model-facing memory, workspace, and context retrieval tools over the Host ctx.retrieval service, plus conservative automatic pre-request retrieval",
-  "version": "0.2.1-rc.3",
+  "version": "0.2.2-rc.1",
   "publishConfig": {
     "access": "public"
   },
