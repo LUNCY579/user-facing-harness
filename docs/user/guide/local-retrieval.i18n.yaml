@@ -9,8 +9,8 @@
   en: b9ae80a26afad6fa
   zh: 737425af655d2588
 /local-context-retrieval-and-explicit-memory/table-of-contents:
-  en: 09478851a932fa56
-  zh: 09478851a932fa56
+  en: 9ff8da8d5d39c894
+  zh: 9ff8da8d5d39c894
 /local-context-retrieval-and-explicit-memory/enable-and-verify:
   en: 20182f5cf32c9c88
   zh: 8f92a2566e7ee8f8
@@ -18,17 +18,23 @@
   en: 83fe33f36bf97050
   zh: eed266864204dff7
 /local-context-retrieval-and-explicit-memory/choose-memory-ownership:
-  en: 3c877ec41e0a3102
-  zh: e44a5218f3e885f3
+  en: 37d0f1cfb6947917
+  zh: 2094fc629399c213
 /local-context-retrieval-and-explicit-memory/choose-embeddings-and-acceleration:
-  en: dddad781ceb6f33b
-  zh: 4dacdaa95366d2d4
+  en: edc4d37b6afaf857
+  zh: 78e2bf5e0c5e5040
+/local-context-retrieval-and-explicit-memory/move-memories-between-stores:
+  en: e7c17c0b681a501d
+  zh: 469c2aebe378e47f
+/local-context-retrieval-and-explicit-memory/platform-support:
+  en: 4b55cc3b08c9f993
+  zh: 28740455146a1468
 /local-context-retrieval-and-explicit-memory/recover-or-disable:
-  en: a32b7962747237c3
-  zh: b1f4bb849d2461fa
+  en: 5c06576df568718a
+  zh: 3d940a860583b0d9
 /local-context-retrieval-and-explicit-memory/privacy-and-verification-limits:
-  en: 8eb4afac4b1df7f3
-  zh: daf4199e126f79a2
+  en: a018c64bfe03791b
+  zh: 739cceb5c881d1c9
 /local-context-retrieval-and-explicit-memory/dev-note:
-  en: b75c8458928b72b9
-  zh: 02cbcc6baa338b07
+  en: 215eadf14bcd1b5e
+  zh: 5c9a09ab49c17144

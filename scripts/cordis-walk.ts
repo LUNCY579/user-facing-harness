@@ -5,9 +5,10 @@
  * region generator's exhaustiveness backstop consumes the key scan.
  */
 
-import { globSync, readFileSync } from 'node:fs'
-import { resolve, sep } from 'node:path'
+import { globSync } from 'node:fs'
+import { resolve } from 'node:path'
 import ts from 'typescript'
+import { corpusListing, readCorpus } from './scratch-sources.ts'
 
 /** Cheap textual prefilter for a cordis module merge, quote-style agnostic
  * (the AST match below reads `stmt.name.text` and never sees the quotes). */
@@ -28,10 +29,11 @@ export function contextMergeFiles(
   patterns: string | readonly string[],
 ): { rel: string; sf: ts.SourceFile; text: string; body: ts.ModuleBlock }[] {
   const out: { rel: string; sf: ts.SourceFile; text: string; body: ts.ModuleBlock }[] = []
-  const rels = [...new Set(globSync(patterns as string | string[], { cwd: scanRoot }).map(s => s.split(sep).join('/')))].sort()
+  const rels = corpusListing(globSync(patterns, { cwd: scanRoot }))
   for (const rel of rels) {
     const abs = resolve(scanRoot, rel)
-    const text = readFileSync(abs, 'utf8')
+    const text = readCorpus(abs)
+    if (text === undefined) continue
     if (!MERGE_HEAD.test(text)) continue
     const sf = ts.createSourceFile(abs, text, ts.ScriptTarget.Latest, true)
     for (const body of cordisModuleBodies(sf)) out.push({ rel, sf, text, body })

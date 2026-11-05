@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-02-memory-portability-format.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-11-02-memory-portability-format.md
+/agent-note-authorized-memory-portability-and-embedding-space-migration:
+  en: 14e7abe48f89a6f0
+  zh: 582602833826d423
+/agent-note-authorized-memory-portability-and-embedding-space-migration/problem:
+  en: ddbe19c911bbb225
+  zh: 74adda3ee6341010
+/agent-note-authorized-memory-portability-and-embedding-space-migration/decision:
+  en: bf5816b39ddb616d
+  zh: 986358fd506c2d1f
+/agent-note-authorized-memory-portability-and-embedding-space-migration/alternatives-considered:
+  en: 2592b947863fa7df
+  zh: 677b7e1c7c4a1445
+/agent-note-authorized-memory-portability-and-embedding-space-migration/consequences:
+  en: 48b983509c882145
+  zh: 850418ea664318c9

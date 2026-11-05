@@ -20,6 +20,7 @@ coverage/
 .oxlint-contract-*/
 .oxlintrc.contract-*.json
 oxlint-contract-*.ts
+oxlint-contract-*.tsx
 .humanize/
 tmp/
 .claude/commands/
@@ -51,6 +52,10 @@ native/system/test/bin/
 
 # TestingPlatform local profiles, credentials, sessions, and logs.
 /.testingplatform/
+
+# Memory portability state: the forgotten ledger and per-store import journals hold private record ids.
+memory-ledger.json
+import-journal-*.json
 
 # Generated installer state and platform launchers.
 /.installer-node-version

@@ -203,7 +203,28 @@ export function scanRepository(): DispatcherViolation[] {
     ...globSync('apps/*/src/**/*.ts', { cwd: root }),
   ]
   if (files.length === 0) throw new Error('verify-no-bare-dispatcher: scanned an empty corpus; the globs no longer match.')
-  return files.flatMap(file => findDispatcherViolations(file, readFileSync(resolve(root, file), 'utf8')))
+  return scanFiles(files)
+}
+
+/**
+ * Read and scan each path one corpus listing named.
+ * @param files - paths relative to the repository root.
+ * @returns every violation found, in the order listed. A path that vanished between listing and
+ *   read contributes none: a gate running beside the test suite sees scratch sources that the
+ *   suite deletes mid-scan, and only a read error that is not `ENOENT` can mean the corpus moved
+ *   out from under the gate.
+ */
+export function scanFiles(files: readonly string[]): DispatcherViolation[] {
+  return files.flatMap((file) => {
+    let source: string
+    try {
+      source = readFileSync(resolve(root, file), 'utf8')
+    } catch (error: unknown) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+      return []
+    }
+    return findDispatcherViolations(file, source)
+  })
 }
 
 function main(): void {

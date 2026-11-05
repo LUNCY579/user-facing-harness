@@ -39,3 +39,60 @@ jobs:
         run: pnpm run test:integration
       - name: Smoke test the combined Web application
         run: pnpm run smoke:platform
+
+  native-retrieval:
+    name: Native retrieval (${{ matrix.platform }})
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runs-on: ubuntu-24.04
+          - platform: linux-arm64
+            runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5.0.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build published entry points
+        run: pnpm run build:artifacts
+      - name: Run the native retrieval lane
+        run: pnpm run check:native-retrieval
+
+  native-retrieval-turbovec:
+    name: Native retrieval (linux-x64 with turbovec)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5.0.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build published entry points
+        run: pnpm run build:artifacts
+      - name: Provision the pinned turbovec worker
+        run: |
+          python3 -m venv "$RUNNER_TEMP/retrieval-python"
+          "$RUNNER_TEMP/retrieval-python/bin/python" -m pip install turbovec==1.1.2 numpy==2.3.5
+      - name: Run the native retrieval lane
+        env:
+          DSH_TEST_TURBOVEC_PYTHON: ${{ runner.temp }}/retrieval-python/bin/python
+        run: pnpm run check:native-retrieval

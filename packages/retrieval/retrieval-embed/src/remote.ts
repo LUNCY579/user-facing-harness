@@ -135,6 +135,7 @@ export class RemoteEmbeddings extends Embeddings {
       throwIfAborted(signal, 'embedding batch')
       const batch = texts.slice(start, start + this.options.maxBatch)
       const vectors = await this.request(batch, signal)
+      /* v8 ignore next 3 -- vectorsFrom emits one vector per input, so a count mismatch is an internal fault. */
       if (vectors.length !== batch.length) {
         throw new RetrievalError('protocol_error', `embedding server returned ${vectors.length} vectors for ${batch.length} inputs`)
       }
@@ -304,6 +305,7 @@ function backoffFor(attempt: number, initial: number, cap: number): number {
  * @returns when the delay elapses, or cancellation throws.
  */
 async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  /* v8 ignore next -- send() reports cancellation from the same signal before a retry wait can start. */
   if (signal?.aborted === true) throw new RetrievalError('cancelled', 'embedding retry cancelled')
   await new Promise<void>((resolve, reject) => {
     const onAbort = (): void => {

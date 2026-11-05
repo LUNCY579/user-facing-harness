@@ -26,10 +26,10 @@ kind: "package-group"
 
 | 包 | 职责 |
 |---|---|
-| [`retrieval`](retrieval/README.zh.md) | 检索和显式记忆服务；工作区和会话同步入口。 |
+| [`retrieval`](retrieval/README.zh.md) | 检索和显式记忆服务；工作区和会话同步入口，并定义版本化记忆导出、遗忘账本和导入日志。 |
 | [`retrieval-embed`](retrieval-embed/README.zh.md) | 离线哈希和授权的 OpenAI 兼容嵌入。 |
 | [`retrieval-zvec`](retrieval-zvec/README.zh.md) | 持久 Zvec 存储和可选隔离 turbovec 派生索引。 |
-| [`retrieval-tools`](retrieval-tools/README.zh.md) | 智能体工具和可选自动上下文。 |
+| [`retrieval-tools`](retrieval-tools/README.zh.md) | 智能体工具、操作者使用的记忆导出导入命令，以及可选自动上下文。 |
 
 <a id="related-documentation"></a>
 ## 相关文档
@@ -40,4 +40,4 @@ kind: "package-group"
 <a id="dev-note"></a>
 ## 开发备注
 
-无。
+[记忆可迁移格式 Agent Note](../../.agents/notes/implemented/feature/2026-11-02-memory-portability-format.zh.md)定义导出、账本和暂存导入的决策。[权威本地检索 Agent Note](../../.agents/notes/implemented/architecture/2026-11-01-authoritative-local-retrieval.zh.md)定义存储权威性与可重建压缩。

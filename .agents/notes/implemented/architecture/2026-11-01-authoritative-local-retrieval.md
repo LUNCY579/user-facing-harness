@@ -30,6 +30,6 @@ Principal and original canonical workspace identity come from trusted host confi
 
 ## Consequences
 
-The primary store survives optional-worker failure, and the model receives logged, source-linked evidence through existing tools and request hooks. Compression does not reduce canonical Zvec storage. Synchronous native query/build calls cannot be interrupted mid-call, and a changed embedding space requires a separate index and manual explicit-memory migration.
+The primary store survives optional-worker failure, and the model receives logged, source-linked evidence through existing tools and request hooks. Compression does not reduce canonical Zvec storage. Synchronous native query/build calls cannot be interrupted mid-call, and a changed embedding space requires a separate index plus the re-embedding import owned by the [memory portability format Agent Note](../feature/2026-11-02-memory-portability-format.md).
 
 Verification covers native persistence, scoped reads and mutations, interrupted publication, worker crashes and process-exit barriers, HTTP cancellation, rebuilds, keyless Loader workflows, and recorded Session replay. The benchmark runs built JavaScript in fresh children and publishes raw measurements; real-model reasoning, neural embedding quality, and other operating systems remain separate verification work.

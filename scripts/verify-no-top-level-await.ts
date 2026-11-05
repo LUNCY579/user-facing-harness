@@ -25,6 +25,7 @@
 import { existsSync, globSync, readdirSync, readFileSync } from 'node:fs'
 import { join, posix, resolve } from 'node:path'
 import ts from 'typescript'
+import { corpusListing } from './scratch-sources.ts'
 
 const GATE = 'verify-no-top-level-await'
 const root = resolve(import.meta.dirname, '..')
@@ -177,7 +178,7 @@ export function findTopLevelAwaits(file: string, sourceText: string): TopLevelAw
  * that holds TypeScript sources, because the gate would then pass by scanning less than it claims.
  */
 export function sourceCorpus(repositoryRoot: string = root, pattern: string = SOURCE_GLOB): string[] {
-  const files = globSync(pattern, { cwd: repositoryRoot }).map(file => file.replaceAll('\\', '/')).sort()
+  const files = corpusListing(globSync(pattern, { cwd: repositoryRoot }))
   if (files.length === 0) throw new Error(`${GATE}: scanned an empty corpus; ${pattern} no longer matches.`)
   if (!files.some(file => file.endsWith('.tsx'))) {
     throw new Error(`${GATE}: the corpus holds no .tsx file; ${pattern} no longer covers TSX sources.`)

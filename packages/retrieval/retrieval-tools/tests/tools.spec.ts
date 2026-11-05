@@ -3,7 +3,7 @@
 import { mkdir, mkdtemp, realpath, rename, rm, symlink, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
-import { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
+import { agentEvents, type Agent, type PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { ToolCallId, createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-llm'
@@ -30,11 +30,12 @@ const SYMBOLS: Record<Workspace, string> = { alpha: 'refundPayment' }
 const contexts: Context[] = []
 const roots: string[] = []
 
-/** One mounted deployment: its scope, the caller the host attributes, and its workspace directory. */
+/** One mounted deployment: its scope, the caller the host attributes, the agent factory, and its workspace directory. */
 interface Mount {
   ctx: Context
   agent: Agent
   dir: string
+  loop: Awaited<ReturnType<typeof mountAgentLoopTestHarness>>
 }
 
 /**
@@ -86,7 +87,7 @@ async function mount(name: Workspace, options: {
   if (options.index === true) {
     await ctx.retrievalIndexing.syncWorkspace(await identity(agent, ctx))
   }
-  return { ctx, agent, dir: workspace }
+  return { ctx, agent, loop, dir: workspace }
 }
 
 /**
@@ -149,6 +150,31 @@ describe('retrieval tool registration', () => {
       expect(definition, name).toBeDefined()
       expect(definition?.description, name).toMatch(/[A-Z].{20,}/)
     }
+  })
+
+  it('presents every retrieval tool as a typed call card', async () => {
+    const { ctx } = await mount('alpha', { index: false })
+    const cards: [string, Record<string, unknown>, string][] = [
+      ['context_index', { source: 'workspace' }, 'edit'],
+      ['context_search', { query: 'refund ledger' }, 'search'],
+      ['workspace_semantic_search', { query: 'refund ledger' }, 'search'],
+      ['vector_similarity_search', { query: 'refund ledger' }, 'search'],
+      ['memory_search', { query: 'refund ledger' }, 'search'],
+      ['memory_remember', { text: 'Prefers concise reports.', scope: 'workspace' }, 'edit'],
+      ['memory_update', { id: 'mem-1', text: 'Rewritten.' }, 'edit'],
+      ['memory_forget', { ids: ['mem-1', 'mem-2'] }, 'delete'],
+      ['memory_status', {}, 'read'],
+    ]
+    for (const [name, args, kind] of cards) {
+      const definition = ctx.tools.get(name)
+      expect(definition, name).toBeDefined()
+      expect(definition?.presentCall?.(args), name).toMatchObject({ card: 'generic', kind })
+    }
+    expect(ctx.tools.get('memory_search')?.presentCall?.({})).toMatchObject({ rawInput: '(recent)' })
+    expect(ctx.tools.get('memory_forget')?.presentCall?.({})).toMatchObject({ rawInput: 'expired or scoped sweep' })
+    expect(ctx.tools.get('memory_status')?.presentCall?.({})).not.toHaveProperty('rawInput')
+    expect(ctx.tools.get('context_search')?.isConcurrencySafe?.({ query: 'refund ledger' })).toBe(true)
+    expect(ctx.tools.get('memory_status')?.isConcurrencySafe?.({})).toBe(true)
   })
 
   it('unregisters its tools when the consumer fiber is disposed', async () => {
@@ -370,22 +396,47 @@ describe('retrieval tools over the native store', () => {
 })
 
 describe('automatic retrieval', () => {
+  /** How one pre-step drive is shaped. */
+  interface Drive {
+    /** Step number the loop reports; retrieval only runs on the first step. */
+    step?: number
+    /** Cancellation handed to the listener. */
+    signal?: AbortSignal
+    /** Decision the earlier listeners reached; defaults to entering with `request`. */
+    outcome?: PreStepDecision
+    /** Batch entering the step; defaults to `request` as one user message. */
+    messages?: UserMessage[]
+  }
+
   /**
-   * Drive one pre-step waterfall for `agent` with `request` as the incoming batch.
+   * Drive one pre-step waterfall for `agent` and return the decision the whole chain settled on.
    * @param ctx - mount scope.
    * @param agent - caller whose turn is starting.
    * @param request - user text for the step.
-   * @returns the messages the step will enter with.
+   * @param options - step number, signal, incoming batch, and earlier-chain outcome.
+   * @returns the settled decision.
    */
-  async function step(ctx: Context, agent: Agent, request: string) {
-    const messages = [createUserMessage({ content: [{ type: 'text', text: request }], source: { kind: 'user' } })]
-    const decision = await agentEvents(ctx, agent).waterfall('agent/pre-step', {
+  async function drive(ctx: Context, agent: Agent, request: string, options: Drive = {}): Promise<PreStepDecision> {
+    const messages = options.messages ?? [createUserMessage({ content: [{ type: 'text', text: request }], source: { kind: 'user' } })]
+    return agentEvents(ctx, agent).waterfall('agent/pre-step', {
       messages,
       turn: 1,
-      step: 1,
-      signal: new AbortController().signal,
+      step: options.step ?? 1,
+      signal: options.signal ?? new AbortController().signal,
       modelSelection: { provider: 'mock', model: 'mock' },
-    }, async () => ({ kind: 'enter' as const, messages }))
+    }, async () => options.outcome ?? { kind: 'enter' as const, messages })
+  }
+
+  /**
+   * Drive one pre-step waterfall and require it to enter.
+   * @param ctx - mount scope.
+   * @param agent - caller whose turn is starting.
+   * @param request - user text for the step.
+   * @param options - step number, signal, incoming batch, and earlier-chain outcome.
+   * @returns the entered decision.
+   */
+  async function step(ctx: Context, agent: Agent, request: string, options: Drive = {}): Promise<PreStepDecision & { kind: 'enter' }> {
+    const decision = await drive(ctx, agent, request, options)
     if (decision.kind !== 'enter') throw new Error('retrieval fixture rejected the pre-step')
     return decision
   }
@@ -467,5 +518,55 @@ describe('automatic retrieval', () => {
     })
     const decision = await step(ctx, agent, `How does the refund ledger in ${SYMBOLS.alpha} write an entry?`)
     expect(decision.messages).toHaveLength(1)
+  })
+
+  it('retrieves nothing for a rejected, cancelled, or later step', async () => {
+    const { ctx, agent } = await mount('alpha', { index: true, tools: { autoRetrieval: true, autoMinQueryChars: 8 } })
+    const request = `How does the refund ledger in ${SYMBOLS.alpha} write an entry?`
+    const cancelled = new AbortController()
+    cancelled.abort()
+    const search = vi.spyOn(ctx.retrieval, 'search')
+    try {
+      expect((await drive(ctx, agent, request, { outcome: { kind: 'reject' } })).kind).toBe('reject')
+      expect((await step(ctx, agent, request, { signal: cancelled.signal })).messages).toHaveLength(1)
+      expect((await step(ctx, agent, request, { step: 2 })).messages).toHaveLength(1)
+      expect(search).not.toHaveBeenCalled()
+    } finally {
+      search.mockRestore()
+    }
+  })
+
+  it('searches only the text blocks of the incoming batch', async () => {
+    const { ctx, agent } = await mount('alpha', { index: true, tools: { autoRetrieval: true, autoMinQueryChars: 8 } })
+    const request = `How does the refund ledger in ${SYMBOLS.alpha} write an entry?`
+    const batch = [createUserMessage({
+      content: [{ type: 'reasoning', text: 'pondering the ledger' }, { type: 'text', text: request }],
+      source: { kind: 'user' },
+    })]
+    const search = vi.spyOn(ctx.retrieval, 'search')
+    try {
+      const decision = await step(ctx, agent, request, { messages: batch })
+      expect(search.mock.calls.map(([query]) => query.text)).toEqual([request])
+      expect(decision.messages).toHaveLength(2)
+    } finally {
+      search.mockRestore()
+    }
+  })
+
+  it('injects nothing when no record clears the relevance floor', async () => {
+    const { ctx, agent } = await mount('alpha', { index: false, tools: { autoRetrieval: true, autoMinQueryChars: 8 } })
+    const decision = await step(ctx, agent, `How does the refund ledger in ${SYMBOLS.alpha} write an entry?`)
+    expect(decision.messages).toHaveLength(1)
+  })
+
+  it('keeps the request when the backend fails with a value that is not an Error', async () => {
+    const { ctx, agent } = await mount('alpha', { index: true, tools: { autoRetrieval: true, autoMinQueryChars: 8 } })
+    const search = vi.spyOn(ctx.retrieval, 'search').mockRejectedValue('the backend said no')
+    try {
+      const decision = await step(ctx, agent, `How does the refund ledger in ${SYMBOLS.alpha} write an entry?`)
+      expect(decision.messages).toHaveLength(1)
+    } finally {
+      search.mockRestore()
+    }
   })
 })

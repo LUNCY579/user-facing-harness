@@ -102,6 +102,7 @@
     "check:ci:windows-complete": "tsx scripts/run-gates.ts ci-windows-complete",
     "check:ci:windows-observational-ready": "tsx scripts/run-gates.ts ci-windows-observational-ready",
     "check:node-compat": "tsx scripts/run-gates.ts node-compat",
+    "check:native-retrieval": "tsx scripts/native-retrieval-lane.ts",
     "publint": "tsx scripts/publint-all.ts",
     "doc-typecheck": "tsx scripts/compile-referenced-projects.ts host-contracts && npm run doc-typecheck:contracts-ready",
     "doc-typecheck:contracts-ready": "tsx scripts/doc-typecheck.ts",
@@ -229,7 +230,8 @@
     "test:integration": "node --test testing-platform/*.test.mjs",
     "test:plugin": "pnpm --filter dsh-our-free-model run test:contributor",
     "smoke:platform": "node testing-platform/smoke.mjs",
-    "bench:retrieval": "node benchmarks/context-retrieval/run.mjs"
+    "bench:retrieval": "node benchmarks/context-retrieval/run.mjs",
+    "bench:retrieval:neural": "node benchmarks/context-retrieval/neural/run.mjs"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-hooks-claude-code": "workspace:*",

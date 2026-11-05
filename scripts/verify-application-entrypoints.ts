@@ -7,6 +7,7 @@
 import { existsSync, globSync, readFileSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { corpusListing, readCorpus } from './scratch-sources.ts'
 
 type ManifestBin = string | Record<string, string>
 
@@ -119,9 +120,9 @@ function manifestBinViolations(root: string): string[] {
 
 function executableSourceViolations(root: string): string[] {
   const failures: string[] = []
-  for (const rawPath of globSync(SOURCE_PATTERNS, { cwd: root, exclude: SOURCE_EXCLUDES }).sort()) {
-    const path = repositoryPath(rawPath)
-    const source = readFileSync(resolve(root, path), 'utf8')
+  for (const path of corpusListing(globSync(SOURCE_PATTERNS, { cwd: root, exclude: SOURCE_EXCLUDES }))) {
+    const source = readCorpus(resolve(root, path))
+    if (source === undefined) continue
     if (!source.startsWith('#!')) continue
     if (!EXECUTABLE_SOURCE_ALLOWLIST.has(path)) {
       failures.push(`${path}: executable source has no application/build/test classification`)

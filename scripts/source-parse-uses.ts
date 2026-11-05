@@ -1,8 +1,9 @@
 /** Source-text parsing shared by the package dependency and client package gates. */
-import { globSync, readFileSync } from 'node:fs'
+import { globSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { resolve, sep } from 'node:path'
 import ts from 'typescript'
+import { corpusListing, readCorpus } from './scratch-sources.ts'
 import type { PackageDependencyManifest, WorkspacePackageManifest } from './verify-package-dependencies.ts'
 
 export type DependencySection = 'dependencies' | 'devDependencies' | 'optionalDependencies' | 'peerDependencies'
@@ -201,8 +202,9 @@ export function normalizePath(path: string): string {
 
 export function readAllSourceUses(root: string, pkg: WorkspacePackageManifest): Map<string, string[]> {
   const uses = new Map<string, string[]>()
-  for (const sourcePath of globSync('src/**/*.{ts,tsx,mts,cts}', { cwd: resolve(root, pkg.dir) }).sort()) {
-    const source = readFileSync(resolve(root, pkg.dir, sourcePath), 'utf8')
+  for (const sourcePath of corpusListing(globSync('src/**/*.{ts,tsx,mts,cts}', { cwd: resolve(root, pkg.dir) }))) {
+    const source = readCorpus(resolve(root, pkg.dir, sourcePath))
+    if (source === undefined) continue
     const displayPath = `${pkg.dir}/${normalizePath(sourcePath)}`
     let runtimeUses: Set<string> | undefined
     for (const specifier of collectSourcePackageUses(sourcePath, source)) {

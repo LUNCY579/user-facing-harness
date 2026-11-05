@@ -23,6 +23,13 @@ export default defineConfig([
   },
   {
     ...shared,
+    entry: { 'eval.worker': 'context-retrieval/neural/eval.worker.ts' },
+    outDir: '.dsh-build/context-retrieval-neural',
+    clean: true,
+    tsconfig: 'tsconfig.host.json',
+  },
+  {
+    ...shared,
     entry: { 'terminal-io.worker': 'terminal-io/terminal-io.worker.ts' },
     outDir: '.dsh-build/terminal-io',
     clean: true,
