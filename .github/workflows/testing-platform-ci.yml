@@ -29,6 +29,8 @@ jobs:
           cache: pnpm
       - name: Install pinned dependencies
         run: pnpm install --frozen-lockfile
+      - name: Audit dependencies for known vulnerabilities
+        run: pnpm audit --audit-level high
       - name: Build harness and check TypeScript
         run: pnpm run setup
       - name: Check plugin adapter types

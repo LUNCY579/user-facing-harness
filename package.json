@@ -113,6 +113,7 @@
     "verify-repository-references": "tsx scripts/verify-repository-references.ts",
     "verify-concrete-terms": "tsx scripts/verify-concrete-terms.ts",
     "verify-no-unknown-casts": "tsx scripts/verify-no-unknown-casts.ts",
+    "verify-secrets-scan": "tsx scripts/verify-secrets-scan.ts",
     "verify-doc-refs": "tsx scripts/verify-doc-refs.ts",
     "verify-subsystem-pages": "tsx scripts/verify-subsystem-pages.ts",
     "verify-package-paths": "tsx scripts/verify-package-paths.ts",
@@ -232,6 +233,13 @@
     "smoke:platform": "node testing-platform/smoke.mjs",
     "bench:retrieval": "node benchmarks/context-retrieval/run.mjs",
     "bench:retrieval:neural": "node benchmarks/context-retrieval/neural/run.mjs"
+  },
+  "pnpm": {
+    "overrides": {
+      "dompurify": ">=3.4.17",
+      "node-forge": ">=1.4.1",
+      "undici": ">=7.16.0"
+    }
   },
   "devDependencies": {
     "@deepseek-ai/dsh-hooks-claude-code": "workspace:*",

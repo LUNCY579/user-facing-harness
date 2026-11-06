@@ -20,6 +20,23 @@ overrides:
   'extract-zip>yauzl': '3.4.0'
   '@deepseek-ai/cosmokit': 'link:vendor/cosmokit'
   '@deepseek-ai/schemastery': 'link:vendor/schemastery'
+  # Security overrides: force patched versions over vulnerable ranges reported
+  # by pnpm audit (DOMPurify XSS bypass, node-forge X.509 bypass, undici CVEs,
+  # vite/zod/electron/MCP advisories). extract-zip has no patched release yet.
+  dompurify: '>=3.4.17'
+  node-forge: '>=1.4.1'
+  undici: '>=7.30.1'
+  '@yao-pkg/pkg-fetch>undici': '>=8.12.2'
+  jsdom>undici: '>=8.12.2'
+  vite: '>=8.2.4'
+  zod: '>=4.6.6'
+  electron: '>=44.9.1'
+  '@modelcontextprotocol/sdk': '>=1.32.0'
+  '@modelcontextprotocol/server': '>=2.3.0'
+  '@modelcontextprotocol/node': '>=2.1.0'
+  follow-redirects: '>=1.16.1'
+  body-parser: '>=2.4.0'
+  happy-dom: '>=21.0.4'
 
 peerDependencyRules:
   allowedVersions:
