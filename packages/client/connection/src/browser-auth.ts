@@ -206,14 +206,21 @@ async function initializeSecret(credentials: CredentialProvider): Promise<Buffer
 export class BrowserAuth {
   private readonly launchToken: string
   private readonly maxAgeMilliseconds: number
+  /** Optional structured sink for denied authentication attempts; absence logs nothing. */
+  private readonly denied?: (message: string) => void
+  /** Denial-log throttle state: last logged timestamp and denials suppressed since. */
+  private deniedLogAt = 0
+  private deniedSuppressed = 0
 
   private constructor(
     processOwner: object,
     private readonly secret: Buffer,
     maxAgeDays: number,
+    denied?: (message: string) => void,
   ) {
     this.launchToken = processLaunchToken(processOwner)
     this.maxAgeMilliseconds = maxAgeDays * DAY_MILLISECONDS
+    this.denied = denied
     if (!Number.isSafeInteger(this.maxAgeMilliseconds)
       || !Number.isSafeInteger(Date.now() + this.maxAgeMilliseconds)) {
       throw new Error('client-connection: cookieMaxAgeDays exceeds the safe timestamp range')
@@ -232,8 +239,9 @@ export class BrowserAuth {
     processOwner: object,
     credentials: CredentialProvider,
     maxAgeDays: number,
+    denied?: (message: string) => void,
   ): Promise<BrowserAuth> {
-    return new BrowserAuth(processOwner, await initializeSecret(credentials), maxAgeDays)
+    return new BrowserAuth(processOwner, await initializeSecret(credentials), maxAgeDays, denied)
   }
 
   /**
@@ -383,6 +391,25 @@ export class BrowserAuth {
   }
 
   private writeUnauthorized(req: ConnectionIndexRequest, res: ConnectionIndexResponse): void {
+    // One audit line per denial: method, path, and presence booleans only —
+    // never the token, cookie value, or authorization header. The remote
+    // address is omitted on purpose: node:http does not expose it here and
+    // guessing it from proxy headers would trust an attacker-controlled value.
+    // A flood of denied requests must not become a log-flooding denial of
+    // service: the first denial logs, repeats within one second are counted,
+    // and the next log line reports the suppressed count.
+    if (this.denied !== undefined) {
+      const url = req.url ?? '/'
+      const message = `browser auth denied: ${req.method} ${url.split('?')[0]} token=${url.includes(`${TOKEN_QUERY}=`)} cookie=${req.headers.cookie !== undefined}`
+      const now = Date.now()
+      if (now - this.deniedLogAt >= 1000) {
+        this.denied(`${message}${this.deniedSuppressed > 0 ? ` (+${String(this.deniedSuppressed)} suppressed within 1s)` : ''}`)
+        this.deniedLogAt = now
+        this.deniedSuppressed = 0
+      } else {
+        this.deniedSuppressed += 1
+      }
+    }
     res.writeHead(401, {
       'cache-control': 'no-store',
       'content-type': 'text/plain; charset=utf-8',
