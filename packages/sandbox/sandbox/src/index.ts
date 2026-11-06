@@ -32,6 +32,9 @@ export type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access'
 /** A confining (non-`danger-full-access`) mode — the modes a {@link SandboxPolicy} can carry. */
 export type ConfinedSandboxMode = Exclude<SandboxMode, 'danger-full-access'>
 
+/** Whether one confined execution may open network sockets. */
+export type SandboxNetworkPolicy = 'allow' | 'deny'
+
 /**
  * The complete file-effect policy resolved for one capability call. The root
  * is carried even under modes that do not consume it so callers can resolve
@@ -40,6 +43,14 @@ export type ConfinedSandboxMode = Exclude<SandboxMode, 'danger-full-access'>
 export interface SandboxExecutionPolicy {
   /** The file-effect mode this execution runs under. */
   mode: SandboxMode
+  /**
+   * Whether the execution may open network sockets. Absent reads as `allow`:
+   * today's backends confine files by default and leave the network to the
+   * host. `deny` is an absolute request — a backend that cannot enforce it
+   * fails loud (`SandboxUnsupportedPolicyError`) rather than running with the
+   * network open.
+   */
+  network?: SandboxNetworkPolicy
   /** Absolute root directory `workspace-write` may write under. */
   workspaceRoot: string
   /**
@@ -77,6 +88,8 @@ export type SandboxEnforcement = 'full' | 'partial'
 export interface SandboxPolicy extends SandboxExecutionPolicy {
   /** The file-effect mode this execution runs under. */
   mode: ConfinedSandboxMode
+  /** Whether the execution may open network sockets; absent reads as `allow`. */
+  network?: SandboxNetworkPolicy
 }
 
 /**

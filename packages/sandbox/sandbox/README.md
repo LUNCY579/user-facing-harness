@@ -163,7 +163,8 @@ Append-only; escalation text follows the retained prefix and does not invalidate
 
 These limits define when the seam is a poor fit or needs special operational care. They are current package constraints, not a general sandbox comparison or a task backlog.
 
-- **File effects are the whole policy vocabulary** — the seam expresses no network, process, syscall, device, or credential restrictions.
+- **Network deny, where expressible** — the policy vocabulary is file effects plus one network axis. `network: 'deny'` blocks socket creation where the backend can (bwrap unshares the network namespace; Seatbelt denies `network*`) and fails loud with `SandboxUnsupportedPolicyError` where it cannot (Landlock, windows-acl); the default is `allow` (no network rule). Process, syscall, device, and credential restrictions remain outside the seam.
+- **Seatbelt cannot express every path** — SBPL string literals have no escape sequences, so a write root containing a quote, backslash, or control character is refused with `SandboxUnsupportedPolicyError` instead of being granted with altered profile semantics.
 - **Same-world confinement only** — containers, microVMs, and remote execution require replacing capability implementations rather than adding a provider here.
 - **Denial reporting is a stderr dialect** — the seam returns backend signatures instead of a typed runtime denial channel, so consumers that need classification infer it from the child process's output.
 - **Runner diagnostics are in-band** — exit status plus stderr evidence cannot prove which process wrote a matching line, so a confined child that deliberately mimics its runner can cause a false availability or diagnostic attribution; this cannot bypass confinement, and an out-of-band runner-status channel is deferred.
