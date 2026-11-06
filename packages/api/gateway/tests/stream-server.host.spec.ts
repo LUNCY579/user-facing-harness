@@ -385,6 +385,64 @@ describe('Remote stream mux server Peer binding', () => {
     expect(closeEvent[0]).toBe(1001)
     expect(String(closeEvent[1])).toBe('peer left')
   })
+
+  it('fails closed on a receiver error when the Peer scope refuses the binding', async () => {
+    // A disposed Peer between admission and upgrade completion makes bindPeer
+    // return undefined. A socket parked with no error handler would crash the
+    // process on the next malformed frame; it must be terminated instead.
+    const disposedPeer = await fixturePeer()
+    await disposedPeer.dispose()
+    const http = createServer()
+    const mux = new RemoteStreamMuxServer(
+      async (_endpoint, _payload, _uplink, _peer, control) => waitForAbort(control.signal),
+      mapFailure,
+      { heartbeatIntervalMs: 2_000, streamInboxBytes: 262_144, compression: true },
+    )
+    running.add({ http, mux, url: '', port: 0 })
+    // No auto-upgrade listener: the socket is handed over manually, the way a
+    // disposed-peer race delivers it.
+    await new Promise<void>(resolve => http.listen(0, '127.0.0.1', resolve))
+    const port = (http.address() as { port: number }).port
+    const client = new WebSocket(`ws://127.0.0.1:${String(port)}`)
+    const [req, socket, head] = await once(http, 'upgrade')
+    mux.handleUpgrade(req, socket as import('node:stream').Duplex, head, disposedPeer)
+    // Termination races the client's open handshake, so the client may never
+    // reach OPEN: any close/error outcome proves the socket was not parked.
+    const outcome = await Promise.race([once(client, 'close'), once(client, 'error').then(() => undefined)])
+    expect(outcome === undefined || [1006, 1001].includes((outcome as [number])[0])).toBe(true)
+    await mux.close().catch(() => undefined)
+    await new Promise<void>(resolve => http.close(() => resolve()))
+  })
+
+  it('terminates the socket and survives a frame the receiver cannot parse', async () => {
+    // Reserved opcode 0x3 (RFC 6455 violation): without an attached error
+    // handler the ws receiver error escapes as an uncaught exception and kills
+    // the process. The socket must terminate instead.
+    const entry = await startMux(async (_endpoint, _payload, _uplink, _peer, control) => waitForAbort(control.signal), 20)
+    const client = await connect(entry.url)
+    const serverSocket = acceptedSocket(entry.mux)
+    const closed = once(client, 'close')
+    // Masked empty frame with opcode 0x3, written under the library's parser.
+    const raw = (client as unknown as { _socket: import('node:net').Socket })._socket
+    raw.write(Buffer.from([0x83, 0x80, 0x11, 0x22, 0x33, 0x44]))
+    await closed
+    expect(serverSocket.readyState).not.toBe(WebSocket.OPEN)
+  })
+
+  it('rejects a frame above the wire bound instead of buffering it', async () => {
+    const entry = await startMux(async (_endpoint, _payload, _uplink, _peer, control) => waitForAbort(control.signal), 20)
+    const client = await connect(entry.url)
+    const serverSocket = acceptedSocket(entry.mux)
+    const closed = once(client, 'close')
+    const head = Buffer.alloc(10)
+    head[0] = 0x81
+    head[1] = 0x80 | 127
+    head.writeBigUInt64BE(17n * 1024n * 1024n, 2)
+    const raw = (client as unknown as { _socket: import('node:net').Socket })._socket
+    raw.write(Buffer.concat([head, Buffer.from([1, 2, 3, 4])]))
+    await closed
+    expect(serverSocket.readyState).not.toBe(WebSocket.OPEN)
+  })
 })
 
 describe('Remote stream mux server compression', () => {

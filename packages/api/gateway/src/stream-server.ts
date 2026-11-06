@@ -41,6 +41,16 @@ export type RemoteStreamFailureMapper = (error: unknown) => RemoteStreamFailure
 
 const MAX_MISSED_HEARTBEATS = 2
 
+/**
+ * Largest accepted wire frame. `ws` buffers a frame wholesale before the
+ * message event, so without this bound one huge frame is a memory denial of
+ * service regardless of the per-stream inbox budget. The bound also caps the
+ * DECOMPRESSED size of a compressed frame, so a small high-ratio deflate bomb
+ * fails the same way. Generous next to the default 256 KiB inbox budget while
+ * hard-bounding the buffer: item frames carry text chunks, never bulk data.
+ */
+const MAX_FRAME_BYTES = 16 * 1024 * 1024
+
 /** Carrier options for {@link RemoteStreamMuxServer}. */
 export interface RemoteStreamMuxServerOptions {
   /** Interval between WebSocket Ping control frames. */
@@ -76,6 +86,7 @@ export class RemoteStreamMuxServer {
     this.compression = options.compression
     this.server = new WebSocketServer({
       noServer: true,
+      maxPayload: MAX_FRAME_BYTES,
       // `ws` ignores its own `threshold` option while context takeover is
       // enabled, so the mux decides per frame in send().
       perMessageDeflate: options.compression ? { zlibDeflateOptions: { level: 1 } } : false,
@@ -93,8 +104,20 @@ export class RemoteStreamMuxServer {
    */
   handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer, peer: PeerScope): void {
     this.server.handleUpgrade(req, socket, head, (websocket) => {
+      // Fail closed on receiver errors BEFORE any other setup: a malformed
+      // frame (invalid opcode, bad UTF-8, oversized) makes `ws` emit 'error'
+      // on the socket, and an unhandled error event crashes the process. The
+      // listener stays attached for the connection's lifetime — 'error' on a
+      // terminated socket cannot recur.
+      websocket.on('error', () => { websocket.terminate() })
       const release = bindPeer(websocket, peer)
-      if (release === undefined) return
+      if (release === undefined) {
+        // The Peer's scope rejected the binding (e.g. disposed between
+        // admission and upgrade completion). A socket left open here would
+        // have no error handler, so it is terminated instead of parked.
+        websocket.terminate()
+        return
+      }
       const alive = (): void => { this.missedHeartbeats.set(websocket, 0) }
       alive()
       this.startHeartbeat()
