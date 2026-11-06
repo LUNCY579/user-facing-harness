@@ -90,13 +90,14 @@ async function request(
   port: number | undefined,
   path: string,
   init?: RequestInit,
-): Promise<{ status: number; type: string | null; body: string }> {
+): Promise<{ status: number; type: string | null; body: string; headers: Headers }> {
   if (port === undefined) throw new Error('frontend-static test: the listener has not bound a port')
   const response = await fetch(`http://127.0.0.1:${String(port)}${path}`, init)
   return {
     status: response.status,
     type: response.headers.get('content-type'),
     body: await response.text(),
+    headers: response.headers,
   }
 }
 
@@ -129,7 +130,10 @@ describe('real Loader composition', () => {
     })
 
     // Real assets with their MIME types; a live rebuild is served on the next read.
-    expect(await request(port, '/app.js')).toMatchObject({ status: 200, type: 'text/javascript; charset=utf-8', body: 'export {}' })
+    const appJs = await request(port, '/app.js')
+    expect(appJs).toMatchObject({ status: 200, type: 'text/javascript; charset=utf-8', body: 'export {}' })
+    // Every static document ships MIME-confusion hardening.
+    expect(appJs.headers.get('x-content-type-options')).toBe('nosniff')
     expect(await request(port, '/manifest.webmanifest')).toMatchObject({
       status: 200,
       type: 'application/manifest+json',
@@ -137,7 +141,7 @@ describe('real Loader composition', () => {
     })
     // The install icons are images; a launcher must not receive them as octet-stream.
     expect(await request(port, '/icon-192.png')).toMatchObject({ status: 200, type: 'image/png', body: 'PNG' })
-    expect(await request(port, '/app.js', { method: 'HEAD' })).toEqual({
+    expect(await request(port, '/app.js', { method: 'HEAD' })).toMatchObject({
       status: 200,
       type: 'text/javascript; charset=utf-8',
       body: '',
@@ -161,6 +165,13 @@ describe('real Loader composition', () => {
       const got = await request(port, path, authenticated())
       expect(got.status).toBe(200)
       expect(got.type).toBe('text/html; charset=utf-8')
+      // The rendered shell carries document hardening: framing is refused, the
+      // MIME type is authoritative, referrers are not leaked, and the CSP keeps
+      // scripts/styles/media same-origin (model-markdown image URLs included).
+      expect(got.headers.get('content-security-policy')).toContain("default-src 'self'")
+      expect(got.headers.get('x-frame-options')).toBe('deny')
+      expect(got.headers.get('x-content-type-options')).toBe('nosniff')
+      expect(got.headers.get('referrer-policy')).toBe('no-referrer')
       expect(got.body).toContain('__T__')
       expect(got.body).toContain('shell')
       // The served document carries the entry-directory base exactly once, and
@@ -174,7 +185,7 @@ describe('real Loader composition', () => {
     // An authenticated browser renders for the owner's shared browser Peer.
     expect(renderedFor).toEqual([loaded.connection.browserPeer, loaded.connection.browserPeer, loaded.connection.browserPeer])
     offRows()
-    expect(await request(port, '/', authenticated({ method: 'HEAD' }))).toEqual({
+    expect(await request(port, '/', authenticated({ method: 'HEAD' }))).toMatchObject({
       status: 200,
       type: 'text/html; charset=utf-8',
       body: '',
@@ -188,8 +199,10 @@ describe('real Loader composition', () => {
     for (const path of ['/', '/index.html']) {
       const get = await request(port, path, authenticated())
       const head = await request(port, path, authenticated({ method: 'HEAD' }))
-      expect(get).toEqual({ status: 404, type: null, body: '' })
-      expect(head).toEqual(get)
+      expect(get).toMatchObject({ status: 404, type: null, body: '' })
+      // Compare the contract fields only: the two `Headers` instances fail
+      // Vitest's structural equality despite holding identical entries.
+      expect(head).toMatchObject({ status: get.status, type: get.type, body: get.body })
     }
 
     // Ordinary unknown paths and static-resource misses are empty 404s for
@@ -206,10 +219,12 @@ describe('real Loader composition', () => {
     for (const path of [...ordinaryMisses, ...assetMisses]) {
       const get = await request(port, path)
       const head = await request(port, path, { method: 'HEAD' })
-      expect(get).toEqual({ status: 404, type: null, body: '' })
-      expect(head).toEqual(get)
+      expect(get).toMatchObject({ status: 404, type: null, body: '' })
+      // Compare the contract fields only: the two `Headers` instances fail
+      // Vitest's structural equality despite holding identical entries.
+      expect(head).toMatchObject({ status: get.status, type: get.type, body: get.body })
     }
-    expect(await request(port, '/api/no/such/route', authenticated())).toEqual({
+    expect(await request(port, '/api/no/such/route', authenticated())).toMatchObject({
       status: 404,
       type: 'text/plain;charset=UTF-8',
       body: 'not found',
