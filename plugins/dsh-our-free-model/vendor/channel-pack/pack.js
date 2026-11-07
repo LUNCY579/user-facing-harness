@@ -59195,6 +59195,8 @@ function channelProxyBypassed(target, patterns, windows = false) {
       pattern = withPort[1];
     }
     if (pattern.includes("*")) {
+      const stars = (pattern.match(/\*/g) ?? []).length;
+      if (pattern.length > 512 || stars > 16) return false;
       const escaped = pattern.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*");
       return new RegExp(`^${escaped}$`, "i").test(hostname);
     }

@@ -54,6 +54,10 @@ export function channelProxyBypassed(target: URL, patterns: string, windows = fa
       pattern = withPort[1]!
     }
     if (pattern.includes('*')) {
+      // 每个通配符段展开成一个 `.*`，段数过多会在不匹配的长主机名上灾难性回溯，
+      // 卡住每个请求的出口判定。超限的配置按不匹配处理（宁可多走代理，也不挂起）。
+      const stars = (pattern.match(/\*/g) ?? []).length
+      if (pattern.length > 512 || stars > 16) return false
       const escaped = pattern.split('*').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*')
       return new RegExp(`^${escaped}$`, 'i').test(hostname)
     }

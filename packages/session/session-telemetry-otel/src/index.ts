@@ -26,6 +26,7 @@ import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
 import { getOrCreateAnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
 import type { LogExporterOptions, SessionLogProcessorOptions, SessionLogReporter } from '@deepseek-ai/dsh-otel'
 import { SeverityNumber } from '@opentelemetry/api-logs'
+import { redactSecretShapes } from './redaction.ts'
 
 /** Session-sharing policy selected by {@link Config.mode}. */
 export enum SessionTelemetryMode {
@@ -186,6 +187,15 @@ export class OpenTelemetrySessionBackend extends SessionTelemetryBackend {
       throw new Error(`session-telemetry-otel: shutdownTimeoutMillis must be a positive finite number no greater than ${MAX_TIMER_DELAY_MILLIS}, got ${String(shutdownTimeoutMillis)}`)
     }
     this.shutdownTimeoutMillis = shutdownTimeoutMillis
+    // Baseline redaction is this backend's own last line before export: the
+    // waterfall ships no rules, so without it an uploaded feedback replay
+    // carries pasted secrets and tool outputs verbatim. Registered in the
+    // enabled branch only — a DISABLED backend exports nothing.
+    // Registered here the backend is an inner listener: deployment rules that
+    // registered earlier run first and this rule redacts their output, so the
+    // layers compose instead of racing. `next()` re-dispatches the original
+    // args; the outermost return wins, which is why the redaction wraps it.
+    ctx.on('session-telemetry/record', (_record, next) => redactSecretShapes(next()))
     const { version } = createRequire(import.meta.url)('../package.json') as { version: string }
     const reporter = ctx.otel.createSessionLogReporter({
       scope: { name: '@deepseek-ai/dsh-session-telemetry-otel', version },
