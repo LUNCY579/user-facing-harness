@@ -12,11 +12,14 @@
   en: cd95cc4d718a4bb5
   zh: c624308608d2d11a
 /context-retrieval-benchmarks/table-of-contents:
-  en: 601eda6d509c28ea
-  zh: 19e92ca0d6a2c30f
+  en: 932b098a8a230070
+  zh: ea7314e4476289d7
 /context-retrieval-benchmarks/run-the-comparison:
-  en: 492183283f5e4587
-  zh: 691ce4a7e4bfd3bc
+  en: e0d480084a9addc9
+  zh: 491cf7c3f3501c53
+/context-retrieval-benchmarks/measure-neural-relevance:
+  en: 45504b477a0bc3a5
+  zh: f90a511d8a878326
 /context-retrieval-benchmarks/measurement-endpoints:
   en: b1fd5dd154b20ee3
   zh: 6e2b343006c734fe
@@ -24,8 +27,8 @@
   en: 627063f6825aad1a
   zh: d3fb9384adbd7207
 /context-retrieval-benchmarks/limits:
-  en: 0a4c1ee545348519
-  zh: f7afe36200e09ddb
+  en: 75a08a58a20cbef5
+  zh: 58ee0c71a9eabbe6
 /context-retrieval-benchmarks/dev-note:
   en: 77c9ec2acd619393
   zh: f4a64f8a0cd6cc3e

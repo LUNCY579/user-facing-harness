@@ -376,6 +376,7 @@ export function gatesForMode(selected: Mode): Gate[] {
         ...hygieneLeafGates(),
         pnpmScript('cordis-config', 'verify-cordis-config', { label: 'Cordis config' }),
         pnpmScript('runtime-closure', 'verify-runtime-closure', { label: 'runtime closure' }),
+        pnpmScript('secrets-scan', 'verify-secrets-scan', { label: 'fixture secrets scan' }),
       ]
     case 'doc-sync':
       return docSyncLeafGates()

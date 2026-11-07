@@ -27,7 +27,10 @@ export function katexWoff2Fonts(): Plugin {
           return rule
         } } },
       })
-      return { code: result.code.toString(), map: result.map?.toString() }
+      // rolldown's TransformResult under exactOptionalPropertyTypes cannot
+      // carry `map: undefined`: omit the key when no source map was produced.
+      const map = result.map?.toString()
+      return map === undefined ? { code: result.code.toString() } : { code: result.code.toString(), map }
     },
   }
 }

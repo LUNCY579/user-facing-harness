@@ -13,6 +13,7 @@ Compare lexical search, Zvec, real four-bit/two-bit turbovec, the combined reran
 ## Table of Contents
 
 - [Run the comparison](#run-the-comparison)
+- [Measure neural relevance](#measure-neural-relevance)
 - [Measurement endpoints](#measurement-endpoints)
 - [Reproduce the packing control](#reproduce-the-packing-control)
 - [Limits](#limits)
@@ -33,6 +34,18 @@ pnpm run bench:retrieval --sizes=1000,10000,100000 --queries=64 --python="$PWD/.
 All text is generated from reviewed constants and seed 421337; no workspace, conversation, credential, or external model is read. Temporary corpus/index directories are owned and removed by the supervisor and worker. Default output is ignored `.testingplatform/retrieval-benchmark/results.json`; `--output=...` selects another private result file. Missing turbovec is recorded as an explicit skip.
 
 Use `--modes=ann-sweep --sizes=100000` for the matched tuning diagnostic, or `--modes=zvec,combined`, `--runs=3`, `--queries=100`, or `--dimension=256` to narrow or repeat a comparison. Compression requires a dimension divisible by eight. The runner permits up to one million vectors, subject to native enumeration limits and available memory; that size is not part of the local validation.
+
+<a id="measure-neural-relevance"></a>
+## Measure neural relevance
+
+`bench:retrieval:neural` scores the keyword, feature-hash dense, neural dense, and hybrid routes over 35 synthetic passages and 45 queries in five categories: paraphrase, hard negative, identifier, multilingual, and missing evidence. Every quality target is declared in [neural/cases.ts](neural/cases.ts) before measurement, and a route that misses one is recorded as a failed target rather than a relaxed one.
+
+```sh
+pnpm exec tsdown --config-loader native --config benchmarks/tsdown.config.ts
+pnpm run bench:retrieval:neural --baseUrl=http://127.0.0.1:11434/v1
+```
+
+The supervisor probes `GET <baseUrl>/models` before indexing and never sends a credential. When the endpoint is unreachable, the dense and hybrid routes stay in `pending` with the probe error and the run reports `partial-pending-live-neural-endpoint`; only the lexical routes are reported as measured. `--selftest=true` substitutes a token-digest server so the dense and hybrid code paths execute without a model, and labels that evidence `harness-plumbing`, never `neural-model`. The pinned model recipe lives in the [neural embedding guide](../../docs/user/guide/local-neural-embeddings.md). Default output is ignored `.testingplatform/retrieval-benchmark/neural.json`.
 
 <a id="measurement-endpoints"></a>
 ## Measurement endpoints
@@ -71,7 +84,7 @@ Compare every output hash and all raw samples. A measured speedup with changed e
 <a id="limits"></a>
 ## Limits
 
-These fixtures measure feature-hash ranking and storage/IPC overhead, not language understanding or real-model task accuracy. Token counts are estimates. Live model validation remains pending by user choice. No result establishes multi-user production readiness, a platform matrix, an equal-recall speedup, a stable population p99, or physical secure deletion.
+These fixtures measure feature-hash ranking and storage/IPC overhead, not language understanding or real-model task accuracy. Token counts are estimates. Neural relevance and live tool-capable model validation stay pending until a local embedding endpoint and a model key are available; the harness records them as pending instead of passing. No result establishes multi-user production readiness, a platform matrix, an equal-recall speedup, a stable population p99, or physical secure deletion.
 
 <a id="dev-note"></a>
 ## Dev Note

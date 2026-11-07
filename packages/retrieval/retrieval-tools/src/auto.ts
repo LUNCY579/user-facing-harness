@@ -121,8 +121,7 @@ function queryOf(messages: readonly UserMessage[]): string {
   const text = messages
     .filter(message => message.source.kind !== 'retrieval-tools')
     .flatMap(message => message.content)
-    .filter(block => block.type === 'text')
-    .map(block => ('text' in block ? block.text : ''))
+    .flatMap(block => block.type === 'text' ? [block.text] : [])
     .join('\n')
     .trim()
   return text

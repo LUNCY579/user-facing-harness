@@ -39,8 +39,9 @@ Workspace files and original Session logs remain authoritative evidence. Their i
 | `MemoryAttribution` | The actor and original reference that created an explicit fact; attribution grants no authority. |
 | `RememberInput`, `MemoryPatch`, `ForgetSelector` | Creation, correction, and deletion requests; a scope deletion includes expired and superseded records, while explicit IDs select those records. |
 | `MemoryCounts` | Authorized active, expired, superseded, and pending populations, with pending intents excluded from active facts. |
+| `ExportInput`, `MemoryExport`, `ImportInput`, `ImportReport` | Portability requests and results; an export keeps ownership, scope, attribution, timestamps, expiry, and supersession, and an import reports accepted, reused, recovered, and refused records. |
 
-The [memory service](../../packages/retrieval/retrieval/src/engine.ts) stages supersession before retiring previous facts and activating their replacement. Authorized reads reconcile interrupted intents before returning current facts. `outcome_pending` reports an uncertain or incomplete write or deletion; it does not claim rollback. Forgetting verifies removal from canonical storage, and indexed source chunks cannot be deleted through memory operations.
+The [memory service](../../packages/retrieval/retrieval/src/engine.ts) stages supersession before retiring previous facts and activating their replacement. Authorized reads reconcile interrupted intents before returning current facts. `outcome_pending` reports an uncertain or incomplete write or deletion; it does not claim rollback. Forgetting verifies removal from canonical storage, and indexed source chunks cannot be deleted through memory operations. Export reads only records the caller may read; import re-embeds into the mounted store's embedding space and both require `portabilityEnabled`. The [format module](../../packages/retrieval/retrieval/src/portability.ts) owns the envelope, the forgotten ledger, and the import journal.
 
 ## Search requests and context packets
 
@@ -245,6 +246,28 @@ async updateMemory(id: RecordId, patch: MemoryPatch, identity: TrustedIdentity, 
  * @returns ids durably removed.
  */
 async forget(selector: ForgetSelector, identity: TrustedIdentity, signal?: AbortSignal): Promise<RecordId[]>
+
+/**
+ * Export the memories one caller may read in the versioned portability format. Pending supersession is
+ * rolled forward first, so an export never carries a half-written lifecycle.
+ * @param identity - host-resolved caller identity; only records it may read are exported.
+ * @param input - optional file name below `portabilityDir`, and whether to include inactive rows.
+ * @param signal - cancellation before the store read.
+ * @returns the validated envelope, and the file written when `path` was given.
+ */
+async exportMemories(identity: TrustedIdentity, input: ExportInput = {}, signal?: AbortSignal): Promise<MemoryExport>
+
+/**
+ * Import one export, which is also how a migration into a fresh store after an embedding-space change
+ * runs: mount the target store and provider, then import the same export file. Records are re-embedded
+ * into the target space, staged under a write-ahead journal, verified, and only then published. A failed
+ * batch is removed again, and the source store is never opened for writing.
+ * @param identity - host-resolved caller identity deciding which exported records are admissible.
+ * @param input - export file name below `portabilityDir`, or export text.
+ * @param signal - cancellation before or between steps.
+ * @returns counters, refusals, recovered ids, and the space pair.
+ */
+async importMemories(identity: TrustedIdentity, input: ImportInput, signal?: AbortSignal): Promise<ImportReport>
 
 /**
  * Read memories the caller may see, newest first, dropping expired and superseded rows by default.

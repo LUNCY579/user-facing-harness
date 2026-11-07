@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { browserFaceSources, findRouteResolutionViolations, type RouteGateFace } from './verify-client-route-resolution.ts'
+import { browserFaceSources, findRouteResolutionViolations, scan, type RouteGateFace } from './verify-client-route-resolution.ts'
 
 function patterns(file: string, source: string, face?: RouteGateFace): string[] {
   return findRouteResolutionViolations(file, source, face).map(violation => violation.pattern)
@@ -195,5 +195,20 @@ describe('browser face discovery', () => {
     } finally {
       rmSync(root, { recursive: true, force: true })
     }
+  })
+})
+
+describe('corpus entries that vanish mid-scan', () => {
+  it('skips a discovered browser source another process deleted between listing and read', () => {
+    expect(scan('packages/client/ui-primitives/src/vanished-mid-scan.ts', 'browser')).toEqual([])
+  })
+
+  it('still fails loud when a declared browser-reference producer is gone', () => {
+    expect(() => scan('packages/client/ui-primitives/src/vanished-mid-scan.ts', 'reference-producer'))
+      .toThrow(/producer packages\/client\/ui-primitives\/src\/vanished-mid-scan\.ts is gone; discovery is broken/u)
+  })
+
+  it('propagates a read failure that is not a vanished file', () => {
+    expect(() => scan('packages', 'browser')).toThrow(/EISDIR/u)
   })
 })

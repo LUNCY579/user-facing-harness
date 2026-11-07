@@ -95,6 +95,7 @@ export class HashedEmbeddings extends Embeddings {
       for (let probe = 0; probe < PROBES; probe++) {
         const at = probe * PROBE_BYTES
         const bucket = digest.readUInt32BE(at) % this.options.dimension
+        /* v8 ignore next -- fill(0) leaves no hole and bucket stays inside dimension; the arm only satisfies noUncheckedIndexedAccess. */
         vector[bucket] = (vector[bucket] ?? 0) + (digest.readUInt8(at + 4) & 1 ? 1 : -1)
       }
     }

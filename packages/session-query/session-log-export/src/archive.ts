@@ -29,6 +29,7 @@ import type {
 import type { SessionLineageNode, SessionQueryEngine } from '@deepseek-ai/dsh-session-query'
 import { SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import { sessionFormatLogFilename } from '@deepseek-ai/dsh-session-format'
+import { formatSessionTrajectory, TRAJECTORY_FILENAME } from './trajectory.ts'
 import type { SessionEvent, SessionHeader, SessionId, SessionStore } from '@deepseek-ai/dsh-session'
 import type { SessionHandle, SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import { SessionPersistenceNotFoundError } from '@deepseek-ai/dsh-session-persistence'
@@ -344,6 +345,30 @@ export function sessionLogZipFilename(sessionId: string): string {
  * @param signal - optional cancellation forwarded to lineage, persistence, and attachment reads.
  * @returns the export entries in zip order.
  */
+/**
+ * Fold one Session's committed snapshot into its redacted structured trajectory.
+ * Reads the live-preferred corpus for the session; failures propagate to the
+ * caller (the zip producer reports and terminates).
+ * @param deps - the mounted export services.
+ * @param sessionId - the session to fold.
+ * @param signal - cancellation forwarded to the snapshot read.
+ * @returns the trajectory JSON text.
+ */
+async function trajectoryFor(
+  deps: SessionLogExportReady,
+  sessionId: SessionId,
+  signal?: AbortSignal,
+): Promise<string> {
+  const snapshot = await deps.sessionQuery.readSession(sessionId)
+  signal?.throwIfAborted()
+  const trajectory = formatSessionTrajectory(snapshot.events, {
+    id: sessionId,
+    createdAt: snapshot.session.createdAt,
+    ...(snapshot.session.cwd === undefined ? {} : { cwd: snapshot.session.cwd }),
+  })
+  return JSON.stringify(trajectory)
+}
+
 export async function* sessionLogZipEntries(
   deps: SessionLogExportReady,
   rootContent: string,
@@ -360,6 +385,7 @@ export async function* sessionLogZipEntries(
   }
   rememberAttachments(rootContent)
   yield { path: SESSION_LOG_FILENAME, content: rootContent }
+  yield { path: TRAJECTORY_FILENAME, content: await trajectoryFor(deps, sessionId, signal) }
   if (includeDescendants) {
     const seen = new Set<SessionId>([sessionId])
     const collect = async function* (
@@ -380,6 +406,10 @@ export async function* sessionLogZipEntries(
         yield {
           path: `subagents/${safeSessionIdSegment(id)}/${SESSION_LOG_FILENAME}`,
           content,
+        }
+        yield {
+          path: `subagents/${safeSessionIdSegment(id)}/${TRAJECTORY_FILENAME}`,
+          content: await trajectoryFor(deps, id, signal),
         }
         yield* collect(node.descendants)
       }

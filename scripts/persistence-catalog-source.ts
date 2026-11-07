@@ -1,9 +1,10 @@
 /** Source discovery and declaration validation shared by persistence documentation and schemas. */
 
 import { globSync, readFileSync } from 'node:fs'
-import { resolve, sep } from 'node:path'
+import { resolve } from 'node:path'
 import ts from 'typescript'
 import { parseJsDoc, pointer, rawJsDoc, reportViolations } from './jsdoc.ts'
+import { corpusListing, readCorpus } from './scratch-sources.ts'
 
 const root = resolve(import.meta.dirname, '..')
 
@@ -139,9 +140,10 @@ export function collectLogEvents(scanRoot: string = root): LogEventEntry[] {
   const violations: string[] = []
   const seen = new Map<string, string>()
   let owningDecl: string | null = null
-  for (const rel of globSync('packages/*/*/src/**/*.{ts,tsx}', { cwd: scanRoot }).map(s => s.split(sep).join('/')).sort()) {
+  for (const rel of corpusListing(globSync('packages/*/*/src/**/*.{ts,tsx}', { cwd: scanRoot }))) {
     const abs = resolve(scanRoot, rel)
-    const text = readFileSync(abs, 'utf8')
+    const text = readCorpus(abs)
+    if (text === undefined) continue
     if (!text.includes('SessionEventMap')) continue
     const sf = ts.createSourceFile(abs, text, ts.ScriptTarget.Latest, true)
     for (const { decl, topLevel } of sessionEventMapDecls(sf)) {
@@ -221,9 +223,10 @@ export function collectEventEnvelopeTypes(scanRoot: string = root): EventEnvelop
   const found = new Map<EventEnvelopeTypeName, EventEnvelopeTypeEntry>()
   const violations: string[] = []
   const wanted = new Set<string>(EVENT_ENVELOPE_TYPE_NAMES)
-  for (const rel of globSync('packages/*/*/src/**/*.{ts,tsx}', { cwd: scanRoot }).map(s => s.split(sep).join('/')).sort()) {
+  for (const rel of corpusListing(globSync('packages/*/*/src/**/*.{ts,tsx}', { cwd: scanRoot }))) {
     const abs = resolve(scanRoot, rel)
-    const text = readFileSync(abs, 'utf8')
+    const text = readCorpus(abs)
+    if (text === undefined) continue
     if (!EVENT_ENVELOPE_TYPE_NAMES.some(name => text.includes(name))) continue
     if (packageNameFor(rel, scanRoot) !== SESSION_PACKAGE) continue
     const sf = ts.createSourceFile(abs, text, ts.ScriptTarget.Latest, true)
@@ -267,9 +270,10 @@ export function collectEventEnvelopeTypes(scanRoot: string = root): EventEnvelop
  */
 export function collectSurfaceEventTypes(scanRoot: string = root): string[] {
   const found: { names: string[]; source: string }[] = []
-  for (const rel of globSync('packages/*/*/src/**/*.{ts,tsx}', { cwd: scanRoot }).map(s => s.split(sep).join('/')).sort()) {
+  for (const rel of corpusListing(globSync('packages/*/*/src/**/*.{ts,tsx}', { cwd: scanRoot }))) {
     const abs = resolve(scanRoot, rel)
-    const text = readFileSync(abs, 'utf8')
+    const text = readCorpus(abs)
+    if (text === undefined) continue
     if (!text.includes('SurfaceEventType')) continue
     const sf = ts.createSourceFile(abs, text, ts.ScriptTarget.Latest, true)
     for (const stmt of sf.statements) {

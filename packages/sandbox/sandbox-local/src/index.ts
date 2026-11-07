@@ -3,7 +3,9 @@
  * Landlock; macOS Seatbelt; Windows the ACL restricted-token runner), functionally probes
  * competing candidates once, and reports each wrap's enforcement and stderr
  * classification facts. Missing or unusable confinement fails closed rather
- * than returning the original argv.
+ * than returning the original argv. A `deny` network policy unshares the
+ * network namespace (bwrap) or denies `network*` (Seatbelt); backends that
+ * cannot express it (Landlock, windows-acl) fail loud.
  *
  * The windows-acl rung additionally owns the write grants: the write SID is
  * the per-WORKSPACE identity derived from the canonical workspace path
@@ -316,7 +318,7 @@ export class LocalSandboxProvider extends SandboxProvider {
    * chain's runner speaking its own profile dialect.
    *
    * @param argv - the exact argv the caller is about to spawn.
-   * @param policy - the file-effect policy this execution runs under.
+   * @param policy - the file-effect and network policy this execution runs under.
    * @param signal - cancellation before policy resolution or grant creation.
    * @returns the wrapped argv plus the selected backend's enforcement completeness, denial
    *   signatures, and structured runner-failure rules; throws the fail-closed
@@ -325,6 +327,15 @@ export class LocalSandboxProvider extends SandboxProvider {
   async confine(argv: readonly string[], policy: SandboxPolicy, signal?: AbortSignal): Promise<ConfinedArgv> {
     signal?.throwIfAborted()
     policy = { ...policy, workspaceRoot: canonicalPath(policy.workspaceRoot) }
+    if (policy.network === 'deny' && this.runnerCommand === undefined) {
+      // Fail loud before building any argv: Landlock has no network rule and
+      // the windows-acl restricted token does not block sockets, so a deny
+      // request these backends cannot enforce must never run unconfined.
+      const selected = this.selectRunner(policy.mode)
+      if (selected.runner === 'landlock' || selected.runner === 'windows-acl') {
+        throw new SandboxUnsupportedPolicyError(`The ${selected.runner} sandbox backend cannot enforce a deny network policy; use the bwrap or Seatbelt backend, or drop the network deny request`)
+      }
+    }
     if (this.runnerCommand !== undefined) {
       return Promise.resolve<ConfinedArgv>({
         argv: [...this.runnerCommand, ...bwrapProfileArgs(policy), '--', ...argv],

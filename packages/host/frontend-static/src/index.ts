@@ -42,6 +42,46 @@ export const Config: z<Config> = z.object({
 
 const HTML_MIME = 'text/html; charset=utf-8'
 
+/**
+ * Hardening headers for every served response: clickjacking (deny framing),
+ * MIME-type confusion (nosniff), referrer leakage, cross-origin reading of
+ * served bytes (CORP), and window-opener reach from attacker-opened tabs
+ * (COOP). The HTML document adds a Content-Security-Policy restricting
+ * script/style/image/media origins: the client shell loads only same-origin
+ * assets, so remote references — including image URLs inside rendered model
+ * markdown — stay blocked.
+ */
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'deny',
+  'referrer-policy': 'no-referrer',
+  'cross-origin-resource-policy': 'same-origin',
+  'cross-origin-opener-policy': 'same-origin',
+}
+const HTML_SECURITY_HEADERS = {
+  ...SECURITY_HEADERS,
+  'content-security-policy': [
+    "default-src 'self'",
+    // 'unsafe-inline' is required by contract: Connection, the inspector, and
+    // every plugin contribute `global` and `script` index-injection rows that
+    // render as inline <script> elements, so blocking inline script would
+    // break the served shell's own composition. External script SOURCES stay
+    // restricted to self; a nonce-based scheme for the injection rows is the
+    // follow-up hardening.
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "media-src 'self' blob:",
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; '),
+}
+
 const MIME: Record<string, string> = {
   '.html': HTML_MIME,
   '.js': 'text/javascript; charset=utf-8',
@@ -107,13 +147,13 @@ async function serveStatic(
       const refusal = authorizeIndex()
       if (refusal !== undefined) return refusal
       body = renderIndex(await readFile(distIndex, 'utf8'))
-      headers = { 'content-type': HTML_MIME }
+      headers = { 'content-type': HTML_MIME, ...HTML_SECURITY_HEADERS }
     } else {
       body = await readFile(target)
       // Weak: gzip changes the transferred bytes.
       const cache = { 'cache-control': 'no-cache', etag: `W/"${createHash('sha1').update(body).digest('base64url')}"` }
       if (request.headers.get('if-none-match') === cache.etag) return new Response(null, { status: 304, headers: cache })
-      headers = { 'content-type': MIME[extname(target)] ?? 'application/octet-stream', ...cache }
+      headers = { 'content-type': MIME[extname(target)] ?? 'application/octet-stream', ...cache, 'x-content-type-options': 'nosniff' }
     }
   } catch (error) {
     // Only absent or non-file targets are 404; other filesystem failures reach

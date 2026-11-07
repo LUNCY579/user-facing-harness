@@ -12,6 +12,8 @@ Enable local source search and explicit memory without a database server or clou
 - [Call the tools](#call-the-tools)
 - [Choose memory ownership](#choose-memory-ownership)
 - [Choose embeddings and acceleration](#choose-embeddings-and-acceleration)
+- [Move memories between stores](#move-memories-between-stores)
+- [Platform support](#platform-support)
 - [Recover or disable](#recover-or-disable)
 - [Privacy and verification limits](#privacy-and-verification-limits)
 - [Dev Note](#dev-note)
@@ -65,7 +67,7 @@ Memory creation always names a scope. The host supplies identity and permissions
 
 The example keeps personal persistence and cross-session transcript access off. Explicit workspace memories already support same-workspace recall in a new session. Enable personal persistence only when you intend to retain user-level facts. No component silently extracts personal facts from every conversation. Session text indexing also requires `retrieval-indexing.config.indexSessions: true` and an explicit `context_index` call with `source: "sessions"`; it covers authorized live and persisted workspace sessions.
 
-`localPrincipal` defaults to the operating-system username. It is a trusted local configuration label, not an authentication system for multiple browser users. Original local session logs are treated as belonging to that operator; this label cannot establish ownership in a shared multi-user log store. Use the canonical workspace path when opening a session; symlink aliases are rejected so restarting cannot retarget its authority. Changing the working directory inside a session does not grant another workspace's memory access.
+`localPrincipal` defaults to the account name of the user running the harness; on a host with no account record for that uid it falls back to `USER`, then `USERNAME`, then `uid-<number>`. It is a trusted local configuration label, not an authentication system for multiple browser users. Original local session logs are treated as belonging to that operator; this label cannot establish ownership in a shared multi-user log store. Use the canonical workspace path when opening a session; symlink aliases are rejected so restarting cannot retarget its authority. Changing the working directory inside a session does not grant another workspace's memory access.
 
 ## Choose embeddings and acceleration
 
@@ -75,7 +77,7 @@ Choose the provider before creating an index. Embedding provider, model, endpoin
 - `local-openai-compatible` sends text only to a configured loopback HTTP(S) embedding endpoint. Start and configure your own local embedding runtime, and match its model ID and output dimension. TestingPlatform does not install model weights.
 - `openai-compatible` requires `allowRemoteEmbeddings: true` and a credential in the configured `apiKeyEnv`. Enabling it authorizes sending indexed text and queries to that provider. Keep it off unless the document owner explicitly permits that upload.
 
-The [embedding package](../../../packages/retrieval/retrieval-embed/README.md) owns provider fields and transport limits. Local HTTP behavior is tested with synthetic fixtures; no cloud embedding provider or real neural model is claimed as validated here.
+The [embedding package](../../../packages/retrieval/retrieval-embed/README.md) owns provider fields and transport limits. Local HTTP behavior is tested with synthetic fixtures; no cloud embedding provider or real neural model is claimed as validated here. The [neural embedding guide](local-neural-embeddings.md) pins one reproducible local recipe and links the [relevance harness](../../../benchmarks/context-retrieval/neural/run.mjs) that scores it.
 
 Zvec runs independently and is the default. To experiment with turbovec, install the tested optional worker dependencies with Python 3.11 or newer in an ignored environment (locally tested with Python 3.12.6):
 
@@ -86,6 +88,33 @@ python3 -m venv .testingplatform/retrieval-python
 
 In a copied overlay, set `retrieval-zvec.config.acceleratorEnabled: true`, set `turbovecPython` to that environment's absolute Python path, and set `retrieval.config.useAccelerator: true`. Four-bit compression is the default; two-bit compression is experimental. The worker is a rebuildable dense reranker, not a standalone persistent memory store. Missing or failed workers fall back to authorized Zvec retrieval. Read the [local benchmark report](../../../benchmarks/context-retrieval/README.md) before enabling acceleration for a workload.
 
+## Move memories between stores
+
+Set `retrieval.config.portabilityEnabled: true` and `retrieval.config.portabilityDir` to an absolute directory outside the repository, such as one below the profile's Harness home. Exports, the forgotten ledger, and import journals are plaintext memory text below that directory. A file name that reaches outside it, whether by `..` or by a link, is refused before any read or write. The [retrieval package](../../../packages/retrieval/retrieval/README.md) owns the file format and its ordering rules.
+
+Run `/memory-export <file-name>` in a session opened on the workspace that owns the memories. It writes the records the configured `localPrincipal` may read, after resolving any unfinished supersession. Add `--include-inactive` to carry expired and superseded rows so the receiving store keeps lifecycle history. `/memory-import <file-name>` re-embeds that file into the mounted store and reports accepted, already present, recovered, and refused counts, naming each refusal by record ID.
+
+An import admits a record only under an identity the receiving host may write, so migrate by opening the original canonical workspace with the same `localPrincipal` value. A record belonging to another workspace or principal is refused rather than rewritten, and ownership never changes on the way in.
+
+Changing the embedding provider, model, endpoint, weight revision, normalization, or dimension is the reason to import instead of only reindexing. Back up the old index, point `indexDir` and `statePath` at new directories, restart with the new provider, then run `/memory-import` once. Vectors are rebuilt from the stored text in the target space, so the source store is never opened for writing.
+
+An import refuses an id this host recorded as forgotten until that ledger entry is deliberately deleted, refuses an id that already holds different content, and never makes an expired or superseded row retrievable. A write or verification failure removes exactly the staged batch; records left by an interrupted import are removed by the next import for that store before it plans again.
+
+## Platform support
+
+Native retrieval needs a Zvec platform binding; the optional accelerator additionally needs a turbovec Python wheel for the same platform. Run `pnpm run check:native-retrieval` on any host after `pnpm run build:artifacts` to prove it locally: the lane drives the real binding, then opens a collection through the published `lib` entries, answers a semantic and a keyword query, survives a reopen, keeps another workspace out, and honors a scoped forget. It is keyless and bounded, and it fails on an unexpected skip, an unloadable suite, or a missing binding. Availability is stated for `@zvec/zvec` 0.8.0 and `turbovec` 1.1.2, checked against their published package lists.
+
+| Platform | Zvec binding | turbovec wheel | Validation |
+|---|---|---|---|
+| linux-x64 | available | `manylinux_2_28_x86_64` | required lane defined, plus a lane that provisions the worker; hosted runs pending |
+| linux-arm64 | available | `manylinux_2_28_aarch64` | required lane defined; hosted runs pending |
+| darwin-arm64 | available | `macosx_11_0_arm64` | lane executed on a local host, with and without a provisioned worker; no hosted macOS runner |
+| darwin-x64 | available | none published | untested |
+| win32-x64 | available | `win_amd64` | untested; worker cases skip on Windows |
+| win32-arm64 | available | none published | untested |
+
+Musl hosts such as Alpine install `@zvec/bindings-linux-x64-musl` or `@zvec/bindings-linux-arm64-musl` and run no lane. The two Linux lanes are declared in `.github/workflows/testing-platform-ci.yml` and have no hosted result yet. On darwin-arm64 the lane executed 47 cases with a provisioned turbovec worker, and 42 with only the five turbovec cases skipped when no worker was configured; on this required platform any other skip fails the lane, so the unprovisioned run proves the binding and the published entries, not the worker. Retrieval stays disabled until an overlay enables it, so a successful `pnpm install` on any of these platforms proves only that the dependency tree resolved.
+
 ## Recover or disable
 
 Use the reported operation and failure code to choose recovery. Keep the application stopped while copying or restoring its index directory.
@@ -95,23 +124,24 @@ Use the reported operation and failure code to choose recovery. Keep the applica
 | Files changed or disappeared | Run `context_index` with `source: "workspace"`; hashes detect repeated or changed content |
 | Source index is stale or its derivative ledger is corrupt | Run `context_index` with `source: "rebuild"`; authorized source chunks are cleared and rebuilt, while explicit memories remain |
 | Memory write reports `outcome_pending` | Inspect `memory_status`; run `context_index` with `source: "rebuild"` to finish the authorized staged change before dependent work |
-| Embedding model, weights, endpoint, or dimensions changed | Back up the old index; choose new `indexDir` and `statePath` values and reindex; explicit memory migration is manual |
+| Embedding model, weights, endpoint, or dimensions changed | Back up the old index; choose new `indexDir` and `statePath` values, reindex, then `/memory-import` an export taken from the old store |
 | Canonical Zvec collection is corrupt | Stop and restore a known-good backup; a source rebuild cannot repair lost explicit memories |
+| Collection directory exists but holds no committed version | If this store never served a read, remove the index directory and reindex; otherwise restore a backup |
 | turbovec is unavailable | Use Zvec; inspect `memory_status` and correct the worker path or dependencies before restarting |
 | Remove memories | Call `memory_forget` with IDs or authorized scopes; deletion is verified in canonical storage |
 | Hide tools temporarily | Set `retrieval-tools.config.enableTools: false` and keep automatic retrieval off |
 | Disable the subsystem | Omit the optional overlay, or disable all five retrieval rows in the profile |
 
-A rebuild re-reads configured files and authorized workspace sessions available through Session persistence; it cannot reconstruct unavailable source logs or an explicit memory deleted from the authoritative store. An embedding-space change does not migrate memories automatically. Keep old backups protected: they can still contain forgotten facts.
+A rebuild re-reads configured files and authorized workspace sessions available through Session persistence; it cannot reconstruct unavailable source logs or an explicit memory deleted from the authoritative store. An embedding-space change never rewrites the mounted store in place: export from the old store, then import into the new one. Keep old backups protected, because a backup taken before a deletion still contains that fact, and the refusal lives only in the forgotten ledger below the current `portabilityDir` — a new `portabilityDir` or another machine does not carry it.
 
 ## Privacy and verification limits
 
 The indexer excludes common secret files, credentials, generated directories, runtime state, and `.git` by default. It rejects path traversal and symlink escapes. These exclusions cannot identify a secret pasted into an otherwise ordinary source file: choose indexing roots deliberately. Retrieved text is untrusted evidence and never becomes a system instruction.
 
-Forgetting removes searchable records and prevents stale accelerator IDs from returning them. It does not erase old Session tool results, filesystem history, backups, or recoverable storage blocks. Explicitly indexed transcripts and files can still contain the same fact independently of the deleted memory ID. Use each original system's retention controls for those copies.
+Forgetting removes searchable records and prevents stale accelerator IDs from returning them. While portability is enabled, each verified deletion also appends the record ID and content digest to the forgotten ledger, so a later import refuses it. Forgetting does not erase old Session tool results, filesystem history, backups, or recoverable storage blocks. Explicitly indexed transcripts and files can still contain the same fact independently of the deleted memory ID. Use each original system's retention controls for those copies. Memory exports and the ledger are plaintext below `portabilityDir`; treat that directory as private storage, keep it out of Git, and delete or protect the exports you no longer need.
 
-The [keyless headless recording](../../../snapshots/session/local-retrieval/snapshot.yml) verifies source-linked indexing and retrieval through the shipped profile. The [real Loader workflow](../../../packages/retrieval/retrieval-tools/tests/composition.spec.ts) verifies synthetic cross-session recall, correction, restart-safe deletion, worker fallback, and same-store workspace isolation with a local scripted model. These tests establish tool orchestration rather than real-model task accuracy. The indexer requires the session filesystem to map the same native host directory; SSH and unrelated execution worlds are rejected. Only macOS arm64 native execution is exercised locally; this integration is suitable for local experimentation and does not establish multi-user production readiness.
+The [keyless headless recording](../../../snapshots/session/local-retrieval/snapshot.yml) verifies source-linked indexing and retrieval through the shipped profile. The [real Loader workflow](../../../packages/retrieval/retrieval-tools/tests/composition.spec.ts) verifies synthetic cross-session recall, correction, restart-safe deletion, worker fallback, and same-store workspace isolation with a local scripted model. The [portability protocol tests](../../../packages/retrieval/retrieval/tests/portability-ops.spec.ts) and [command tests](../../../packages/retrieval/retrieval-tools/tests/portability.spec.ts) verify export and import admission, fault-injected rollback, interrupted-journal recovery, and re-embedding into a new space against the native store. These tests establish tool orchestration rather than real-model task accuracy. The [real-model suite](../../../packages/retrieval/retrieval-tools/tests/model.e2e.ts) additionally requires a tool-capable key and covers evidence-dependent answers, cross-session recall, memory correction, forgetting after restart, and workspace isolation; every case self-skips without `DEEPSEEK_API_KEY`. The indexer requires the session filesystem to map the same native host directory; SSH and unrelated execution worlds are rejected. The [platform support](#platform-support) section states which platforms a required lane covers, and this integration does not establish multi-user production readiness.
 
 ## Dev Note
 
-None.
+The [memory portability format Agent Note](../../../.agents/notes/implemented/feature/2026-11-02-memory-portability-format.md) records why forgetting writes its ledger entry before deletion, why pending rows never travel, and why imports re-embed instead of copying vectors.
