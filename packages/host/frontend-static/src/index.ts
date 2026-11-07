@@ -44,12 +44,20 @@ const HTML_MIME = 'text/html; charset=utf-8'
 
 /**
  * Hardening headers for every served response: clickjacking (deny framing),
- * MIME-type confusion (nosniff), and referrer leakage. The HTML document adds
- * a Content-Security-Policy restricting script/style/image/media origins: the
- * client shell loads only same-origin assets, so remote references — including
- * image URLs inside rendered model markdown — stay blocked.
+ * MIME-type confusion (nosniff), referrer leakage, cross-origin reading of
+ * served bytes (CORP), and window-opener reach from attacker-opened tabs
+ * (COOP). The HTML document adds a Content-Security-Policy restricting
+ * script/style/image/media origins: the client shell loads only same-origin
+ * assets, so remote references — including image URLs inside rendered model
+ * markdown — stay blocked.
  */
-const SECURITY_HEADERS = { 'x-content-type-options': 'nosniff', 'x-frame-options': 'deny', 'referrer-policy': 'no-referrer' }
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'deny',
+  'referrer-policy': 'no-referrer',
+  'cross-origin-resource-policy': 'same-origin',
+  'cross-origin-opener-policy': 'same-origin',
+}
 const HTML_SECURITY_HEADERS = {
   ...SECURITY_HEADERS,
   'content-security-policy': [
