@@ -7,7 +7,7 @@ export class WebhookHttpError extends Error {
   override readonly name = 'WebhookHttpError'
 
   constructor(
-    readonly status: 400 | 401 | 405 | 413 | 415 | 503,
+    readonly status: 400 | 401 | 405 | 413 | 415 | 429 | 503,
     message: string,
   ) {
     super(message)

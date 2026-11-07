@@ -23,6 +23,13 @@ export interface Config {
   readonly secretEnv: string
   /** Positive raw body ceiling in bytes. */
   readonly maxBodyBytes: number
+  /**
+   * Accepted requests per source address per rolling 60-second window
+   * (default 120 — far above any real GitHub delivery cadence, far below a
+   * flood). Signature verification, body reads, and dispatch are skipped for
+   * rejected requests.
+   */
+  readonly rateLimitPerMinute?: number
 }
 
 export const Config: z<Config> = z.object({
@@ -30,6 +37,7 @@ export const Config: z<Config> = z.object({
   path: z.string().required(),
   secretEnv: z.string().role('credential-ref').required(),
   maxBodyBytes: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).required(),
+  rateLimitPerMinute: z.number().step(1).min(1).max(1_000_000),
 })
 
 /** Validate route and source facts that Schemastery cannot express. */
@@ -53,6 +61,7 @@ export function apply(ctx: Context, config: Config): void {
       source: config.source,
       secretEnv: credentialRef(config.secretEnv),
       maxBodyBytes: config.maxBodyBytes,
+      ...(config.rateLimitPerMinute === undefined ? {} : { rateLimitPerMinute: config.rateLimitPerMinute }),
     }),
   }
   ctx.effect(
