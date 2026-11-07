@@ -39,7 +39,7 @@ export type {
   SessionLogZipEntry,
 } from './archive.ts'
 export { formatSessionMarkdown } from './markdown.ts'
-export { formatSessionTrajectory } from './trajectory.ts'
+export { formatSessionTrajectory, TRAJECTORY_FILENAME } from './trajectory.ts'
 
 export const name = 'session-log-download'
 export const inject = ['commands', 'connection']
