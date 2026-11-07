@@ -54,7 +54,13 @@ const HTML_SECURITY_HEADERS = {
   ...SECURITY_HEADERS,
   'content-security-policy': [
     "default-src 'self'",
-    "script-src 'self'",
+    // 'unsafe-inline' is required by contract: Connection, the inspector, and
+    // every plugin contribute `global` and `script` index-injection rows that
+    // render as inline <script> elements, so blocking inline script would
+    // break the served shell's own composition. External script SOURCES stay
+    // restricted to self; a nonce-based scheme for the injection rows is the
+    // follow-up hardening.
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",

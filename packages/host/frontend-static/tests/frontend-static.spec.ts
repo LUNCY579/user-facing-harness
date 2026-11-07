@@ -169,6 +169,10 @@ describe('real Loader composition', () => {
       // MIME type is authoritative, referrers are not leaked, and the CSP keeps
       // scripts/styles/media same-origin (model-markdown image URLs included).
       expect(got.headers.get('content-security-policy')).toContain("default-src 'self'")
+      // The injection rows (Connection recovery, inspector, plugins) render as
+      // inline scripts by contract; pin the policy so a future tightening that
+      // breaks them fails here with the reason in reach.
+      expect(got.headers.get('content-security-policy')).toContain("script-src 'self' 'unsafe-inline'")
       expect(got.headers.get('x-frame-options')).toBe('deny')
       expect(got.headers.get('x-content-type-options')).toBe('nosniff')
       expect(got.headers.get('referrer-policy')).toBe('no-referrer')

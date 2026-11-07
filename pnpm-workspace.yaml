@@ -26,10 +26,11 @@ overrides:
   # Web build). extract-zip has no patched upstream release yet.
   dompurify: '>=3.4.17 <4'
   node-forge: '>=1.4.1 <2'
-  # undici advisories split by major: 7.x needs >=7.30.1, 8.x needs >=8.12.2.
-  undici: '>=7.30.1 <8'
+  # undici advisories split by major and by consumer: only the flagged paths
+  # are pinned (8.x needs >=8.12.2); the 7.x web packages were never on a
+  # flagged path, and the blanket pin changed their proxy wire behavior.
   '@yao-pkg/pkg-fetch>undici': '>=8.12.2 <9'
-  'liveshare>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-experimental-liveshare>undici': '>=8.12.2 <9'
   vite: '>=8.2.4 <8.3'
   zod: '>=4.6.6 <5'
   electron: '>=44.9.1 <45'
