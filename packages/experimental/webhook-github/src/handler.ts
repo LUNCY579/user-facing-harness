@@ -19,6 +19,61 @@ export interface GitHubWebhookHandlerConfig {
   readonly source: string
   readonly secretEnv: CredentialRef
   readonly maxBodyBytes: number
+  /** Per-address request budget per rolling minute; `undefined` disables the limiter. */
+  readonly rateLimitPerMinute?: number
+}
+
+/**
+ * Fixed-window per-address rate limiter for the webhook ingress. Signature
+ * verification, body reads, and dispatch are skipped for rejected requests,
+ * so a flood costs a map lookup instead of HMAC work and body buffering.
+ * Address entries expire lazily and the table is capped, so a spoofed-address
+ * flood cannot grow it without bound.
+ */
+/**
+ * The peer address of one request, or `undefined` when the carrier carries no
+ * address (an internal read). node:http always exposes a socket on server
+ * requests; the guard documents the contract instead of trusting it blindly.
+ */
+function peerAddress(request: IncomingMessage): string | undefined {
+  const address = request.socket.remoteAddress
+  return address === undefined ? undefined : address
+}
+
+export class WebhookRateLimiter {
+  private readonly entries = new Map<string, { windowStart: number; count: number }>()
+  private static readonly MAX_TRACKED_ADDRESSES = 4096
+  private static readonly WINDOW_MILLIS = 60_000
+
+  constructor(private readonly limit: number | undefined) {}
+
+  /**
+   * Admit one request from `address` under the fixed window.
+   * @param address - the peer address, or `undefined` (e.g. an internal read without a socket); unlimited.
+   * @param now - current epoch milliseconds.
+   * @returns whether the request may proceed.
+   */
+  admit(address: string | undefined, now: number): boolean {
+    if (this.limit === undefined || address === undefined) return true
+    if (this.entries.size >= WebhookRateLimiter.MAX_TRACKED_ADDRESSES) {
+      // Lazy prune first: expired entries free slots without rejecting fresh peers.
+      for (const [key, entry] of this.entries) {
+        if (now - entry.windowStart >= WebhookRateLimiter.WINDOW_MILLIS) this.entries.delete(key)
+      }
+      if (this.entries.size >= WebhookRateLimiter.MAX_TRACKED_ADDRESSES) {
+        // Still saturated within one window: evict the oldest window holder.
+        const oldest = [...this.entries.entries()].sort((left, right) => left[1].windowStart - right[1].windowStart)[0]
+        if (oldest !== undefined) this.entries.delete(oldest[0])
+      }
+    }
+    const entry = this.entries.get(address)
+    if (entry === undefined || now - entry.windowStart >= WebhookRateLimiter.WINDOW_MILLIS) {
+      this.entries.set(address, { windowStart: now, count: 1 })
+      return true
+    }
+    entry.count += 1
+    return entry.count <= this.limit
+  }
 }
 
 /** Require one unambiguous non-empty request header. */
@@ -79,11 +134,16 @@ export function createGitHubWebhookHandler(
   ctx: Context,
   config: GitHubWebhookHandlerConfig,
 ): WebRoute['handler'] {
+  const limiter = new WebhookRateLimiter(config.rateLimitPerMinute)
   return async (request, response) => {
     try {
       if (request.method !== 'POST') {
         response.setHeader('allow', 'POST')
         throw new WebhookHttpError(405, 'method not allowed')
+      }
+      // Before signature work or body reads: a flood costs one map lookup.
+      if (!limiter.admit(peerAddress(request), Date.now())) {
+        throw new WebhookHttpError(429, 'rate limit exceeded for this source address')
       }
       if (!isJsonContentType(request.headers['content-type'])) {
         throw new WebhookHttpError(415, 'content type must be application/json')
