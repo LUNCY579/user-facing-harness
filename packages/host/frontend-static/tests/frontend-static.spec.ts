@@ -176,6 +176,8 @@ describe('real Loader composition', () => {
       expect(got.headers.get('x-frame-options')).toBe('deny')
       expect(got.headers.get('x-content-type-options')).toBe('nosniff')
       expect(got.headers.get('referrer-policy')).toBe('no-referrer')
+      // Plain HTTP carries no HSTS: the header over plaintext is meaningless.
+      expect(got.headers.get('strict-transport-security')).toBeNull()
       expect(got.body).toContain('__T__')
       expect(got.body).toContain('shell')
       // The served document carries the entry-directory base exactly once, and
