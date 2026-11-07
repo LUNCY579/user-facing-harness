@@ -207,7 +207,7 @@ export class BrowserAuth {
   private readonly launchToken: string
   private readonly maxAgeMilliseconds: number
   /** Optional structured sink for denied authentication attempts; absence logs nothing. */
-  private readonly denied?: (message: string) => void
+  private readonly denied: ((message: string) => void) | undefined
   /** Denial-log throttle state: last logged timestamp and denials suppressed since. */
   private deniedLogAt = 0
   private deniedSuppressed = 0
@@ -400,7 +400,7 @@ export class BrowserAuth {
     // and the next log line reports the suppressed count.
     if (this.denied !== undefined) {
       const url = req.url ?? '/'
-      const message = `browser auth denied: ${req.method} ${url.split('?')[0]} token=${url.includes(`${TOKEN_QUERY}=`)} cookie=${req.headers.cookie !== undefined}`
+      const message = `browser auth denied: ${req.method} ${url.split('?')[0]} token=${url.includes(`${TOKEN_QUERY}=`)} cookie=${header(req.headers, 'cookie') !== undefined}`
       const now = Date.now()
       if (now - this.deniedLogAt >= 1000) {
         this.denied(`${message}${this.deniedSuppressed > 0 ? ` (+${String(this.deniedSuppressed)} suppressed within 1s)` : ''}`)
