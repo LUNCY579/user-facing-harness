@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net'
 import type { Context } from '@deepseek-ai/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { createGitHubWebhookHandler } from '../src/handler.ts'
+import { createGitHubWebhookHandler, WebhookRateLimiter } from '../src/handler.ts'
 
 const servers: Server[] = []
 
@@ -166,7 +166,7 @@ describe('GitHub webhook HTTP handler', () => {
       secretEnv: credentialRef('DSH_GITHUB_WEBHOOK_SECRET'),
       maxBodyBytes: 1024,
     })
-    const request = { method: 'POST', headers: {}, headersDistinct: {} } as unknown as IncomingMessage
+    const request = { method: 'POST', headers: {}, headersDistinct: {}, socket: { remoteAddress: '127.0.0.1' } } as unknown as IncomingMessage
     const writeHead = vi.fn()
     const response = { setHeader: vi.fn(), writeHead, end: vi.fn() } as unknown as ServerResponse
     await handler(request, response)
@@ -190,6 +190,7 @@ describe('GitHub webhook HTTP handler', () => {
         'x-github-event': ['pull_request', 'ping'],
       },
       complete: true,
+      socket: { remoteAddress: '127.0.0.1' },
       async * [Symbol.asyncIterator]() { yield Buffer.from('{}') },
     } as unknown as IncomingMessage
     const writeHead = vi.fn()
@@ -254,5 +255,39 @@ describe('GitHub webhook HTTP handler', () => {
     const diagnostics = JSON.stringify(fake.warnings.mock.calls)
     expect(diagnostics).not.toContain('super-secret')
     expect(diagnostics).not.toContain('payload-secret')
+  })
+})
+
+describe('WebhookRateLimiter', () => {
+  it('admits within the per-address window budget and rejects the overflow', () => {
+    const limiter = new WebhookRateLimiter(3)
+    expect(limiter.admit('10.0.0.1', 1000)).toBe(true)
+    expect(limiter.admit('10.0.0.1', 1001)).toBe(true)
+    expect(limiter.admit('10.0.0.1', 1002)).toBe(true)
+    expect(limiter.admit('10.0.0.1', 1003)).toBe(false)
+    // A different address has its own budget.
+    expect(limiter.admit('10.0.0.2', 1004)).toBe(true)
+    // The window rolls: the first address is admitted again after expiry.
+    expect(limiter.admit('10.0.0.1', 1000 + 60_000)).toBe(true)
+  })
+
+  it('treats a missing peer address as unlimited', () => {
+    const limiter = new WebhookRateLimiter(1)
+    expect(limiter.admit(undefined, 1000)).toBe(true)
+    expect(limiter.admit(undefined, 1001)).toBe(true)
+  })
+
+  it('caps the tracked address table and evicts the oldest window', () => {
+    const limiter = new WebhookRateLimiter(1)
+    for (let index = 0; index < 5000; index += 1) {
+      expect(limiter.admit(`10.0.0.${String(index % 256)}.${String(index >> 8)}`, index)).toBe(true)
+    }
+    // The saturated table still admits: the oldest window holder was evicted.
+    expect(limiter.admit('10.0.0.0.0', 9000)).toBe(true)
+  })
+
+  it('disables itself without a limit', () => {
+    const limiter = new WebhookRateLimiter(undefined)
+    for (let index = 0; index < 50; index += 1) expect(limiter.admit('10.0.0.1', index)).toBe(true)
   })
 })
