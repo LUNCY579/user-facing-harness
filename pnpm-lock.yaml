@@ -4656,7 +4656,7 @@ importers:
         version: link:../../util/workspace-path
       mime:
         specifier: ^4.1.0
-        version: 4.1.1
+        version: 4.1.0
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -9564,8 +9564,8 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
       '@trycua/cua-driver':
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.34.0
+        version: 0.34.0
       zod:
         specifier: '>=4.6.6 <5'
         version: 4.6.7
@@ -13615,10 +13615,10 @@ importers:
         version: link:../../core/tools
       '@modelcontextprotocol/node':
         specifier: '>=2.1.0 <3'
-        version: 2.1.2(@modelcontextprotocol/server@2.4.0)
+        version: 2.1.1(@modelcontextprotocol/server@2.3.1)
       '@modelcontextprotocol/server':
         specifier: '>=2.3.0 <3'
-        version: 2.4.0
+        version: 2.3.1
       '@modelcontextprotocol/server-everything':
         specifier: ^2026.8.31
         version: 2026.8.31(supports-color@9.4.0)
@@ -16533,7 +16533,7 @@ importers:
     dependencies:
       '@anthropic-ai/claude-agent-sdk':
         specifier: 0.3.263
-        version: 0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.6.7))(@modelcontextprotocol/sdk@1.32.2(supports-color@9.4.0)(zod@4.6.7))(zod@4.6.7)
+        version: 0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.6.7))(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.6.7))(zod@4.6.7)
       '@anthropic-ai/sdk':
         specifier: 0.93.0
         version: 0.93.0(zod@4.6.7)
@@ -16548,7 +16548,7 @@ importers:
         version: link:../../../vendor/schemastery
       '@modelcontextprotocol/sdk':
         specifier: '>=1.32.0 <2'
-        version: 1.32.2(supports-color@9.4.0)(zod@4.6.7)
+        version: 1.32.1(supports-color@9.4.0)(zod@4.6.7)
       zod:
         specifier: '>=4.6.6 <5'
         version: 4.6.7
@@ -20631,15 +20631,25 @@ packages:
     resolution: {integrity: sha512-iLhmprRmWI8EcosOA3wVvww22z02NkgqhV4fBH6f/odQBsi7xnJc0HGmi21yWO+/iKw2yzqVE127Zhna5/+JXw==}
     engines: {node: '>=20'}
 
-  '@modelcontextprotocol/core@2.4.0':
-    resolution: {integrity: sha512-z8QBKqdfXLPzkLQuG4xp8hrVEMm1PZ1IgxMN2sMbJiFiAKOWXnAzogXn2W4aqIBlP1ea6U5yiqVquvUNM1Cj6Q==}
+  '@modelcontextprotocol/core@2.3.1':
+    resolution: {integrity: sha512-laVmIhPGpWi7rG9q+0UigblRN0Hws/Yjlb6qLFtVqryXVLkc4h+yN8z731POD2LnAGQlFe7/tXhUm7Bi0YB91g==}
     engines: {node: '>=20'}
 
-  '@modelcontextprotocol/node@2.1.2':
-    resolution: {integrity: sha512-IIcIqBpr6NCQQs5DgJTgvbSOAw+3iaR/uquqg+e0nXCdudfjPg/80x0TseUnQx14AUAtE4fsJCEpJKPyb6WPVA==}
+  '@modelcontextprotocol/node@2.1.1':
+    resolution: {integrity: sha512-EY92OAXN2xYL7tNS/MVsWJW1v8VHAPwl9B4Ca3pCrjmvqyC+S1C/6UHsMxF2GoFPraS5Yyg56vFz9brVpFojMA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@modelcontextprotocol/server': '>=2.3.0 <3'
+
+  '@modelcontextprotocol/sdk@1.32.1':
+    resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cfworker/json-schema': ^4.1.1
+      zod: '>=4.6.6 <5'
+    peerDependenciesMeta:
+      '@cfworker/json-schema':
+        optional: true
 
   '@modelcontextprotocol/sdk@1.32.2':
     resolution: {integrity: sha512-SWsVtH/0vULSQStoZ6xxH2K09Li8fXYTMC64ZeogCdpZ3XSi1eCPOByV1OpuJxuI3OcmHhosDWYyii07tpPsLw==}
@@ -20661,8 +20671,8 @@ packages:
     deprecated: 'Date-based versions are no longer published. This package has resumed semantic versioning at 1.0.0: install the latest version.'
     hasBin: true
 
-  '@modelcontextprotocol/server@2.4.0':
-    resolution: {integrity: sha512-rgR9yxSaAJ+bcsi/XroT/S2AfPiIWloXAnrdfYSCms9ivVju0ishu/wW0J21Ho6+ZOR1r7RyeRbjiRuF87ix5Q==}
+  '@modelcontextprotocol/server@2.3.1':
+    resolution: {integrity: sha512-e59MfWuSssj6DoQ96JCTqdW1AXT5/XtnTl0WWd6MU1Ka434fFUGGosCLJbGNySDhHGvxQWoRWK137FXYFkYNWw==}
     engines: {node: '>=20'}
 
   '@napi-rs/canvas-android-arm64@1.0.8':
@@ -21491,6 +21501,9 @@ packages:
   '@smithy/core@3.35.0':
     resolution: {integrity: sha512-zRMhfkByhT2snNdr1si24vJitU6Cr9ix2MikUfWmkAgp4jrNP0GcKSP5YvwQ+TlI8AZXER5QOGJn3JsVtSD9/A==}
     engines: {node: '>=18.0.0'}
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with this
+        version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.5.2':
     resolution: {integrity: sha512-A9uSdn72ozbRUSit0eib0TW7nXuNPlaeM0zcGkJ+nE6tFcSDbnmtwoxbTCFBukVQcszDAyvsd7+rTduPTXpygg==}
@@ -21559,40 +21572,40 @@ packages:
       '@types/react-dom':
         optional: true
 
-  '@trycua/cua-driver-darwin-arm64@0.28.0':
-    resolution: {integrity: sha512-T6xvOlCph5uropetrH6tNTvg5ipN9FUzV1n28gNJ1LYoNT3fsqnQUpCRMavlAui/zYkyMqCMaBUqBcfZLA+SnA==}
+  '@trycua/cua-driver-darwin-arm64@0.34.0':
+    resolution: {integrity: sha512-UhzOe86Q1cJpl8lagOCgMnnekzbZz7hnvmBU4hDc7apUqnv6BBAJJz2e1DE4CUkNCCF2tkZSHA6xUncTYdnylA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@trycua/cua-driver-darwin-x64@0.28.0':
-    resolution: {integrity: sha512-8lBtyiTfMOGmEklNY4GHu5SedfxYbg43FjLpPUmKLSVF98+opyQ1bsyI7A7VlfUBW4hdwEBDLtzZnpZqepN9ZA==}
+  '@trycua/cua-driver-darwin-x64@0.34.0':
+    resolution: {integrity: sha512-v4Pj3BuQ48d713uIhNjSP5F9hD2zoKtMfJWfii2lx35fJNwJImhDZccxbDjDnAVjIrGICqviGVCrLTq1OiDSaA==}
     cpu: [x64]
     os: [darwin]
 
-  '@trycua/cua-driver-linux-arm64-gnu@0.28.0':
-    resolution: {integrity: sha512-/sDRM2vUQUA5FY3y3VAOxe0I5U1UHfhDUY3EfvGhASrHteefMVh+Wo8teebcto5TgVjiw4P41YdoTFBFWR3w4g==}
+  '@trycua/cua-driver-linux-arm64-gnu@0.34.0':
+    resolution: {integrity: sha512-RUygHOF8D20sLgJ1NrVmsb13I3W+XDcOvEnFt5/YTHsXoyWaj2KPneY3mUTONH0/ya25KbVOmI6vObdVZetMyA==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@trycua/cua-driver-linux-x64-gnu@0.28.0':
-    resolution: {integrity: sha512-2rEldOcNy+CT7re2pnIEfMW1c4wCoaLqhv8hoqBRK5gHn3UJTJPaxvo35tKSuIJAAQ/GMawCHCl9WvjY+W2ysw==}
+  '@trycua/cua-driver-linux-x64-gnu@0.34.0':
+    resolution: {integrity: sha512-MUe05gFjB9AK1BgMnQQBgRQFBeu6jzBAO7kpc5QbybtcwzbGiXlDDvrtirrWJ+AYJFqvaewE3DPdwT+aC7UL7A==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@trycua/cua-driver-win32-arm64-msvc@0.28.0':
-    resolution: {integrity: sha512-7cbX5v7xyCdGK3KuwPbMKlIuIUjKkKFuGgdPsCl7qZHLv+PQC5f7FrDFl8hFG3YNKvjoyan5ufus0AoTCcmp5w==}
+  '@trycua/cua-driver-win32-arm64-msvc@0.34.0':
+    resolution: {integrity: sha512-xlrck9tP1fD9AQpbWyuF6axnQHRYv8hM+iV7j5vI8yP3HCQl3bsGmvXa9r230d6A7zGqr5dHvbVPFw8y5gVvnQ==}
     cpu: [arm64]
     os: [win32]
 
-  '@trycua/cua-driver-win32-x64-msvc@0.28.0':
-    resolution: {integrity: sha512-tTWcGIGUCZ/k+mbcdh/4VmehsELp12M/tUj59XQSW97lFwrMSSIUypZ84LAEO+CEBdK9NQBRKO2pMBTH6aakEQ==}
+  '@trycua/cua-driver-win32-x64-msvc@0.34.0':
+    resolution: {integrity: sha512-BzdQ9rSOvekEdHLwEpYOaNAYRVXwav9cNnaR4traNmKPLkr+IvhQZv5K6CDGMM20O2S9q7lHG6k8n6jHA4zqHg==}
     cpu: [x64]
     os: [win32]
 
-  '@trycua/cua-driver@0.28.0':
-    resolution: {integrity: sha512-n3ArFsQ9RzNQIiYpHJEjTGLIPPpnqXDJRp0sevRcrRThAG3H2Fh/gWooEb9k4ba3rNSAohUoPiG/EbdKLF1WRw==}
+  '@trycua/cua-driver@0.34.0':
+    resolution: {integrity: sha512-MJs5+z6dM9UnqXZuKCE9uNZPA12QZOI+7wiKjk2ZmTtGox7Scvx1w+7fv6B1CTQV+3/ZR8fVmfEILbq/90WbVg==}
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -24644,6 +24657,11 @@ packages:
     engines: {node: '>=4.0.0'}
     hasBin: true
 
+  mime@4.1.0:
+    resolution: {integrity: sha512-X5ju04+cAzsojXKes0B/S4tcYtFAJ6tTMuSPBEn9CPGlrWr8Fiw7qYeLT0XyH80HSoAoqWCaz+MWKh22P7G1cw==}
+    engines: {node: '>=16'}
+    hasBin: true
+
   mime@4.1.1:
     resolution: {integrity: sha512-YAApRsTpM2+gnUFHhRNGfkX8NK0V5xj1nyQLufGlwEI+eX4xRsTcel2IXDuMEGSGjBvzykNW4VuoEACgwYe7BQ==}
     engines: {node: '>=16'}
@@ -26666,10 +26684,10 @@ snapshots:
   '@anthropic-ai/claude-agent-sdk-win32-x64@0.3.263':
     optional: true
 
-  '@anthropic-ai/claude-agent-sdk@0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.6.7))(@modelcontextprotocol/sdk@1.32.2(supports-color@9.4.0)(zod@4.6.7))(zod@4.6.7)':
+  '@anthropic-ai/claude-agent-sdk@0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.6.7))(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.6.7))(zod@4.6.7)':
     dependencies:
       '@anthropic-ai/sdk': 0.93.0(zod@4.6.7)
-      '@modelcontextprotocol/sdk': 1.32.2(supports-color@9.4.0)(zod@4.6.7)
+      '@modelcontextprotocol/sdk': 1.32.1(supports-color@9.4.0)(zod@4.6.7)
       zod: 4.6.7
     optionalDependencies:
       '@anthropic-ai/claude-agent-sdk-darwin-arm64': 0.3.263
@@ -28220,15 +28238,37 @@ snapshots:
     dependencies:
       zod: 4.6.7
 
-  '@modelcontextprotocol/core@2.4.0':
+  '@modelcontextprotocol/core@2.3.1':
     dependencies:
       zod: 4.6.7
 
-  '@modelcontextprotocol/node@2.1.2(@modelcontextprotocol/server@2.4.0)':
+  '@modelcontextprotocol/node@2.1.1(@modelcontextprotocol/server@2.3.1)':
     dependencies:
       '@hono/node-server': 1.19.17(hono@4.13.7)
-      '@modelcontextprotocol/server': 2.4.0
+      '@modelcontextprotocol/server': 2.3.1
       hono: 4.13.7
+
+  '@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.6.7)':
+    dependencies:
+      '@hono/node-server': 1.19.17(hono@4.13.7)
+      ajv: 8.20.0
+      ajv-formats: 3.0.1
+      content-type: 1.0.5
+      cors: 2.8.6
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.1.0
+      express: 5.2.1(supports-color@9.4.0)
+      express-rate-limit: 8.5.2(express@5.2.1(supports-color@9.4.0))
+      hono: 4.13.7
+      jose: 6.2.3
+      json-schema-typed: 8.0.2
+      pkce-challenge: 5.0.1
+      raw-body: 3.0.2
+      zod: 4.6.7
+      zod-to-json-schema: 3.25.2(zod@4.6.7)
+    transitivePeerDependencies:
+      - supports-color
 
   '@modelcontextprotocol/sdk@1.32.2(supports-color@9.4.0)(zod@4.6.7)':
     dependencies:
@@ -28274,9 +28314,9 @@ snapshots:
       - supports-color
       - zod
 
-  '@modelcontextprotocol/server@2.4.0':
+  '@modelcontextprotocol/server@2.3.1':
     dependencies:
-      '@modelcontextprotocol/core': 2.4.0
+      '@modelcontextprotocol/core': 2.3.1
       zod: 4.6.7
 
   '@napi-rs/canvas-android-arm64@1.0.8':
@@ -28935,35 +28975,35 @@ snapshots:
       '@types/react': 18.3.31
       '@types/react-dom': 18.3.7(@types/react@18.3.31)
 
-  '@trycua/cua-driver-darwin-arm64@0.28.0':
+  '@trycua/cua-driver-darwin-arm64@0.34.0':
     optional: true
 
-  '@trycua/cua-driver-darwin-x64@0.28.0':
+  '@trycua/cua-driver-darwin-x64@0.34.0':
     optional: true
 
-  '@trycua/cua-driver-linux-arm64-gnu@0.28.0':
+  '@trycua/cua-driver-linux-arm64-gnu@0.34.0':
     optional: true
 
-  '@trycua/cua-driver-linux-x64-gnu@0.28.0':
+  '@trycua/cua-driver-linux-x64-gnu@0.34.0':
     optional: true
 
-  '@trycua/cua-driver-win32-arm64-msvc@0.28.0':
+  '@trycua/cua-driver-win32-arm64-msvc@0.34.0':
     optional: true
 
-  '@trycua/cua-driver-win32-x64-msvc@0.28.0':
+  '@trycua/cua-driver-win32-x64-msvc@0.34.0':
     optional: true
 
-  '@trycua/cua-driver@0.28.0':
+  '@trycua/cua-driver@0.34.0':
     dependencies:
       '@ubjs/core': 0.31.0-3
       '@ubjs/node': 0.31.0-3
     optionalDependencies:
-      '@trycua/cua-driver-darwin-arm64': 0.28.0
-      '@trycua/cua-driver-darwin-x64': 0.28.0
-      '@trycua/cua-driver-linux-arm64-gnu': 0.28.0
-      '@trycua/cua-driver-linux-x64-gnu': 0.28.0
-      '@trycua/cua-driver-win32-arm64-msvc': 0.28.0
-      '@trycua/cua-driver-win32-x64-msvc': 0.28.0
+      '@trycua/cua-driver-darwin-arm64': 0.34.0
+      '@trycua/cua-driver-darwin-x64': 0.34.0
+      '@trycua/cua-driver-linux-arm64-gnu': 0.34.0
+      '@trycua/cua-driver-linux-x64-gnu': 0.34.0
+      '@trycua/cua-driver-win32-arm64-msvc': 0.34.0
+      '@trycua/cua-driver-win32-x64-msvc': 0.34.0
 
   '@tybys/wasm-util@0.10.2':
     dependencies:
@@ -32526,6 +32566,8 @@ snapshots:
   mime@1.6.0: {}
 
   mime@2.6.0: {}
+
+  mime@4.1.0: {}
 
   mime@4.1.1: {}
 
