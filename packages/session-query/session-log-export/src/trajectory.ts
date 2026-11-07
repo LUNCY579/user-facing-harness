@@ -26,6 +26,9 @@ export const SESSION_TRAJECTORY_SCHEMA = 'dsh.session-trajectory'
 /** Current {@link SessionTrajectory} layout version. */
 export const SESSION_TRAJECTORY_VERSION = 1
 
+/** Name of the redacted structured-trajectory entry inside the export archive. */
+export const TRAJECTORY_FILENAME = 'trajectory.json'
+
 /** One tool-call specification as the model issued it. */
 export interface TrajectoryToolCall {
   readonly callId: string
