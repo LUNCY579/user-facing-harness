@@ -9,6 +9,7 @@
  * @module scripts/verify-secrets-scan
  */
 
+import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
 
@@ -92,8 +93,25 @@ export function scanText(file: string, text: string): string[] {
   return failures
 }
 
+/**
+ * The repository's tracked files under the scan roots, from `git ls-files`.
+ * The gate's property is about COMMITTED content: filtering to tracked files
+ * keeps that promise while a developer's untracked local scratch under a scan
+ * root cannot fail a checkout's hygiene spuriously. Empty output (no git, or
+ * a stripped export) falls back to scanning everything on disk.
+ */
+function trackedFiles(root: string): Set<string> | undefined {
+  // -z: NUL-terminated entries and no C-quoting, so non-ASCII filenames come
+  // back verbatim. macOS stores filenames in NFD while the index holds NFC;
+  // both sides compare NFC-normalized.
+  const result = spawnSync('git', ['ls-files', '-z', '--', ...SCAN_ROOTS], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  if (result.status !== 0 || typeof result.stdout !== 'string') return undefined
+  return new Set(result.stdout.split('\0').filter(Boolean).map(name => name.normalize('NFC')))
+}
+
 /** Scan every committed fixture under the scan roots. */
 export function scanFixtures(root: string = ROOT): SecretsScanReport {
+  const tracked = trackedFiles(root)
   const files: string[] = []
   for (const scanRoot of SCAN_ROOTS) {
     const absoluteRoot = resolve(root, scanRoot)
@@ -108,6 +126,7 @@ export function scanFixtures(root: string = ROOT): SecretsScanReport {
       if (entry.isDirectory()) continue
       const relativePath = `${scanRoot}${sep}${relative(absoluteRoot, join(entry.parentPath, entry.name))}`
       if (!isScannedPath(relativePath)) continue
+      if (tracked !== undefined && !tracked.has(relativePath.split(sep).join('/').normalize('NFC'))) continue
       files.push(relativePath)
     }
   }
