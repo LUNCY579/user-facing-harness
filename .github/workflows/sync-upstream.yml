@@ -1,0 +1,63 @@
+name: Sync upstream master
+
+# Keeps the fork current with deepseek-ai/deepseek-harness: a scheduled run
+# opens (or refreshes) one sync PR whenever upstream master advances past
+# main, so the merge decision happens on a reviewed PR instead of a stale
+# checkout. The PR is deliberately not auto-merged: upstream changes can
+# conflict with fork-local security work, and the review is the point.
+
+on:
+  schedule:
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-upstream-master
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'LUNCY579/user-facing-harness'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Fetch upstream master
+        run: git fetch https://github.com/deepseek-ai/deepseek-harness.git master:upstream-master
+      - name: Measure the delta
+        id: delta
+        run: |
+          behind="$(git rev-list --count main..upstream-master)"
+          echo "behind=$behind" >> "$GITHUB_OUTPUT"
+          if [ "$behind" -gt 0 ]; then
+            git log --oneline main..upstream-master | head -30 > sync-commits.txt
+          fi
+      - name: Open or refresh the sync PR
+        if: steps.delta.outputs.behind != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEHIND: ${{ steps.delta.outputs.behind }}
+        run: |
+          git config user.name "Luncy-May"
+          git config user.email "cheng.li1@wustl.edu"
+          git checkout -B sync/upstream-master upstream-master
+          git push --force-with-lease origin sync/upstream-master
+          BODY=$(printf 'Upstream master advanced by **%s** commit(s).\n\n%s' "$BEHIND" "$(head -30 sync-commits.txt | sed 's/^/- /')")
+          gh pr list --head sync/upstream-master --state open --json number --jq '.[0].number' > pr-number || true
+          number="$(cat pr-number)"
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --body "$BODY"
+          else
+            gh pr create --base main --head sync/upstream-master \
+              --title "Sync upstream master ($BEHIND commits)" --body "$BODY"
+          fi
+      - name: Report already-current
+        if: steps.delta.outputs.behind == '0'
+        run: echo "main is current with upstream master — nothing to sync."
