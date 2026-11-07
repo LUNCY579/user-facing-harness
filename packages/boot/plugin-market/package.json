@@ -61,7 +61,7 @@
     "@deepseek-ai/dsh-util-values": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
     "execa": "^10.0.1",
-    "hosted-git-info": "^9.0.3",
+    "hosted-git-info": "^10.1.1",
     "minisearch": "^7.2.0",
     "semver": "^7.8.5",
     "zod": "^4.4.3"

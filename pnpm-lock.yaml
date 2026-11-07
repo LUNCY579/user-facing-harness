@@ -953,8 +953,8 @@ importers:
         specifier: ^15.0.0
         version: 15.0.0
       hosted-git-info:
-        specifier: ^9.0.3
-        version: 9.0.3
+        specifier: ^10.1.1
+        version: 10.1.1
       resolve.exports:
         specifier: ^2.0.3
         version: 2.0.3
@@ -2226,8 +2226,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       hosted-git-info:
-        specifier: ^9.0.3
-        version: 9.0.3
+        specifier: ^10.1.1
+        version: 10.1.1
       semver:
         specifier: ^7.8.5
         version: 7.8.5
@@ -2341,8 +2341,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       hosted-git-info:
-        specifier: ^9.0.3
-        version: 9.0.3
+        specifier: ^10.1.1
+        version: 10.1.1
       minisearch:
         specifier: ^7.2.0
         version: 7.2.0
@@ -23804,6 +23804,10 @@ packages:
   hookable@6.1.1:
     resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
 
+  hosted-git-info@10.1.1:
+    resolution: {integrity: sha512-DeOnSPAvOndYKfw075gt8yZzQ7S2hNztw34zBTfhIzLhmBTswIBg5/y+pqu/VD5cYWm5goAFTusDmUEmKZ0PEQ==}
+    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
+
   hosted-git-info@4.1.0:
     resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==}
     engines: {node: '>=10'}
@@ -31604,6 +31608,10 @@ snapshots:
   hookable@5.5.3: {}
 
   hookable@6.1.1: {}
+
+  hosted-git-info@10.1.1:
+    dependencies:
+      lru-cache: 11.5.1
 
   hosted-git-info@4.1.0:
     dependencies:
