@@ -12,6 +12,13 @@ updates:
       timezone: "Asia/Shanghai"
     cooldown:
       default-days: 30
+    ignore:
+      # Deliberate pins, documented in pnpm-workspace.yaml: Koffi 3.3.2's
+      # source build fails under GCC 13, and lexical@0.49.0 carries a
+      # reviewed patch. Bumps reopen when those sequences land.
+      - dependency-name: "koffi"
+      - dependency-name: "lexical"
+      - dependency-name: "@lexical/*"
     labels:
       - "kind/dependency"
       - "area/infra"
