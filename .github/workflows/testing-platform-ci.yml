@@ -31,6 +31,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Audit dependencies for known vulnerabilities
         run: pnpm audit --audit-level high
+      - name: Scan committed fixtures for secret-shaped strings
+        run: pnpm run verify-secrets-scan
       - name: Build harness and check TypeScript
         run: pnpm run setup
       - name: Check plugin adapter types
@@ -58,8 +60,8 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@v5.0.0
-      - uses: actions/setup-node@v7.0.0
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
           cache: pnpm
@@ -78,8 +80,8 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@v5.0.0
-      - uses: actions/setup-node@v7.0.0
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
           cache: pnpm
