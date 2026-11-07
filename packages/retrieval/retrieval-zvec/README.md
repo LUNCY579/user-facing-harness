@@ -74,7 +74,7 @@ No direct conversation cache effect. Search results change context only when a c
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- Only macOS arm64 is exercised locally; native availability on other platforms follows upstream wheels and Node bindings.
+- `pnpm run check:native-retrieval` exercises the real binding and the published entry points on the host that runs it; the [platform support matrix](../../../docs/user/guide/local-retrieval.md#platform-support) names which platform-and-architecture pairs a required lane covers and which stay untested.
 - turbovec is an ephemeral compressed reranker, not a standalone persistent memory database. Its copies do not reduce canonical Zvec storage.
 - Forgetting removes searchable records, not historical Session tool messages, backups, or recoverable filesystem blocks.
 

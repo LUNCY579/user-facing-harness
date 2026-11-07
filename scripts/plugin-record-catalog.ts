@@ -1,10 +1,11 @@
 /** Discover package-owned experimental Session records without adding persistence schema roots. */
 
 import { globSync, readFileSync } from 'node:fs'
-import { resolve, sep } from 'node:path'
+import { resolve } from 'node:path'
 import ts from 'typescript'
 import { experimentalPackageRecordNamespace } from './experimental-package-policy.ts'
 import { parseJsDoc, pointer, rawJsDoc, reportViolations } from './jsdoc.ts'
+import { corpusListing } from './scratch-sources.ts'
 
 const SESSION_PACKAGE = '@deepseek-ai/dsh-session'
 const SESSION_TYPES_MODULE = `${SESSION_PACKAGE}/types`
@@ -53,8 +54,7 @@ export function collectPluginRecords(scanRoot: string): PluginRecordEntry[] {
   const violations: string[] = []
   const seen = new Map<string, string>()
   let owningDeclaration: string | undefined
-  const files = globSync('packages/*/*/src/**/*.{ts,tsx,mts,cts}', { cwd: scanRoot })
-    .map(file => file.split(sep).join('/')).sort()
+  const files = corpusListing(globSync('packages/*/*/src/**/*.{ts,tsx,mts,cts}', { cwd: scanRoot }))
   for (const file of files) {
     const text = readFileSync(resolve(scanRoot, file), 'utf8')
     const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)

@@ -7,9 +7,10 @@
  * attributes, plus the common data/helper forms that feed them.
  */
 
-import { globSync, readFileSync } from 'node:fs'
+import { globSync } from 'node:fs'
 import { resolve } from 'node:path'
 import ts from 'typescript'
+import { isScratchProbe, readCorpus } from './scratch-sources.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const MINIMUM_CLIENT_UI_SOURCES = 450
@@ -333,6 +334,7 @@ function sourceFiles(): string[] {
   ])]
     .map(file => file.replaceAll('\\', '/'))
     .filter(file => !file.endsWith('.d.ts'))
+    .filter(file => !isScratchProbe(file))
     .sort()
 }
 
@@ -343,8 +345,10 @@ function main(): void {
       `verify-client-ui-i18n: discovery narrowed to ${files.length} source file(s); expected at least ${MINIMUM_CLIENT_UI_SOURCES}.`,
     )
   }
-  const violations = files.flatMap(file =>
-    findUiI18nViolations(file, readFileSync(resolve(root, file), 'utf8')))
+  const violations = files.flatMap((file) => {
+    const source = readCorpus(resolve(root, file))
+    return source === undefined ? [] : findUiI18nViolations(file, source)
+  })
   if (violations.length > 0) {
     console.error(`verify-client-ui-i18n: ${violations.length} hard-coded UI string(s):`)
     for (const violation of violations) {

@@ -12,6 +12,7 @@ import {
   Accelerator, Embeddings, IndexingService, RetrievalService, VectorStore, contentHash, spaceKeyOf,
   tokenOf, throwIfAborted, type BackendHit, type ChunkRecord, type EmbeddingSpace, type ReadFilter, type StoredRecord, type TrustedIdentity,
 } from '../src/index.ts'
+import { EMPTY_FORGET_LEDGER, ledgerPathOf, readPortabilityJson } from '../src/portability.ts'
 
 const SPACE: EmbeddingSpace = { provider: 'fixture', model: 'fixture-v1', dimension: 8, normalized: true }
 const ROOT_ID: TrustedIdentity = { ownerKey: OwnerKey('owner-a'), workspaceRoot: '/fixture', workspaceKey: WorkspaceKey('workspace-a'), sessionKey: SessionKey('session-a'), agentKey: AgentKey('agent-a'), allowUserScope: true, allowCrossSession: true }
@@ -200,6 +201,18 @@ describe('memory authority and lifecycle', () => {
     expect(await ctx.vectorStore.fetch([previous.id, current.id, expired.id])).toEqual([])
     expect(await ctx.retrieval.listMemories(ROOT_ID, { includeExpired: true, includeSuperseded: true })).toEqual([])
     expect([...store.records.keys()]).toEqual([foreign.id])
+  })
+
+  it('records each forgotten memory once and leaves a repeat request without work to do', async () => {
+    const portabilityDir = await mkdtemp(join(tmpdir(), 'retrieval-forget-ledger-'))
+    directories.push(portabilityDir)
+    const { ctx, store } = await fixture({ portabilityEnabled: true, portabilityDir })
+    const row = await ctx.retrieval.remember(remember('Synthetic fact forgotten twice'), ROOT_ID)
+    expect(await ctx.retrieval.forget({ ids: [row.id] }, ROOT_ID)).toEqual([row.id])
+    expect(await ctx.retrieval.forget({ ids: [row.id] }, ROOT_ID)).toEqual([])
+    expect(store.records.size).toBe(0)
+    const ledger = await readPortabilityJson(ledgerPathOf(portabilityDir), EMPTY_FORGET_LEDGER)
+    expect(ledger.entries.map(entry => [entry.id, entry.contentHash])).toEqual([[row.id, row.contentHash]])
   })
 
   it('does not turn memory forgetting into arbitrary chunk deletion', async () => {

@@ -38,7 +38,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { watch as chokidarWatch } from 'chokidar'
-import { mkdir, readFile, stat } from 'node:fs/promises'
+import { lstat, mkdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { Document, isMap, isScalar, parseDocument, type YAMLError } from 'yaml'
 import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
@@ -118,21 +118,30 @@ const DOCUMENT_LOCK_WAIT_MS = 30_000
  * and silently serving secrets out of a world-readable file would make the
  * mode the provider promises meaningless.
  *
+ * The check inspects the directory entry itself (`lstat`), not its target: a
+ * symlink planted at the document path is rejected outright rather than
+ * validated by whatever the link points at, so the mode promise stays bound to
+ * the file this provider writes.
+ *
  * POSIX only: Windows has no mode to inspect — its ACLs are not expressible
  * here — so the check is skipped rather than faked, and the file's protection
  * there is whatever the create and replace APIs express.
  * @param filename - absolute path of the document.
- * @throws when the path hierarchy is invalid or the file exists with group or other permission bits set.
+ * @throws when the path hierarchy is invalid, the entry is a symlink, or the file exists with group or other permission bits set.
  */
 async function assertOwnerOnly(filename: string): Promise<void> {
-  let mode: number
+  let entry: Awaited<ReturnType<typeof lstat>>
   try {
-    mode = (await stat(filename)).mode
+    entry = await lstat(filename)
   } catch (error) {
     if (!isENOENT(error)) throw error
     await canonicalizeWatchPath(filename)
     return
   }
+  if (entry.isSymbolicLink()) {
+    throw new Error(`credentials-local: ${filename} is a symlink; remove it and store the document directly`)
+  }
+  const mode = entry.mode
   /* v8 ignore next -- POSIX coverage cannot take the Windows peer; native Windows coverage does. */
   if (process.platform === 'win32') return
   /* v8 ignore start -- Windows has no POSIX mode enforcement; POSIX behavior tests enforce this peer. */

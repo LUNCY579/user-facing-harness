@@ -209,8 +209,8 @@ function tlsRequest(
   path: string,
   ca?: string,
   agent?: Agent,
-): Promise<{ status: number; body: string }> {
-  const { promise, resolve, reject } = Promise.withResolvers<{ status: number; body: string }>()
+): Promise<{ status: number; body: string; headers: import('node:http').IncomingHttpHeaders }> {
+  const { promise, resolve, reject } = Promise.withResolvers<{ status: number; body: string; headers: import('node:http').IncomingHttpHeaders }>()
   const request = httpsRequest({
     host: '127.0.0.1',
     port: boundPort(port),
@@ -221,7 +221,7 @@ function tlsRequest(
     let body = ''
     response.setEncoding('utf8')
     response.on('data', (chunk: string) => { body += chunk })
-    response.on('end', () => { resolve({ status: response.statusCode ?? 0, body }) })
+    response.on('end', () => { resolve({ status: response.statusCode ?? 0, body, headers: response.headers }) })
   })
   request.on('error', reject)
   request.end()
@@ -908,7 +908,10 @@ describe('real Loader composition', () => {
 
     // The fixture CA is the only reason the handshake succeeds, so this is a
     // verifying client rather than one that disabled its checks.
-    expect(await tlsRequest(server.port, '/tls', fixture.ca)).toEqual({ status: 200, body: 'SECURE' })
+    const tlsResponse = await tlsRequest(server.port, '/tls', fixture.ca)
+    expect(tlsResponse).toMatchObject({ status: 200, body: 'SECURE' })
+    // The TLS listener pins every served document; plain-HTTP compositions assert the absence below.
+    expect(tlsResponse.headers['strict-transport-security']).toBe('max-age=31536000')
     await expect(tlsRequest(server.port, '/tls')).rejects.toMatchObject({ code: 'DEPTH_ZERO_SELF_SIGNED_CERT' })
     // The listener speaks TLS only: a plain-HTTP client cannot reach the route.
     await expect(request(server.port, '/tls')).rejects.toThrow()
@@ -1027,7 +1030,7 @@ describe('real Loader composition', () => {
       const upgraded = await tlsUpgrade(server.port, '/events', fixture.ca)
       observeClient(upgraded.socket)
       expect(upgraded.status).toBe(101)
-      expect(await tlsRequest(server.port, '/probe', fixture.ca, agent)).toEqual({ status: 200, body: 'EXACT' })
+      expect(await tlsRequest(server.port, '/probe', fixture.ca, agent)).toMatchObject({ status: 200, body: 'EXACT' })
       await idleReady
       // A TCP connection without a ClientHello is absent from closeAllConnections().
       const handshaking = connect(boundPort(server.port), '127.0.0.1')

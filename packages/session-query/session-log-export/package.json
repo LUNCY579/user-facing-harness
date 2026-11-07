@@ -38,10 +38,11 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/dsh-brand": "workspace:*",
     "@deepseek-ai/dsh-session-format": "workspace:*",
+    "@deepseek-ai/dsh-session-telemetry": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
-    "fflate": "^0.8.2",
-    "@deepseek-ai/dsh-brand": "workspace:*"
+    "fflate": "^0.8.2"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",

@@ -306,13 +306,28 @@ export function browserFaceSources(projectRoot: string = root): string[] {
   return [...sources].sort()
 }
 
-/** Scan one file for one face; a producer that disappeared must fail loud. */
-function scan(file: string, face: RouteGateFace): RouteResolutionViolation[] {
+/**
+ * Scan one path for one face.
+ * @param file - repository-relative path from a corpus listing or a declared producer list.
+ * @param face - compiler face whose route ownership the file is judged against.
+ * @returns the violations in that file. A discovered source that vanished between listing and read
+ *   returns none, because a gate running beside the test suite sees scratch sources the suite
+ *   deletes mid-scan; a declared producer that vanished throws, since its absence means discovery
+ *   moved out from under this gate.
+ */
+export function scan(file: string, face: RouteGateFace): RouteResolutionViolation[] {
   const path = resolve(root, file)
   if (face === 'reference-producer' && !existsSync(path)) {
     throw new Error(`${GATE}: browser-reference producer ${file} is gone; discovery is broken.`)
   }
-  return findRouteResolutionViolations(file, readFileSync(path, 'utf8'), face)
+  let source: string
+  try {
+    source = readFileSync(path, 'utf8')
+  } catch (error: unknown) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    return []
+  }
+  return findRouteResolutionViolations(file, source, face)
 }
 
 function main(): void {

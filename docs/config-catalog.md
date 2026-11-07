@@ -2972,12 +2972,15 @@ export interface Config {
 ## `@deepseek-ai/dsh-retrieval-tools`
 
 - `inject`: `retrieval` · `retrievalIndexing` · `tools` · `fs`
-- `source`: [`packages/retrieval/retrieval-tools/src/index.ts:28`](../packages/retrieval/retrieval-tools/src/index.ts)
+- `source`: [`packages/retrieval/retrieval-tools/src/index.ts:30`](../packages/retrieval/retrieval-tools/src/index.ts)
 
 ```ts config-catalog
 /** Tool and automatic-retrieval configuration. */
 export interface Config {
-  /** Trusted local principal; use separate profiles/stores for different operating-system users. */
+  /**
+   * Trusted local principal, resolved from this host by {@link principalOf} when a profile omits
+   * it; use separate profiles/stores for different operating-system users.
+   */
   localPrincipal: string
   /** Passages returned when a search omits top_k. */
   defaultSearchTopK: number

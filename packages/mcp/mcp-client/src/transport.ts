@@ -23,6 +23,42 @@ function buildChildEnv(extra: Record<string, string>): Record<string, string> {
 }
 
 /**
+ * Whether a WHATWG URL hostname names the local loopback authority: localhost
+ * (including subdomains), IPv6 loopback, or any IPv4 address in 127/8.
+ * @param hostname - the parsed URL's hostname (IPv6 literals retain brackets).
+ */
+function isLoopbackHostname(hostname: string): boolean {
+  const bare = hostname.replace(/^\[|\]$/gu, '')
+  if (bare === 'localhost' || bare === '::1' || bare.endsWith('.localhost')) return true
+  const parts = bare.split('.')
+  return parts.length === 4
+    && parts[0] === '127'
+    && parts.every(part => /^\d{1,3}$/u.test(part) && Number(part) <= 255)
+}
+
+/**
+ * Assert a Streamable HTTP endpoint's URL is safe to carry authenticated
+ * traffic. Plain HTTP is accepted only for loopback endpoints (local dev
+ * servers); a remote plaintext endpoint would send the configured headers —
+ * often credentials — and every tool payload unencrypted. Fails loud at
+ * plugin load instead of silently downgrading transport security.
+ * @param url - the configured endpoint URL, verbatim.
+ * @returns the parsed URL, ready for the transport.
+ * @throws when the URL is unparsable, uses a non-HTTP(S) scheme, or serves
+ *   plain HTTP to a non-loopback host.
+ */
+export function parseTransportUrl(url: string): URL {
+  const parsed = new URL(url)
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`mcp-client: streamable-http endpoint must use http or https, got "${parsed.protocol}"`)
+  }
+  if (parsed.protocol === 'http:' && !isLoopbackHostname(parsed.hostname)) {
+    throw new Error(`mcp-client: streamable-http endpoint ${url} serves plain HTTP to a non-loopback host; use https for remote servers`)
+  }
+  return parsed
+}
+
+/**
  * Create an MCP transport from the resolved plugin config.
  *
  * @param config - Resolved plugin config discriminated on `transport`.
@@ -39,7 +75,7 @@ export function createTransport(config: Config): Transport {
       })
     case 'streamable-http':
       return new StreamableHTTPClientTransport(
-        new URL(config.url),
+        parseTransportUrl(config.url),
         { requestInit: { headers: config.headers } },
       )
   }

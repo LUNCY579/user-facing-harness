@@ -40,9 +40,11 @@ Enable the [native retrieval overlay](../../../docs/user/guide/local-retrieval.m
 
 Explicit search budgets accept zero for the configured default or at least 64; reported tokens include the complete framing and empty-result notice.
 
+When `retrieval.config.portabilityEnabled` is true and a commands service is mounted, this package also registers the operator-run commands `/memory-export <file-name> [--include-inactive]` and `/memory-import <file-name>`. They are human commands, not model tools, and they read and write only below `retrieval.config.portabilityDir`. The [local retrieval guide](../../../docs/user/guide/local-retrieval.md#move-memories-between-stores) owns the migration recipe.
+
 | Field | Default | Meaning |
 |---|---|---|
-| `localPrincipal` | operating-system username | Trusted local owner; never an authentication credential |
+| `localPrincipal` | account name, else `$USER`, else uid | Trusted local owner; never an authentication credential |
 | `enableTools` | `true` | Register the tool set |
 | `defaultSearchTopK` | `6` | Default search item count |
 | `defaultMemoryLimit` | `20` | Default memory listing count |
@@ -66,7 +68,7 @@ Identity derives from the configured principal, canonical original session works
 
 Automatic retrieval uses the accepted user text at `agent/pre-step`; returned passages become a sourced user message in the durable Session log. It compares logged fingerprints of selected record IDs, content hashes, and memory versions, so ranking or score changes do not repeat the unchanged selection. It asynchronously reads and scans the session log through `sessionQuery` for each automatic retrieval, checks fresh results for corrections, and leaves the user's request intact on retrieval failure. Registrations and the listener are removed when the plugin fiber unloads.
 
-[Tool implementations](src/tools.ts), [identity resolution](src/identity.ts), and [automatic retrieval](src/auto.ts) own the runtime behavior. The real Loader workflow is tested in [composition.spec.ts](tests/composition.spec.ts); the [recorded headless scenario](../../../snapshots/session/local-retrieval/snapshot.yml) exercises the shipped launcher without a cloud model.
+[Tool implementations](src/tools.ts), [identity resolution](src/identity.ts), and [automatic retrieval](src/auto.ts) own the runtime behavior. [portability.ts](src/portability.ts) parses those command arguments, resolves the calling agent's identity, and returns counters; a failing command throws, and the command registry records its message as the error result. The real Loader workflow is tested in [composition.spec.ts](tests/composition.spec.ts); the [recorded headless scenario](../../../snapshots/session/local-retrieval/snapshot.yml) exercises the shipped launcher without a cloud model. The [portability command tests](tests/portability.spec.ts) run the commands against the native store through the real registry, including a refused foreign owner and a re-embedded legacy space.
 
 </details>
 
@@ -100,7 +102,7 @@ Tool definitions add prompt tokens when enabled. Search-shaped tools and automat
 
 #### KV Cache effect
 
-Tool results and automatic context append to the conversation suffix. An unchanged selected evidence set already logged in the session adds no message; corrected evidence adds a new suffix. Enabling tools changes the schema-bearing prompt and can invalidate cached prompt reuse.
+Tool results and automatic context append to the conversation suffix. An unchanged selected evidence set already logged in the session adds no message; corrected evidence adds a new suffix. Enabling tools changes the schema-bearing prompt and can invalidate cached prompt reuse. The portability commands add no model-visible schema.
 
 ## Known Limitations and Deferred Work
 
@@ -117,6 +119,6 @@ Tool results and automatic context append to the conversation suffix. An unchang
 <details>
 <summary>Working context for maintainers — click to expand</summary>
 
-None.
+The [memory portability format Agent Note](../../../.agents/notes/implemented/feature/2026-11-02-memory-portability-format.md) records the admission and ordering rules the commands inherit. Commands are registered only while `retrieval.config.portabilityEnabled` is true, so the plugin takes `commands` as an optional service rather than a required injection.
 
 </details>

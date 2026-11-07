@@ -202,7 +202,7 @@ function renderEntry(entry: TurnEntry): string {
   return `${heading}\n\n${argumentsText}\n\n${resultHeading}\n\n${resultBody}`
 }
 
-function visibleContent(content: UserMessage['content']): string {
+export function visibleContent(content: UserMessage['content']): string {
   const parts: string[] = []
   for (const block of content) {
     switch (block.type) {

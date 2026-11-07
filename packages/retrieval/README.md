@@ -26,10 +26,10 @@ These plugins compose through Cordis services and leave the agent loop unchanged
 
 | Package | Role |
 |---|---|
-| [`retrieval`](retrieval/README.md) | Search and explicit memory service; workspace and Session synchronization entry. |
+| [`retrieval`](retrieval/README.md) | Search and explicit memory service; workspace and Session synchronization entry, and the versioned memory export, ledger, and journal. |
 | [`retrieval-embed`](retrieval-embed/README.md) | Offline hashing and authorized OpenAI-compatible embeddings. |
 | [`retrieval-zvec`](retrieval-zvec/README.md) | Persistent Zvec store and optional isolated turbovec derivative. |
-| [`retrieval-tools`](retrieval-tools/README.md) | Agent tools and opt-in automatic context. |
+| [`retrieval-tools`](retrieval-tools/README.md) | Agent tools, the operator portability commands, and opt-in automatic context. |
 
 <a id="related-documentation"></a>
 ## Related documentation
@@ -40,4 +40,4 @@ These plugins compose through Cordis services and leave the agent loop unchanged
 <a id="dev-note"></a>
 ## Dev Note
 
-None.
+The [memory portability format Agent Note](../../.agents/notes/implemented/feature/2026-11-02-memory-portability-format.md) owns the export, ledger, and staged-import decisions. The [authoritative local retrieval Agent Note](../../.agents/notes/implemented/architecture/2026-11-01-authoritative-local-retrieval.md) owns store authority and rebuildable compression.

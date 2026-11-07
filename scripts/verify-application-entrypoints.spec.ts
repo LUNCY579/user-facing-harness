@@ -47,6 +47,13 @@ describe('application entrypoints', () => {
     ])
   })
 
+  it('ignores a scratch probe the lint contract leaves in a source tree', () => {
+    const root = fixture()
+    write(root, 'packages/example/app/src/oxlint-contract-probe.ts', '#!/usr/bin/env node\n')
+
+    expect(applicationEntrypointViolations(root)).toEqual([])
+  })
+
   it('rejects an executable at an application package root', () => {
     const root = fixture()
     write(root, 'apps/example/rogue.mjs', '#!/usr/bin/env node\n')

@@ -58,7 +58,10 @@ export function productWebBundleIsolation(repository: string, webRoot: string): 
             name: 'dsh-worker-build-inputs',
             generateBundle: {
               order: 'post',
-              handler(_options, bundle) { inputs.workerBundle(bundle, this.getWatchFiles()) },
+              // rolldown's plugin context has no getWatchFiles (it is a
+              // RolldownBuild method); workerBundle derives the build inputs
+              // from the emitted chunk module keys instead.
+              handler(_options, bundle) { inputs.workerBundle(bundle) },
             },
           }],
         },
@@ -98,7 +101,24 @@ export function productWebBundleIsolation(repository: string, webRoot: string): 
     generateBundle: {
       order: 'post',
       handler(_options, bundle) {
-        if (!dependencyAnalysis) inputs.verify(bundle, id => this.getModuleInfo(id))
+        if (dependencyAnalysis) return
+        // rolldown's ModuleInfo drops rollup's isExternal/isIncluded: code is
+        // null exactly for external modules at post-bundle time, and inclusion
+        // is membership in the emitted chunk module keys.
+        const included = new Set<string>()
+        for (const item of Object.values(bundle)) {
+          if (item.type === 'chunk') for (const id of Object.keys(item.modules)) included.add(id)
+        }
+        inputs.verify(bundle, (id) => {
+          const info = this.getModuleInfo(id)
+          if (info === null) return null
+          return {
+            importedIds: info.importedIds,
+            dynamicallyImportedIds: info.dynamicallyImportedIds,
+            isExternal: info.code === null,
+            isIncluded: included.has(id),
+          }
+        })
       },
     },
   }]

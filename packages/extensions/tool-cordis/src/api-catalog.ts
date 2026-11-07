@@ -2654,6 +2654,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'ids durably removed.',
       },
       {
+        signature: 'async exportMemories(identity: TrustedIdentity, input: ExportInput = {}, signal?: AbortSignal): Promise<MemoryExport>',
+        description: 'Export the memories one caller may read in the versioned portability format. Pending supersession is rolled forward first, so an export never carries a half-written lifecycle.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity; only records it may read are exported.' }, { name: 'input', description: 'optional file name below `portabilityDir`, and whether to include inactive rows.' }, { name: 'signal', description: 'cancellation before the store read.' }],
+        returns: 'the validated envelope, and the file written when `path` was given.',
+      },
+      {
+        signature: 'async importMemories(identity: TrustedIdentity, input: ImportInput, signal?: AbortSignal): Promise<ImportReport>',
+        description: 'Import one export, which is also how a migration into a fresh store after an embedding-space change runs: mount the target store and provider, then import the same export file. Records are re-embedded into the target space, staged under a write-ahead journal, verified, and only then published. A failed batch is removed again, and the source store is never opened for writing.',
+        parameters: [{ name: 'identity', description: 'host-resolved caller identity deciding which exported records are admissible.' }, { name: 'input', description: 'export file name below `portabilityDir`, or export text.' }, { name: 'signal', description: 'cancellation before or between steps.' }],
+        returns: 'counters, refusals, recovered ids, and the space pair.',
+      },
+      {
         signature: 'async listMemories( identity: TrustedIdentity, options: { includeExpired?: boolean; includeSuperseded?: boolean } = {}, ): Promise<MemoryRecord[]>',
         description: 'Read memories the caller may see, newest first, dropping expired and superseded rows by default.',
         parameters: [{ name: 'identity', description: 'host-resolved caller identity.' }, { name: 'options', description: '`includeExpired` keeps expired rows, `includeSuperseded` keeps replaced rows.' }],
@@ -6661,6 +6673,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface EveryScheduleRecord {\n    readonly id: ScheduleId;\n    readonly kind: \'every\';\n    readonly title: string;\n    readonly prompt: string;\n    readonly everySeconds: number;\n    readonly scheduledAt: string;\n}',
   },
   {
+    name: 'ExportedMemory',
+    declaration: 'export type ExportedMemory = MemoryRecord;',
+  },
+  {
+    name: 'ExportInput',
+    declaration: 'export interface ExportInput {\n    path?: string;\n    includeInactive?: boolean;\n}',
+  },
+  {
     name: 'FeedbackCategory',
     declaration: 'export type FeedbackCategory = \'task-result\' | \'instruction-following\' | \'product-interaction\' | \'service-stability\' | \'resource-cost\' | \'security-privacy-permission\' | \'other\';',
   },
@@ -7023,6 +7043,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ImageVariantId',
     declaration: 'export type ImageVariantId = Branded<\'ImageVariantId\'>;',
+  },
+  {
+    name: 'ImportInput',
+    declaration: 'export interface ImportInput {\n    path?: string;\n    json?: string;\n}',
+  },
+  {
+    name: 'ImportRefusal',
+    declaration: 'export interface ImportRefusal {\n    id: RecordId;\n    reason: string;\n}',
+  },
+  {
+    name: 'ImportReport',
+    declaration: 'export interface ImportReport {\n    accepted: number;\n    reused: number;\n    recovered: number;\n    refused: ImportRefusal[];\n    sourceSpace: SpaceKey;\n    targetSpace: SpaceKey;\n}',
   },
   {
     name: 'IncompatiblePlugin',
@@ -7519,6 +7551,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemoryCounts',
     declaration: 'export interface MemoryCounts {\n    pending: number;\n    active: number;\n    expired: number;\n    superseded: number;\n}',
+  },
+  {
+    name: 'MemoryExport',
+    declaration: 'export interface MemoryExport {\n    version: number;\n    exportedAt: number;\n    sourceSpace: SpaceKey;\n    records: ExportedMemory[];\n}',
   },
   {
     name: 'MemoryPatch',

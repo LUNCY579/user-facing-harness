@@ -1,0 +1,49 @@
+# Neural local embeddings through one loopback OpenAI-compatible embedding server.
+#
+# Recipe: install Ollama, then `ollama pull bge-m3:567m` and keep the server on
+# loopback. BAAI/bge-m3 is MIT-licensed, emits 1024-dimensional dense vectors,
+# covers more than 100 languages, and needs no query instruction prefix.
+# Copy this overlay instead of patching a private profile, and keep
+# dimension, model, and modelRevision matched to the running server. An existing
+# index directory holds a different embedding space, so retrieval-zvec requires
+# fresh indexDir and statePath values here.
+#
+# Remote embeddings, persistent personal memory, automatic injection, historical
+# session indexing, and the optional turbovec worker stay disabled.
+- id: retrieval-embed
+  disabled: false
+  config:
+    provider: local-openai-compatible
+    model: bge-m3:567m
+    modelRevision: 5617a9f61b028005a4858fdac845db406aefb181
+    dimension: 1024
+    baseUrl: http://127.0.0.1:11434/v1
+    timeoutMs: 30000
+    maxBatch: 32
+
+- id: retrieval-zvec
+  disabled: false
+  config:
+    indexDir: !!js dshHomePath('retrieval-neural')
+    queryThreads: 1
+    optimizeThreads: 1
+
+- id: retrieval
+  disabled: false
+  config:
+    enabled: true
+    persistentMemory: false
+    crossSessionRead: false
+    useAccelerator: false
+
+- id: retrieval-indexing
+  disabled: false
+  config:
+    roots: !!js '[process.cwd()]'
+    statePath: !!js dshHomePath('retrieval-neural/index-state.json')
+
+- id: retrieval-tools
+  disabled: false
+  config:
+    enableTools: true
+    autoRetrieval: false

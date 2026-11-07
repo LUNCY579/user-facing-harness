@@ -42,6 +42,10 @@ async function mounted(withServices: boolean): Promise<{
   ctx.provide('commands', { register: () => () => {} } as never)
   if (withServices) {
     ctx.provide('sessionQuery', {
+      readSession: async (id: SessionId) => {
+        const handle = readHandle(String(id))
+        return { session: handle.header, inheritedEventCount: 0, events: [] }
+      },
       traceSession: async () => ({ descendants: [] }),
     } as never)
     ctx.provide('sessionPersistence', {

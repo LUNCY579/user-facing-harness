@@ -122,6 +122,8 @@ export function chunkText(
   for (let cursor = 0; cursor < normalized.length; cursor += step) {
     const slice = normalized.slice(cursor, cursor + policy.size)
     if (slice.trim().length === 0) {
+      /* v8 ignore next -- the loader floors maxChunksPerDocument at 1, and a full cap breaks
+       * at the push arm, so a whitespace slice never sees an exhausted cap. */
       if (chunks.length >= policy.maxChunks) break
       continue
     }
@@ -151,6 +153,7 @@ function lineAt(starts: readonly number[], offset: number): number {
   let found = 1
   while (low <= high) {
     const mid = (low + high) >> 1
+    /* v8 ignore next -- low and high stay inside starts, so the read is a number; the arm satisfies noUncheckedIndexedAccess. */
     if ((starts[mid] ?? Number.POSITIVE_INFINITY) <= offset) {
       found = mid + 1
       low = mid + 1
@@ -238,6 +241,7 @@ export function estimateTokens(text: string): number {
   let ascii = 0
   let nonAscii = 0
   for (const character of text) {
+    /* v8 ignore next -- string iteration yields a whole code point, so codePointAt(0) is defined. */
     if ((character.codePointAt(0) ?? 0) <= 127) ascii++
     else nonAscii += Buffer.byteLength(character, 'utf8')
   }

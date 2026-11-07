@@ -39,8 +39,9 @@
 | `MemoryAttribution` | 创建显式事实的行为主体及原始引用；归属信息不授予权限。 |
 | `RememberInput`, `MemoryPatch`, `ForgetSelector` | 创建、更正和删除请求；按作用域删除包含过期和被替代的记录，显式 ID 则选择对应记录。 |
 | `MemoryCounts` | 已授权的有效、过期、被替代和待处理记忆数量，待处理意图不计入有效事实。 |
+| `ExportInput`, `MemoryExport`, `ImportInput`, `ImportReport` | 记忆可迁移的请求与结果；导出保留所有权、作用域、归属、时间戳、过期时间和替代关系，导入报告已接纳、复用、恢复和拒绝的记录。 |
 
-[记忆服务](../../packages/retrieval/retrieval/src/engine.ts)先暂存替代意图，再停用旧事实并激活替代记录。授权读取会先协调被中断的意图，再返回当前事实。`outcome_pending` 表示写入或删除结果不确定或尚未完成，并不表示操作已回滚。遗忘操作会验证主存储中的记录已删除；记忆操作不能删除已索引的源片段。
+[记忆服务](../../packages/retrieval/retrieval/src/engine.ts)先暂存替代意图，再停用旧事实并激活替代记录。授权读取会先协调被中断的意图，再返回当前事实。`outcome_pending` 表示写入或删除结果不确定或尚未完成，并不表示操作已回滚。遗忘操作会验证主存储中的记录已删除；记忆操作不能删除已索引的源片段。导出只读取调用方有权查看的记录；导入会把记录重新嵌入当前挂载存储的嵌入空间，两者都要求 `portabilityEnabled`。[格式模块](../../packages/retrieval/retrieval/src/portability.ts)负责导出封装、遗忘账本和导入日志。
 
 ## 搜索请求和上下文包
 
@@ -245,6 +246,28 @@ async updateMemory(id: RecordId, patch: MemoryPatch, identity: TrustedIdentity, 
  * @returns ids durably removed.
  */
 async forget(selector: ForgetSelector, identity: TrustedIdentity, signal?: AbortSignal): Promise<RecordId[]>
+
+/**
+ * Export the memories one caller may read in the versioned portability format. Pending supersession is
+ * rolled forward first, so an export never carries a half-written lifecycle.
+ * @param identity - host-resolved caller identity; only records it may read are exported.
+ * @param input - optional file name below `portabilityDir`, and whether to include inactive rows.
+ * @param signal - cancellation before the store read.
+ * @returns the validated envelope, and the file written when `path` was given.
+ */
+async exportMemories(identity: TrustedIdentity, input: ExportInput = {}, signal?: AbortSignal): Promise<MemoryExport>
+
+/**
+ * Import one export, which is also how a migration into a fresh store after an embedding-space change
+ * runs: mount the target store and provider, then import the same export file. Records are re-embedded
+ * into the target space, staged under a write-ahead journal, verified, and only then published. A failed
+ * batch is removed again, and the source store is never opened for writing.
+ * @param identity - host-resolved caller identity deciding which exported records are admissible.
+ * @param input - export file name below `portabilityDir`, or export text.
+ * @param signal - cancellation before or between steps.
+ * @returns counters, refusals, recovered ids, and the space pair.
+ */
+async importMemories(identity: TrustedIdentity, input: ImportInput, signal?: AbortSignal): Promise<ImportReport>
 
 /**
  * Read memories the caller may see, newest first, dropping expired and superseded rows by default.

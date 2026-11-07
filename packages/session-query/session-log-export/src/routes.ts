@@ -15,3 +15,9 @@ export const SESSION_MARKDOWN_EXPORT_PATH = '/api/session.markdown'
 
 /** Browser-relative form of {@link SESSION_MARKDOWN_EXPORT_PATH}. */
 export const SESSION_MARKDOWN_EXPORT_ROUTE = SESSION_MARKDOWN_EXPORT_PATH.slice(1)
+
+/** Absolute registration path for the structured trajectory export route. */
+export const SESSION_TRAJECTORY_EXPORT_PATH = '/api/session.trajectory'
+
+/** Browser-relative form of {@link SESSION_TRAJECTORY_EXPORT_PATH}. */
+export const SESSION_TRAJECTORY_EXPORT_ROUTE = SESSION_TRAJECTORY_EXPORT_PATH.slice(1)

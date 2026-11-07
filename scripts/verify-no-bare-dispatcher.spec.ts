@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findDispatcherViolations, scanRepository, DISPATCHER_OWNER } from './verify-no-bare-dispatcher.ts'
+import { findDispatcherViolations, scanFiles, scanRepository, DISPATCHER_OWNER } from './verify-no-bare-dispatcher.ts'
 
 const FILE = 'packages/web/web-fetch-http/src/provider.ts'
 
@@ -139,5 +139,13 @@ describe('bare dispatcher check', () => {
 
   it('passes on the current tree', () => {
     expect(scanRepository()).toEqual([])
+  })
+
+  it('skips a corpus path another process deleted between listing and read', () => {
+    expect(scanFiles(['packages/util/http-proxy/src/vanished-mid-scan.ts'])).toEqual([])
+  })
+
+  it('propagates a read failure that is not a vanished file', () => {
+    expect(() => scanFiles(['packages'])).toThrow(/EISDIR/u)
   })
 })

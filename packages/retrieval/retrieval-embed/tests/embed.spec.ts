@@ -7,7 +7,7 @@
  */
 
 import { Context } from '@deepseek-ai/cordis'
-import { Embeddings, RetrievalError, spaceKeyOf } from '@deepseek-ai/dsh-retrieval'
+import { Embeddings, RetrievalError, contentHash, spaceKeyOf } from '@deepseek-ai/dsh-retrieval'
 import * as embedPlugin from '@deepseek-ai/dsh-retrieval-embed'
 import { HashedEmbeddings, type LocalOptions } from '../src/local.ts'
 import { RemoteEmbeddings, type RemoteOptions } from '../src/remote.ts'
@@ -323,6 +323,12 @@ describe('RemoteEmbeddings space and configuration', () => {
     expect(spaceKeyOf(provider.space)).toBe('sp:0dca7ce85051bc0412e42a04')
   })
 
+  it('folds a non-empty weight revision into the space identity', () => {
+    const tagged = remoteProvider({ modelRevision: 'v3-weights' })
+    expect(tagged.space.revision).toBe(contentHash('http://127.0.0.1:1/v1/embeddings\u0000v3-weights'))
+    expect(tagged.space.revision).not.toBe(remoteProvider().space.revision)
+  })
+
   it('rejects an invalid width, batch, retry, or timeout limit', () => {
     expect(failure(() => remoteProvider({ dimension: 4 })).message).toContain('embedding dimension must be an integer of at least 8, got 4')
     expect(failure(() => remoteProvider({ dimension: 8.5 })).message).toContain('got 8.5')
@@ -338,6 +344,32 @@ describe('RemoteEmbeddings space and configuration', () => {
     const error = failure(() => remoteProvider({ baseUrl: 'ftp://127.0.0.1:1/v1' }, null))
     expect(error.code).toBe('invalid_input')
     expect(error.message).toContain('embedding endpoint must be HTTP(S), got ftp:')
+  })
+
+  it('rejects a baseUrl that is not an absolute URL', () => {
+    const error = failure(() => remoteProvider({ baseUrl: '127.0.0.1:1/v1' }, null))
+    expect(error.code).toBe('invalid_input')
+    expect(error.message).toContain('embedding baseUrl must be an absolute HTTP(S) URL')
+  })
+
+  it('refuses endpoint credentials that bypass the configured environment variable', () => {
+    const error = failure(() => remoteProvider({ baseUrl: 'http://operator:secret@127.0.0.1:1/v1' }, null))
+    expect(error.code).toBe('invalid_input')
+    expect(error.message).toContain('embedding endpoint credentials must use the configured environment variable')
+  })
+
+  it('refuses a remote provider whose retry backoff bounds are unusable', () => {
+    const bounds: readonly Partial<RemoteOptions>[] = [
+      { retryBackoffMs: -1 },
+      { retryBackoffMs: 25.5 },
+      { retryMaxBackoffMs: -1 },
+      { retryBackoffMs: 500, retryMaxBackoffMs: 250 },
+    ]
+    for (const over of bounds) {
+      const error = failure(() => remoteProvider(over))
+      expect(error.code).toBe('invalid_input')
+      expect(error.message).toContain('retryMaxBackoffMs must be at least retryBackoffMs')
+    }
   })
 
   it('refuses to construct when the named credential is absent or blank', () => {
@@ -477,6 +509,16 @@ describe('RemoteEmbeddings failures', () => {
     expect(error.message).toContain('embedding server unreachable: fetch failed')
   })
 
+  it('reports a rejection that is not an Error by its string form', async () => {
+    // oxlint-disable-next-line typescript/prefer-promise-reject-errors -- exercise a transport rejection with a non-Error reason.
+    const calls = stubFetch(() => Promise.reject('synthetic transport rejection without an Error'))
+    const error = await rejection(() => remoteProvider().embed(['refund ledger']))
+    expect(calls).toHaveLength(1)
+    expect(error.code).toBe('unavailable')
+    expect(error.retryable).toBe(true)
+    expect(error.message).toContain('embedding server unreachable: synthetic transport rejection without an Error')
+  })
+
   it('reports a timeout when an attempt outlives timeoutMs', async () => {
     const calls = stubFetch((_index, init) => new Promise<Response>((_resolve, reject) => {
       const signal = init.signal
@@ -524,6 +566,15 @@ describe('RemoteEmbeddings response validation', () => {
   it('rejects a response with no data entries', async () => {
     expect((await rejectBody('{"data":[]}')).message).toContain('embedding server returned no data')
     expect((await rejectBody('{}')).message).toContain('embedding server returned no data')
+    expect((await rejectBody('null')).message).toContain('embedding server returned no data')
+    expect((await rejectBody('42')).message).toContain('embedding server returned no data')
+  })
+
+  it('rejects a successful response whose body is absent', async () => {
+    stubFetch(() => new Response(null, { status: 200 }))
+    const error = await rejection(() => remoteProvider().embed(['refund ledger']))
+    expect(error.code).toBe('protocol_error')
+    expect(error.message).toContain('embedding server returned no data: invalid JSON')
   })
 
   it('rejects a body that is not JSON', async () => {
@@ -675,5 +726,29 @@ describe('local embedding endpoint and bounded responses', () => {
   it('keeps its timeout active while reading a stalled body after headers arrive', async () => {
     stubFetch(() => new Response(new ReadableStream<Uint8Array>()))
     await expect(remoteProvider({ timeoutMs: 20 }).embed(['synthetic input'])).rejects.toMatchObject({ code: 'timeout' })
+  })
+
+  it('reports the timeout, not a cancel failure, when abandoning a body refuses cleanup', async () => {
+    const refusingCancel = new ReadableStream<Uint8Array>({
+      cancel(): Promise<never> {
+        return Promise.reject(new Error('synthetic body cancel rejection'))
+      },
+    })
+    stubFetch(() => new Response(refusingCancel))
+    const error = await rejection(() => remoteProvider({ timeoutMs: 20 }).embed(['synthetic input']))
+    expect(error.code).toBe('timeout')
+    expect(error.message).toContain('embedding request exceeded 20 ms')
+  })
+
+  it('abandons an errored response body and reports the server as unreachable', async () => {
+    const erroredBody = new ReadableStream<Uint8Array>({
+      start(controller): void {
+        controller.error(new Error('synthetic body failure'))
+      },
+    })
+    stubFetch(() => new Response(erroredBody))
+    const error = await rejection(() => remoteProvider().embed(['synthetic input']))
+    expect(error.code).toBe('unavailable')
+    expect(error.message).toContain('embedding server unreachable: synthetic body failure')
   })
 })

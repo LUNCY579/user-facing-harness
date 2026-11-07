@@ -14,7 +14,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { LAUNCHER_FAILURE_EXIT } from '@deepseek-ai/node-addon-system/landlock-run'
-import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
+import { SANDBOX_UNAVAILABLE, SandboxUnavailableError, SandboxUnsupportedPolicyError } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 import {
   LocalSandboxProvider,
@@ -115,6 +115,22 @@ describe('profile dialects', () => {
     ])
   })
 
+  it('seatbelt refuses a write root that could close the SBPL string literal and inject forms', () => {
+    // SBPL string literals have no escape sequences: a `"` in the root would
+    // close the literal and let the tail become profile forms granting
+    // attacker-chosen write paths. Every metacharacter is refused instead.
+    for (const root of [
+      '/tmp/inj") (allow file-write* (subpath "/tmp',
+      '/tmp/inj\\',
+      '/tmp/a\n(deny network*)',
+    ]) {
+      expect(() => seatbeltProfileArgs({ mode: 'workspace-write', workspaceRoot: root }))
+        .toThrow(SandboxUnsupportedPolicyError)
+    }
+    expect(() => seatbeltProfileArgs({ mode: 'workspace-write', workspaceRoot: '/tmp/ws" x' }))
+      .toThrow(SandboxUnsupportedPolicyError)
+  })
+
   it('read-only ignores extra roots in every backend dialect', () => {
     const policy: SandboxPolicy = { mode: 'read-only', workspaceRoot: '/ws', additionalWritableRoots: ['/extra'] }
     expect(bwrapProfileArgs(policy)).not.toContain('--bind')
@@ -137,6 +153,15 @@ describe('profile dialects', () => {
     expect(seatbeltProfileArgs(WW)).toEqual(['-p', `${SEATBELT_RO_PROFILE} ${allow}`])
   })
 
+  it('bwrap network deny unshares the network namespace beside the file profile', () => {
+    expect(bwrapProfileArgs({ ...RO, network: 'deny' })).toContain('--unshare-net')
+    expect(bwrapProfileArgs(RO)).not.toContain('--unshare-net')
+  })
+
+  it('seatbelt network deny adds the deny network* form after the file forms', () => {
+    expect(seatbeltProfileArgs({ ...RO, network: 'deny' })).toEqual(['-p', `${SEATBELT_RO_PROFILE} (deny network*)`])
+  })
+
   it('seatbelt workspace-write grants every explicit extra root', () => {
     const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-'))
     const extra = realpathSync.native(mkdtempSync(join(tmpdir(), 'dsh-extra-')))
@@ -154,6 +179,32 @@ describe('profile dialects', () => {
     const grant = `(subpath "${realpathSync(tmpdir())}")`
     expect(profile).toContain(grant)
     expect(profile.split(grant)).toHaveLength(2)
+  })
+})
+
+describe('network deny enforcement', () => {
+  it('fails loud under the landlock rung: no network rule means the request must not run unconfined', async () => {
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => false, probeLandlock: () => 'full' })
+    await expect(sandbox.confine(['true'], { ...RO, network: 'deny' }))
+      .rejects.toThrow('cannot enforce a deny network policy')
+  })
+
+  it('fails loud under the windows-acl rung: the restricted token does not block sockets', async () => {
+    const { sandbox } = await setup({}, { platform: 'win32', windowsAclRunnerEntry: absentRunnerEntry() })
+    await expect(sandbox.confine(['true'], { ...RO, network: 'deny' }))
+      .rejects.toThrow('cannot enforce a deny network policy')
+  })
+
+  it('selects the bwrap rung first on linux, so a deny request wraps with --unshare-net', async () => {
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => true, probeLandlock: () => 'full' })
+    const confined = await sandbox.confine(['true'], { ...RO, network: 'deny' })
+    expect(confined.argv).toContain('--unshare-net')
+  })
+
+  it('an operator runnerCommand rides the bwrap profile dialect, deny included', async () => {
+    const { sandbox } = await setup({ runnerCommand: ['/opt/run'], runnerFailureSignatures: ['refused'] })
+    const confined = await sandbox.confine(['true'], { ...RO, network: 'deny' })
+    expect(confined.argv).toContain('--unshare-net')
   })
 })
 
