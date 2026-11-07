@@ -9,14 +9,22 @@
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import { isAbsolute } from 'node:path'
 import { RetrievalError, throwIfAborted } from './errors.ts'
 import { calibrate, mergeCandidates, pack, renderInjection, scaleFor, toCandidates } from './fusion.ts'
+import {
+  EMPTY_FORGET_LEDGER, MEMORY_EXPORT_VERSION, ledgerPathOf, ledgerWithForgotten, readPortabilityJson, writePortabilityJson,
+} from './portability.ts'
+import type { ImportReport, MemoryExport } from './portability.ts'
+import { exportMemories, importMemories } from './portability-ops.ts'
+import type { ExportInput, ImportInput, PortabilityHost } from './portability-ops.ts'
 import { assertValidVector, contentHash, newMemoryId, normalizeVector, spaceKeyOf } from './records.ts'
 import type {
   AcceleratorStats,
   BackendHit,
   Candidate,
   ContextPacket,
+  EmbeddingSpace,
   MemoryRecord,
   ReadFilter,
   RecordKind,
@@ -67,6 +75,12 @@ export interface Config {
   maxRebuildRecords: number
   /** Maximum remembered authorization scopes whose startup recovery has completed. */
   maxRecoveryScopes: number
+  /** Admit export and import of explicit memories; forgetting appends to the ledger only while enabled. */
+  portabilityEnabled: boolean
+  /** Absolute directory holding exports, the forgotten ledger, and import journals. */
+  portabilityDir: string
+  /** Largest export this release reads. */
+  maxPortabilityRecords: number
 }
 
 /** Loader schema for {@link Config}. */
@@ -86,6 +100,9 @@ export const Config: z<Partial<Config>, Config> = z.object({
   rebuildBatchSize: z.natural().min(1).default(64),
   maxRebuildRecords: z.natural().min(1).default(100_000),
   maxRecoveryScopes: z.natural().min(1).default(128),
+  portabilityEnabled: z.boolean().default(false),
+  portabilityDir: z.string().default(''),
+  maxPortabilityRecords: z.natural().min(1).default(10_000),
 })
 
 /** Text plus placement for a new memory. */
@@ -129,6 +146,19 @@ export interface MemoryCounts {
 const SCOPES: readonly RecordScope[] = ['user', 'workspace', 'session', 'agent']
 
 /**
+ * Validate one provider vector and bring it into the space the store accepts.
+ * @param vector - raw provider output.
+ * @param space - the space the store accepts.
+ * @returns a vector of the store's dimension, L2-normalized when the space is.
+ */
+function prepareVector(vector: number[], space: EmbeddingSpace): number[] {
+  assertValidVector(vector, { ...space, normalized: false })
+  const prepared = space.normalized ? normalizeVector(vector) : [...vector]
+  assertValidVector(prepared, space)
+  return prepared
+}
+
+/**
  * Unified retrieval and memory service. Providers must mount `vectorStore` and `embeddings` before
  * this service is used; an accelerator is optional and only ever re-ranks candidates the store
  * already authorized.
@@ -163,6 +193,9 @@ export class RetrievalService extends Service {
     readonly config: Config,
   ) {
     super(ctx, 'retrieval')
+    if (config.portabilityEnabled && !isAbsolute(config.portabilityDir.trim())) {
+      throw new RetrievalError('invalid_input', 'portabilityDir must be an absolute directory when portabilityEnabled is true')
+    }
     ctx.effect(() => () => this.close())
   }
 
@@ -180,6 +213,14 @@ export class RetrievalService extends Service {
   private get embeddings() {
     this.assertEnabled()
     return this.ctx.embeddings
+  }
+
+  /**
+   * @returns the embedding space the authoritative store accepts, falling back to the provider when the
+   *   store has not created a collection yet.
+   */
+  private get currentSpace() {
+    return this.store.space ?? this.embeddings.space
   }
 
   /**
@@ -262,17 +303,25 @@ export class RetrievalService extends Service {
    * @returns a unit-length vector when the space is normalized.
    */
   private async embedOne(text: string, signal?: AbortSignal): Promise<number[]> {
-    const space = this.store.space ?? this.embeddings.space
+    const [vector] = await this.embedMany([text], signal)
+    if (vector === undefined) throw new RetrievalError('invalid_vector', 'the provider returned no vector')
+    return vector
+  }
+
+  /**
+   * Embed a batch of texts in the store's current space.
+   * @param texts - inputs in caller order.
+   * @param signal - cancellation.
+   * @returns one prepared vector per returned input.
+   */
+  private async embedMany(texts: readonly string[], signal?: AbortSignal): Promise<number[][]> {
+    const space = this.currentSpace
     if (spaceKeyOf(space) !== spaceKeyOf(this.embeddings.space)) {
       throw new RetrievalError('space_mismatch', 'embedding provider differs from the stored space; rebuild the index with the configured provider')
     }
     throwIfAborted(signal, 'embedding')
-    const [vector] = await this.embeddings.embed([text], signal)
-    if (vector === undefined) throw new RetrievalError('invalid_vector', 'the provider returned no vector')
-    assertValidVector(vector, { ...space, normalized: false })
-    const prepared = space.normalized ? normalizeVector(vector) : [...vector]
-    assertValidVector(prepared, space)
-    return prepared
+    const vectors = await this.embeddings.embed(texts, signal)
+    return vectors.map(vector => prepareVector(vector, space))
   }
 
   /**
@@ -500,7 +549,7 @@ export class RetrievalService extends Service {
       updatedAt: now,
       expiresAt: ttl > 0 ? now + ttl : null,
       contentHash: contentHash(text),
-      spaceKey: spaceKeyOf(this.store.space ?? this.embeddings.space),
+      spaceKey: spaceKeyOf(this.currentSpace),
     }
     if (!Number.isFinite(ttl) || ttl < 0) throw new RetrievalError('invalid_input', 'memory ttl must be a finite non-negative number')
     const vector = await this.embedOne(text, signal)
@@ -510,7 +559,7 @@ export class RetrievalService extends Service {
       await this.writeComplete([record], new Map([[record.id, vector]]), signal)
       staged = true
       const current = record.pending ? await this.finishSupersession(record, superseded, signal) : record
-      await this.syncAccelerator(current, vector)
+      await this.syncAccelerator(current.id, vector)
       return current
     } catch (error) {
       this.invalidateRecovery()
@@ -561,7 +610,7 @@ export class RetrievalService extends Service {
     if (outcome.written !== 1 || outcome.rejected !== 0 || outcome.spaceConflict !== null) {
       throw new RetrievalError('outcome_pending', `memory ${updated.id} update may have committed; retrieve the current version before retrying`, false, { id: updated.id })
     }
-    await this.syncAccelerator(updated, vector)
+    await this.syncAccelerator(updated.id, vector)
     return updated
   }
 
@@ -591,34 +640,143 @@ export class RetrievalService extends Service {
       }
     }
     if (targets.size === 0) return []
-    const owned: RecordId[] = []
+    const owned: MemoryRecord[] = []
     for (const record of await this.store.fetch([...targets])) {
       if (record.kind !== 'memory') throw new RetrievalError('unauthorized', 'memory forgetting cannot delete indexed source records')
       this.assertOwnership(record, identity, 'write')
-      owned.push(record.id)
+      owned.push(record)
     }
+    if (owned.length === 0) return []
+    const ids = owned.map(record => record.id)
+    // Ledger entries are durable before deletion: an interrupted deletion then leaves a ledger that refuses
+    // a later import, which is the safe direction, instead of a ledger that can miss a forgotten memory.
+    if (this.config.portabilityEnabled) await this.recordForgotten(owned)
     throwIfAborted(signal, 'memory deletion')
     let removed: number
     try {
-      removed = await this.store.remove(owned)
+      removed = await this.store.remove(ids)
     } catch (error) {
-      throw new RetrievalError('outcome_pending', 'memory deletion may have partially completed; retry forgetting the same ids after the store is available', false, { ids: owned, cause: String(error instanceof Error ? error.message : error) })
+      throw new RetrievalError('outcome_pending', 'memory deletion may have partially completed; retry forgetting the same ids after the store is available', false, { ids, cause: String(error instanceof Error ? error.message : error) })
     }
-    if (this.lifetime.signal.aborted) throw new RetrievalError('outcome_pending', 'memory deletion was acknowledged but shutdown prevented verification; retry forgetting the same ids after restart', false, { ids: owned })
+    if (this.lifetime.signal.aborted) throw new RetrievalError('outcome_pending', 'memory deletion was acknowledged but shutdown prevented verification; retry forgetting the same ids after restart', false, { ids })
     const accelerator = this.ctx.get('accelerator')
     if (accelerator?.available === true) {
       try {
-        await accelerator.remove(owned)
+        await accelerator.remove(ids)
       } catch (error) {
         this.markDegraded(`accelerator delete failed: ${String(error instanceof Error ? error.message : error)}`)
       }
     }
-    const survivors = await this.store.fetch(owned)
+    const survivors = await this.store.fetch(ids)
     if (survivors.length > 0) {
-      throw new RetrievalError('outcome_pending', `${survivors.length} memories remain after deletion; retry forgetting the same ids`, false, { ids: owned })
+      throw new RetrievalError('outcome_pending', `${survivors.length} memories remain after deletion; retry forgetting the same ids`, false, { ids })
     }
-    if (removed !== owned.length) throw new RetrievalError('outcome_pending', 'memory deletion counters disagree with verified storage; inspect memory_status before retrying', false, { ids: owned })
-    return owned
+    if (removed !== ids.length) throw new RetrievalError('outcome_pending', 'memory deletion counters disagree with verified storage; inspect memory_status before retrying', false, { ids })
+    return ids
+  }
+
+  /** Append forgotten records to the ledger, refusing to delete while the ledger is unwritable. */
+  private async recordForgotten(records: readonly MemoryRecord[]): Promise<void> {
+    const path = ledgerPathOf(this.config.portabilityDir)
+    const ledger = await readPortabilityJson(path, EMPTY_FORGET_LEDGER)
+    if (ledger.version !== MEMORY_EXPORT_VERSION) {
+      throw new RetrievalError('invalid_input', `forgotten ledger version ${String(ledger.version)} is not supported; this release reads version ${MEMORY_EXPORT_VERSION}`)
+    }
+    try {
+      await writePortabilityJson(path, ledgerWithForgotten(ledger, records))
+    } catch (error) {
+      throw new RetrievalError('backend_error', `the forgotten ledger at ${path} is unwritable; no memory was deleted`, false, { cause: String(error) })
+    }
+  }
+
+  /**
+   * Resolve the configured portability directory, refusing while the subsystem or portability is disabled.
+   * @returns the absolute configured directory.
+   */
+  private assertPortability(): string {
+    this.assertEnabled()
+    if (!this.config.portabilityEnabled) throw new RetrievalError('disabled', 'memory portability is disabled by configuration')
+    return this.config.portabilityDir
+  }
+
+  /**
+   * Export the memories one caller may read in the versioned portability format. Pending supersession is
+   * rolled forward first, so an export never carries a half-written lifecycle.
+   * @param identity - host-resolved caller identity; only records it may read are exported.
+   * @param input - optional file name below `portabilityDir`, and whether to include inactive rows.
+   * @param signal - cancellation before the store read.
+   * @returns the validated envelope, and the file written when `path` was given.
+   */
+  async exportMemories(identity: TrustedIdentity, input: ExportInput = {}, signal?: AbortSignal): Promise<MemoryExport> {
+    const cancellation = this.signalFor(signal)
+    const directory = this.assertPortability()
+    return this.exclusive(async () => {
+      await this.reconcilePending(identity, cancellation)
+      return await exportMemories(this.portabilityHost(), identity, input, directory, cancellation)
+    }, cancellation)
+  }
+
+  /**
+   * Import one export, which is also how a migration into a fresh store after an embedding-space change
+   * runs: mount the target store and provider, then import the same export file. Records are re-embedded
+   * into the target space, staged under a write-ahead journal, verified, and only then published. A failed
+   * batch is removed again, and the source store is never opened for writing.
+   * @param identity - host-resolved caller identity deciding which exported records are admissible.
+   * @param input - export file name below `portabilityDir`, or export text.
+   * @param signal - cancellation before or between steps.
+   * @returns counters, refusals, recovered ids, and the space pair.
+   */
+  async importMemories(identity: TrustedIdentity, input: ImportInput, signal?: AbortSignal): Promise<ImportReport> {
+    const cancellation = this.signalFor(signal)
+    const directory = this.assertPortability()
+    return this.exclusive(async () => {
+      await this.reconcilePending(identity, cancellation)
+      return await importMemories(this.portabilityHost(), identity, input, directory, cancellation)
+    }, cancellation)
+  }
+
+  /**
+   * Bind the portability protocol to this engine's store, provider, limits, and authorization rules. Built
+   * per run so a configuration change on the next activation cannot be observed through a stale host.
+   * @returns the host the protocol runs against.
+   */
+  private portabilityHost(): PortabilityHost {
+    return {
+      config: this.config,
+      store: this.store,
+      targetSpace: spaceKeyOf(this.currentSpace),
+      embed: async (records, signal) => await this.embedPortability(records, signal),
+      authorized: async identity => await this.listMemoryRecords(identity, { includeExpired: true, includeSuperseded: true }),
+      stored: async ids => await this.store.fetch(ids),
+      duplicate: async (record, identity) => await this.findDuplicate(record.text, identity, record.scope),
+      probeFilter: (identity, onlyIds) => this.buildFilter(identity, this.authorizeScopes(SCOPES, identity), [], onlyIds, ['memory'], Date.now()),
+      assertWritable: (record, identity) => {
+        this.assertOwnership(record, identity, 'write')
+      },
+      mirror: async (vectors) => {
+        for (const [id, vector] of vectors) await this.syncAccelerator(id, vector)
+      },
+      invalidateRecovery: () => {
+        this.invalidateRecovery()
+      },
+    }
+  }
+
+  /**
+   * Embed the accepted records in the target space, keyed by record id for the store write.
+   * @param records - records to embed, in export order.
+   * @param signal - cancellation.
+   * @returns one vector per record.
+   */
+  private async embedPortability(records: readonly MemoryRecord[], signal?: AbortSignal): Promise<Map<RecordId, readonly number[]>> {
+    const vectors = await this.embedMany(records.map(record => record.text), signal)
+    const prepared = new Map<RecordId, readonly number[]>()
+    records.forEach((record, index) => {
+      const vector = vectors[index]
+      if (vector === undefined) throw new RetrievalError('invalid_vector', `the provider returned no vector for memory ${record.id}`)
+      prepared.set(record.id, vector)
+    })
+    return prepared
   }
 
   /**
@@ -691,15 +849,15 @@ export class RetrievalService extends Service {
 
   /**
    * Mirror a written memory into the accelerator, ignoring failures so the authoritative write stands.
-   * @param record - the stored record.
+   * @param id - the stored record's id.
    * @param vector - its dense vector.
    * @returns nothing.
    */
-  private async syncAccelerator(record: MemoryRecord, vector: readonly number[]): Promise<void> {
+  private async syncAccelerator(id: RecordId, vector: readonly number[]): Promise<void> {
     const accelerator = this.accelerator
     if (accelerator === undefined || !accelerator.available) return
     try {
-      await accelerator.add([record.id], [vector])
+      await accelerator.add([id], [vector])
     } catch (error) {
       this.markDegraded(`accelerator add failed: ${String(error instanceof Error ? error.message : error)}`)
     }
@@ -741,12 +899,7 @@ export class RetrievalService extends Service {
           for (const record of records) this.assertOwnership(record, identity, 'read')
           const vectors = await this.embeddings.embed(records.map(record => record.text), cancellation)
           if (vectors.length !== records.length) throw new RetrievalError('invalid_vector', 'embedding provider returned the wrong rebuild batch length')
-          const prepared = vectors.map((vector) => {
-            assertValidVector(vector, { ...space, normalized: false })
-            const result = space.normalized ? normalizeVector(vector) : [...vector]
-            assertValidVector(result, space)
-            return result
-          })
+          const prepared = vectors.map(vector => prepareVector(vector, space))
           const recordIds = records.map(record => record.id)
           const count = start === 0
             ? await this.acceleratorOperation(() => accelerator.rebuild(recordIds, prepared, cancellation))

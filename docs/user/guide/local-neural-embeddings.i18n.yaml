@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for local-neural-embeddings.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/user/guide/local-neural-embeddings.md
+/local-neural-embeddings:
+  en: bd6bcf763e88aaf4
+  zh: fca84ba430b8e2b4
+/local-neural-embeddings/summary:
+  en: 82f340e7060aff5d
+  zh: 2c336d8a689fdbe4
+/local-neural-embeddings/table-of-contents:
+  en: 8aa60e91e0d57a37
+  zh: b4cad948875a25bc
+/local-neural-embeddings/prerequisites:
+  en: 15a07a6d3e223296
+  zh: 99bdf389a5db8779
+/local-neural-embeddings/install-and-serve-the-pinned-model:
+  en: e2c9f95cb15af8c7
+  zh: 843a8df620423227
+/local-neural-embeddings/point-retrieval-at-the-endpoint:
+  en: 5471d71a9d9e5d21
+  zh: 211360bd7bab9c08
+/local-neural-embeddings/verify-the-space:
+  en: c41c55acb04c29d8
+  zh: 9bb93dcdb9222f7e
+/local-neural-embeddings/measure-relevance:
+  en: 570a476b4fba4b29
+  zh: 6db280f47e26adce
+/local-neural-embeddings/limits:
+  en: 24d13c25eb5d3dfe
+  zh: 3e09857f4e980df2

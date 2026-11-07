@@ -38,7 +38,7 @@ const MANIFEST_VERSION = 3
  * Configure the upstream SDK when this provider activates. Its thread and log settings apply to
  * the hosting process; one application mounts a single authoritative Zvec provider.
  * @param options - deployment-wide thread and logging choices.
- * @param native - SDK loaded by the plugin with optional-dependency error handling.
+ * @param native - the SDK's initialization surface, loaded by the plugin with optional-dependency error handling.
  * @returns when the SDK is configured.
  */
 export function ensureInitialized(options: {
@@ -46,7 +46,7 @@ export function ensureInitialized(options: {
   optimizeThreads: number
   logDir: string
   logLevel: number
-}, native: typeof import('@zvec/zvec')): void {
+}, native: Pick<typeof import('@zvec/zvec'), 'ZVecInitialize' | 'ZVecLogLevel' | 'ZVecLogType'>): void {
   const logDir = options.logDir
   const logToFile = logDir.length > 0
   if (logToFile) mkdirSync(options.logDir, { recursive: true, mode: 0o700 })
@@ -155,8 +155,10 @@ export function resolvePrefixes(prefixes: readonly string[]): string[] {
 
 /**
  * Open, or when absent create, the collection under `indexDir`. Existence of the collection
- * directory, not of the manifest, decides which path runs, so a process that died between the two
- * writes reconverges on the next open instead of wedging the index.
+ * directory, not of the manifest, decides which path runs, so a process that died before the create
+ * leaves no directory and the next open creates one. A create interrupted after the directory
+ * appeared leaves a directory Zvec cannot open: every later open reports `init_failed`, nothing is
+ * deleted, and recovery means restoring a backup or removing the index directory and reindexing.
  * @param indexDir - the index root that already holds a manifest.
  * @param space - the embedding space the collection must serve.
  * @param layout - column declarations to create the collection from.

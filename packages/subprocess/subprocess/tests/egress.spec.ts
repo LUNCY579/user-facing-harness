@@ -62,6 +62,23 @@ function childFetch(target: string, env: Record<string, string>): Promise<string
 }
 
 describe('child process egress', () => {
+  it('the ambient scrub drops credential names the KEY/SECRET/TOKEN heuristic misses', () => {
+    process.env.DB_PASS = 'ambient-secret'
+    process.env.MYSQL_PASSWD = 'ambient-secret'
+    process.env.SSL_BYPASS = 'keep-me'
+    try {
+      const child = scrubbedParentEnv()
+      expect(child.DB_PASS).toBeUndefined()
+      expect(child.MYSQL_PASSWD).toBeUndefined()
+      // End-anchored: common non-credential names survive.
+      expect(child.SSL_BYPASS).toBe('keep-me')
+    } finally {
+      delete process.env.DB_PASS
+      delete process.env.MYSQL_PASSWD
+      delete process.env.SSL_BYPASS
+    }
+  })
+
   it('a child Node honors the proxy the user exported', async () => {
     // The user's own export is what a child inherits, so the scenario starts from one.
     process.env.HTTP_PROXY = proxyUrl

@@ -74,7 +74,7 @@ kind: "package-reference"
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 本地仅验证 macOS arm64；其他平台的可用性取决于上游 wheel 和 Node 绑定。
+- `pnpm run check:native-retrieval` 会在运行它的主机上验证真实绑定与已发布入口；[平台支持矩阵](../../../docs/user/guide/local-retrieval.zh.md#platform-support) 列出了哪些平台与架构组合由必需通道覆盖，哪些仍未测试。
 - turbovec 是临时压缩重排器，不是独立持久记忆数据库，其副本不会减少主 Zvec 存储。
 - 遗忘会删除可检索记录，但不会删除历史会话工具消息、备份或可恢复的文件系统块。
 

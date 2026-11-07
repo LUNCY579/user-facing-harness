@@ -8,8 +8,9 @@
  */
 
 import { globSync, readFileSync } from 'node:fs'
-import { dirname, join, resolve, sep } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import ts from 'typescript'
+import { corpusListing, readCorpus } from './scratch-sources.ts'
 
 /** The module whose `SlotMap` / standard-kit interfaces every slot owner merges into. */
 const SLOTS_MODULE = '@deepseek-ai/dsh-client-ui-slots'
@@ -95,11 +96,11 @@ export interface ScannedFile {
 export function scanSlotFiles(scanRoot: string, patterns: readonly string[]): ScannedFile[] {
   const out: ScannedFile[] = []
   const names = new Map<string, string>()
-  const rels = [...new Set(globSync(patterns as string[], { cwd: scanRoot })
-    .map(path => path.split(sep).join('/')))].sort()
+  const rels = corpusListing(globSync(patterns, { cwd: scanRoot }))
   for (const rel of rels) {
     const abs = resolve(scanRoot, rel)
-    const text = readFileSync(abs, 'utf8')
+    const text = readCorpus(abs)
+    if (text === undefined) continue
     if (!MERGE_HEAD.test(text) && !REGISTER_HEAD.test(text)) continue
     out.push({
       rel,
@@ -122,11 +123,12 @@ export function scanSlotFiles(scanRoot: string, patterns: readonly string[]): Sc
 export function indexExportedTypes(scanRoot: string, patterns: readonly string[]): Map<string, TypeDeclaration> {
   const index = new Map<string, TypeDeclaration>()
   const ambiguous = new Set<string>()
-  const rels = [...new Set(globSync(patterns as string[], { cwd: scanRoot })
-    .map(path => path.split(sep).join('/')))].sort()
+  const rels = corpusListing(globSync(patterns, { cwd: scanRoot }))
   for (const rel of rels) {
     const abs = resolve(scanRoot, rel)
-    const sf = ts.createSourceFile(abs, readFileSync(abs, 'utf8'), ts.ScriptTarget.Latest, true, scriptKindOf(rel))
+    const text = readCorpus(abs)
+    if (text === undefined) continue
+    const sf = ts.createSourceFile(abs, text, ts.ScriptTarget.Latest, true, scriptKindOf(rel))
     for (const statement of sf.statements) {
       if (!ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement)) continue
       if (!statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) continue

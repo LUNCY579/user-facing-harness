@@ -13,6 +13,7 @@ description: "使用合成数据复现本地检索延迟、召回率、进程内
 ## 目录
 
 - [运行对比](#run-the-comparison)
+- [测量神经相关性](#measure-neural-relevance)
 - [测量终点](#measurement-endpoints)
 - [复现打包对照](#reproduce-the-packing-control)
 - [限制](#limits)
@@ -33,6 +34,18 @@ pnpm run bench:retrieval --sizes=1000,10000,100000 --queries=64 --python="$PWD/.
 全部文本由经过审查的常量和种子 421337 生成，不读取工作区、会话、凭证或外部模型。监督进程和工作进程拥有并清理临时语料和索引目录。默认输出为忽略的 `.testingplatform/retrieval-benchmark/results.json`；`--output=...` 可选择其他私有结果文件。缺失 turbovec 会明确记录为跳过。
 
 可用 `--modes=ann-sweep --sizes=100000` 运行匹配调优诊断，或用 `--modes=zvec,combined`、`--runs=3`、`--queries=100` 或 `--dimension=256` 缩小或重复对比。压缩要求维度可被八整除。运行器最多允许一百万个向量，但受原生枚举限制和可用内存约束；本地验证不包含该规模。
+
+<a id="measure-neural-relevance"></a>
+## 测量神经相关性
+
+`bench:retrieval:neural` 在 35 条合成片段和 45 个查询上为关键词、特征哈希稠密、神经稠密和混合路径打分，查询分为改写、困难负例、标识符、多语言和缺失证据五类。所有质量目标在测量前声明于 [neural/cases.ts](neural/cases.ts)，未达到目标的路径记录为失败目标，而不是放宽目标。
+
+```sh
+pnpm exec tsdown --config-loader native --config benchmarks/tsdown.config.ts
+pnpm run bench:retrieval:neural --baseUrl=http://127.0.0.1:11434/v1
+```
+
+监督进程在建立索引前探测 `GET <baseUrl>/models`，且从不发送凭据。端点不可达时，稠密和混合路径连同探测错误保留在 `pending` 中，本次运行报告 `partial-pending-live-neural-endpoint`；只有词项路径报告为已测量。`--selftest=true` 使用基于 token 摘要的替代服务，使稠密和混合代码路径在没有模型的情况下实际执行，并把该证据标记为 `harness-plumbing`，绝不标记为 `neural-model`。固定模型配方见[神经嵌入指南](../../docs/user/guide/local-neural-embeddings.zh.md)。默认输出为忽略的 `.testingplatform/retrieval-benchmark/neural.json`。
 
 <a id="measurement-endpoints"></a>
 ## 测量终点
@@ -71,7 +84,7 @@ pnpm run bench:retrieval --sizes=40,100 --modes=packing --runs=3 --queries=100 -
 <a id="limits"></a>
 ## 限制
 
-这些夹具测量特征哈希排序、存储和 IPC 开销，而非语言理解或真实模型任务准确率。token 数是估算值。根据用户选择，真实模型验证保持待完成状态。这些结果不能证明多用户生产就绪、跨平台矩阵、等召回提速、稳定总体 p99 或物理安全擦除。
+这些夹具测量特征哈希排序、存储和 IPC 开销，而非语言理解或真实模型任务准确率。token 数是估算值。在本地嵌入端点和模型密钥可用之前，神经相关性验证和真实模型验证保持待完成状态；框架把它们记录为待完成，而不是通过。这些结果不能证明多用户生产就绪、跨平台矩阵、等召回提速、稳定总体 p99 或物理安全擦除。
 
 <a id="dev-note"></a>
 ## 开发备注

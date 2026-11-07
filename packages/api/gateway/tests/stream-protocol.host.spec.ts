@@ -1,3 +1,4 @@
+import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import {
   parseRemoteStreamClientMessage,
@@ -83,5 +84,42 @@ describe('Remote stream wire protocol', () => {
 
   it.each(['not json', 'null', '[]', '1'])('rejects a non-message payload: %s', (text) => {
     expect(() => parseRemoteStreamServerMessage(text)).toThrow('api gateway: Remote stream message')
+  })
+
+  it('property: arbitrary wire text either parses to a valid message or throws an Error — never garbage (hostile-input boundary)', () => {
+    const textArb = fc.string({ unit: 'binary', maxLength: 256 })
+    const property = fc.property(textArb, (text) => {
+      let outcome: 'parsed' | 'threw'
+      let parsed: unknown
+      try {
+        parsed = parseRemoteStreamClientMessage(text)
+        outcome = 'parsed'
+      } catch (error: unknown) {
+        outcome = 'threw'
+        expect(error).toBeInstanceOf(Error)
+      }
+      if (outcome === 'parsed') {
+        // Every parse outcome is one of the wire message variants with a
+        // non-empty streamId where the variant requires one; anything else
+        // is the parser handing hostile input to the gateway.
+        expect(['open', 'item', 'end', 'cancel']).toContain((parsed as { type?: unknown }).type)
+        expect(typeof (parsed as { streamId?: unknown }).streamId).toBe('string')
+      }
+    })
+    fc.assert(property, { numRuns: 500 })
+  })
+
+  it('property: the server parser holds the same total contract on hostile text', () => {
+    const property = fc.property(fc.string({ unit: 'binary', maxLength: 256 }), (text) => {
+      try {
+        const parsed = parseRemoteStreamServerMessage(text)
+        expect(['item', 'end', 'error']).toContain(parsed.type)
+        expect(typeof parsed.streamId).toBe('string')
+        expect(parsed.streamId.length).toBeGreaterThan(0)
+      } catch (error: unknown) {
+        expect(error).toBeInstanceOf(Error)
+      }
+    })
+    fc.assert(property, { numRuns: 500 })
   })
 })

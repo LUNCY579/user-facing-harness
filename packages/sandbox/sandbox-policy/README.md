@@ -153,7 +153,7 @@ The stable system prompt remains byte-identical across mode changes. A changed f
 These limits define the policy surface this package provides. They are current package constraints, not a general sandbox comparison or a task backlog.
 
 - **Deployment-scoped extra grants** — additional directories come from configuration; they are not per-session permission settings. Backend support is defined by [sandbox-local](../sandbox-local/README.md).
-- **File-effect modes only** — `SandboxMode` governs file effects; network and process policy are outside its vocabulary, so no knob here restricts them.
+- **File-effect modes plus one network knob** — `SandboxMode` governs file effects; `network` (`allow` by default, `deny` supported where the backend can enforce it) is the only other axis. Process, syscall, device, and credential policy are outside this vocabulary.
 - **Temporary areas are deliberately summarized** — enforcing backends grant different platform temporary areas, which are selected after policy resolution and therefore cannot be enumerated truthfully in the current context.
 
 Policy-context replacements must be counter-tested on denied-then-escalatable tasks to verify that the model still attempts the initial tool call. The [historical five-of-twelve zero-tool-call measurement](../../../.agents/notes/archived/feature/2026-07-06-sandbox.md) records the failure this check prevents.

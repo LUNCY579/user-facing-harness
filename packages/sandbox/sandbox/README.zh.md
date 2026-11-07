@@ -163,7 +163,8 @@ sandbox mode "<mode>" is requested but no sandbox backend is usable on this host
 
 这些限制说明该 seam 何时不合适，或何时需要特别运维。它们是当前包约束，不是通用沙箱对比或任务积压。
 
-- **文件操作是完整的策略词汇**——该 seam 不表达网络、进程、系统调用、设备或凭据限制。
+- **可表达的才限制网络**——策略词汇是文件操作外加一个网络轴。`network: 'deny'` 在后端能力范围内阻止套接字创建（bwrap 取消共享网络命名空间；Seatbelt 拒绝 `network*`），在后端无法表达时（Landlock、windows-acl）以 `SandboxUnsupportedPolicyError` 响亮失败；默认为 `allow`（不加网络规则）。进程、系统调用、设备与凭据限制仍在该 seam 之外。
+- **Seatbelt 无法表达每个路径**——SBPL 字符串字面量没有转义序列，因此包含引号、反斜杠或控制字符的写根会以 `SandboxUnsupportedPolicyError` 被拒绝，而不是以被改变的配置文件语义被授予。
 - **只支持与宿主共享文件系统和内核的限制**——容器、microVM 与远程执行需要替换能力实现，而不是在此添加提供方。
 - **拒绝报告是一种 stderr 方言**——该 seam 返回后端签名，而非类型化运行时拒绝通道，需要分类的消费方必须从子进程输出推断。
 - **Runner 诊断使用带内通道**——退出状态与 stderr 证据无法证明匹配行由哪个进程写入，因此故意模仿 runner 的受限子进程可能造成错误的可用性或诊断归因；这无法绕过隔离，带外 runner 状态通道暂缓实现。

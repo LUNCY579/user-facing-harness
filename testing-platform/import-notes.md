@@ -18,7 +18,7 @@ Move every workflow that the merge adds under `.github/workflows` into [upstream
 
 The 32 upstream harness workflows, as of the most recent synchronization, are preserved byte for byte in [upstream-workflows](upstream-workflows). They require upstream enterprise runners, release credentials, publishing settings, or repository policies, so they are kept as reference files. Upstream documentation references to `.github/workflows` refer to the corresponding files in this archive.
 
-The active [TestingPlatform checks](../.github/workflows/testing-platform-ci.yml) workflow runs on manual request and uses a standard Ubuntu runner. It installs the pinned dependency graph, builds the harness, checks plugin types, runs offline plugin regressions, and checks the combined application. It does not call model providers. The [source import](../.github/workflows/import-sources.yml) workflow performs the initial import only. Once `source-import.json` exists with `completed: true`, rerunning the importer makes no changes.
+The active [TestingPlatform checks](../.github/workflows/testing-platform-ci.yml) workflow runs on manual request and uses a standard Ubuntu runner. It installs the pinned dependency graph, builds the harness, checks plugin types, runs offline plugin regressions, checks the combined application, and runs the native retrieval lanes on Linux x64 and Linux arm64, including a lane that provisions the pinned turbovec worker. It does not call model providers. The [source import](../.github/workflows/import-sources.yml) workflow performs the initial import only. Once `source-import.json` exists with `completed: true`, rerunning the importer makes no changes.
 
 ## Import verification
 

@@ -166,8 +166,10 @@ export class ZvecStore extends VectorStore {
   /**
    * @inheritdoc
    *
-   * A record whose vector belongs to another embedding space is refused before anything is written,
-   * and a batch that fails as a whole counts as rejected rather than disappearing from the tally.
+   * A record whose vector belongs to another embedding space is refused before anything is written and
+   * counted in the rejection tally, so compatible records in the same call still commit. A batch the
+   * backend itself refuses is reported with its operation and cause instead of a count, and records a
+   * previous batch committed stay readable.
    */
   override async write(
     records: readonly StoredRecord[],
@@ -243,8 +245,7 @@ export class ZvecStore extends VectorStore {
         written += accepted
         failed += batch.length - accepted
       } catch (error) {
-        this.translate(error, 'record upsert')
-        failed += batch.length
+        throw this.translate(error, 'record upsert')
       }
     }
     return { written, failed }
@@ -273,8 +274,7 @@ export class ZvecStore extends VectorStore {
         written += accepted
         failed += batch.length - accepted
       } catch (error) {
-        this.translate(error, 'record update')
-        failed += batch.length
+        throw this.translate(error, 'record update')
       }
     }
     return { written, failed }

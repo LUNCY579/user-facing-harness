@@ -184,6 +184,15 @@ describe('spaceKeyOf', () => {
     expect(spaceKeyOf({ ...LOCAL_SPACE, dimension: 128 })).not.toBe(spaceKeyOf(LOCAL_SPACE))
     expect(spaceKeyOf({ ...LOCAL_SPACE, normalized: false })).not.toBe(spaceKeyOf(LOCAL_SPACE))
   })
+
+  it('separates two weight generations of one model id', () => {
+    // `@deepseek-ai/dsh-retrieval-embed` fills this field from its endpoint and the operator's
+    // `modelRevision`, so a server that swaps weights under the same model id yields a different key,
+    // and a portability import into that key re-embeds instead of reusing vectors the old weights made.
+    expect(spaceKeyOf({ ...LOCAL_SPACE, revision: 'rev-2' })).not.toBe(spaceKeyOf(LOCAL_SPACE))
+    expect(spaceKeyOf({ ...LOCAL_SPACE, revision: 'rev-2' })).toBe(spaceKeyOf({ ...LOCAL_SPACE, revision: 'rev-2' }))
+    expect(spaceKeyOf({ ...LOCAL_SPACE, revision: 'rev-2' })).not.toBe(spaceKeyOf({ ...LOCAL_SPACE, revision: 'rev-3' }))
+  })
 })
 
 describe('tokenize', () => {

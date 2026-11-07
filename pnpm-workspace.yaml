@@ -20,6 +20,31 @@ overrides:
   'extract-zip>yauzl': '3.4.0'
   '@deepseek-ai/cosmokit': 'link:vendor/cosmokit'
   '@deepseek-ai/schemastery': 'link:vendor/schemastery'
+  # Security overrides: force patched versions over the vulnerable ranges pnpm
+  # audit reported, each bounded to its own major so a security pin never
+  # becomes a surprise upgrade (vite 8.3 changed plugin types and broke the
+  # Web build). extract-zip has no patched upstream release yet.
+  dompurify: '>=3.4.17 <4'
+  node-forge: '>=1.4.1 <2'
+  # undici advisories split by major and by consumer: only the flagged paths
+  # are pinned (8.x needs >=8.12.2); the 7.x web packages were never on a
+  # flagged path, and the blanket pin changed their proxy wire behavior. The
+  # 8.x runtime consumers must share one undici copy: a dispatcher type from
+  # 8.11.2 flowing into 8.12.4 code fails exactOptionalPropertyTypes.
+  '@yao-pkg/pkg-fetch>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-experimental-liveshare>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-http-proxy>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-web-fetch-http>undici': '>=8.12.2 <9'
+  'dsh-our-free-model>undici': '>=8.12.2 <9'
+  vite: '>=8.2.4 <8.3'
+  zod: '>=4.6.6 <5'
+  electron: '>=44.9.1 <45'
+  '@modelcontextprotocol/sdk': '>=1.32.0 <2'
+  '@modelcontextprotocol/server': '>=2.3.0 <3'
+  '@modelcontextprotocol/node': '>=2.1.0 <3'
+  follow-redirects: '>=1.16.1 <2'
+  body-parser: '>=2.4.0 <3'
+  happy-dom: '>=21.0.4 <22'
 
 peerDependencyRules:
   allowedVersions:

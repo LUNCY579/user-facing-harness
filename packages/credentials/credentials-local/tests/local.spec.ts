@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
@@ -189,6 +189,19 @@ describe('layer ladder', () => {
     // world-readable file would make the 0600 the provider writes meaningless.
     await expect(ctx.plugin(LocalCredentialProvider, { path, watch: false }))
       .rejects.toThrow(/readable beyond its owner \(mode 644\)/)
+  })
+
+  it('refuses a document path that is a symlink instead of validating its target', async () => {
+    const dir = await tempDir()
+    const path = join(dir, '.credentials.yaml')
+    await writeFile(path, 'version: 1\nrefs:\n  DSH_CRED_TEST: elsewhere\n', { mode: 0o600 })
+    const link = join(dir, 'link')
+    await symlink(path, link)
+    const ctx = new Context()
+    // The mode promise binds to the file the provider writes; a planted
+    // symlink is rejected outright rather than validated by its target.
+    await expect(ctx.plugin(LocalCredentialProvider, { path: link, watch: false }))
+      .rejects.toThrow(/is a symlink; remove it and store the document directly/)
   })
 
   it('propagates a permission check that fails for a reason other than absence', async () => {

@@ -54,6 +54,21 @@ export function convertTranscript(events: readonly SessionEvent[], sourcePath?: 
 }
 ```
 
+### Trajectory export
+
+`GET /api/session.trajectory?sessionId=<id>` returns the complete Session as one structured, machine-readable trajectory: `dsh.session-trajectory` version 1, with turns and steps, per-entry timestamps, user entries, assistant entries with their tool-call specifications, paired tool results carrying structured failure identities, settled-but-uncommitted model attempts, and per-step token usage. Every text surface — user text, assistant text, tool arguments, result text, and failure reasons — passes the session-telemetry seam's baseline secret-shape redaction before export, so a trajectory is safe to hand to training or evaluation pipelines. System and developer prompt renderings, request headers, and runtime records are excluded: a trajectory describes the conversation's behavior, not the harness's instruction text.
+
+The package entry also exports `formatSessionTrajectory(events, meta?)`: the same pure fold for callers that already hold a complete committed logical event snapshot in seq order. The optional `meta` carries the backend-resolved session `id`, `createdAt`, and `cwd`; the title comes from the latest `session/title` event.
+
+```ts
+import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { formatSessionTrajectory } from '@deepseek-ai/dsh-session-log-export'
+
+export function toTrajectory(events: readonly SessionEvent[], id: string): string {
+  return JSON.stringify(formatSessionTrajectory(events, { id }))
+}
+```
+
 ### Composition
 
 ```yaml

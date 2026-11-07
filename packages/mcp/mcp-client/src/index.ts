@@ -18,6 +18,7 @@ import z from '@deepseek-ai/schemastery'
 import { scopeOf } from '@deepseek-ai/dsh-scope'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { DEFAULT_MAX_INSTRUCTION_BYTES, RECONNECT_DEFAULTS, resolveReconnectPolicy, startConnection } from './connection.ts'
+import { parseTransportUrl } from './transport.ts'
 
 export { resolveReconnectPolicy } from './connection.ts'
 import type { ReconnectConfig } from './connection.ts'
@@ -222,6 +223,10 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
       )
     }
     names.add(config.serverName)
+    // Fail loud at load: a plaintext remote endpoint would carry the configured
+    // headers and every tool payload unencrypted, independent of whether the
+    // connection itself is allowed to fail startup.
+    if (config.transport === 'streamable-http') parseTransportUrl(config.url)
     status = registerStatusCell(ctx.fiber, (message, error) => {
       ctx.logger.warn(`mcp-client(${config.serverName}): ${message}`)
       if (!config.expandTemplates) ctx.logger.warn(error)

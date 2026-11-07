@@ -6,7 +6,7 @@
 
 import { mkdtemp, mkdir, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { realpathSync } from 'node:fs'
+import { existsSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 import { OwnerKey, SessionKey, WorkspaceKey, IndexingService, RetrievalError, RetrievalService, type RetrievalQuery, type TrustedIdentity } from '@deepseek-ai/dsh-retrieval'
 import * as embedPlugin from '@deepseek-ai/dsh-retrieval-embed'
@@ -109,6 +109,25 @@ describe('zvec store lifecycle', { timeout: 30000 }, () => {
     expect(stats.backend).toBe('zvec')
     expect(stats.documents).toBe(report.chunksWritten)
     expect(stats.space).toMatch(/^sp:[0-9a-f]{24}$/)
+  })
+
+  it('refuses a collection directory left by an interrupted create, and keeps it on disk', async () => {
+    const prefix = await mkdtemp(join(tmpdir(), 'dsh-retrieval-'))
+    roots.push(prefix)
+    const indexDir = join(prefix, 'index')
+    const collectionDir = join(indexDir, 'collection')
+    await mkdir(collectionDir, { recursive: true })
+    const ctx = new Context()
+    contexts.push(ctx)
+    await ctx.plugin(embedPlugin, embedPlugin.Config({ dimension: 128 }))
+    await ctx.plugin(zvecPlugin, zvecPlugin.Config({ indexDir, collectionName: 'retrieval-test' }))
+    await expect(() => ctx.vectorStore.stats()).rejects.toMatchObject({ code: 'init_failed' })
+    const reopened = new Context()
+    contexts.push(reopened)
+    await reopened.plugin(embedPlugin, embedPlugin.Config({ dimension: 128 }))
+    await reopened.plugin(zvecPlugin, zvecPlugin.Config({ indexDir, collectionName: 'retrieval-test' }))
+    await expect(() => reopened.vectorStore.stats()).rejects.toMatchObject({ code: 'init_failed' })
+    expect(existsSync(collectionDir)).toBe(true)
   })
 
   it('answers semantic, keyword, and hybrid queries with evidence references', async () => {

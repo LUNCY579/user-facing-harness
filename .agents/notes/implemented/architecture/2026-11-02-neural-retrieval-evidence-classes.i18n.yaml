@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-02-neural-retrieval-evidence-classes.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-02-neural-retrieval-evidence-classes.md
+/agent-note-neural-retrieval-evidence-classes:
+  en: 31eae8faa196bf17
+  zh: d4dbe121383ac091
+/agent-note-neural-retrieval-evidence-classes/problem:
+  en: 58a49a52e95ca5cd
+  zh: f195c17f02488628
+/agent-note-neural-retrieval-evidence-classes/decision:
+  en: c01cf56953d13363
+  zh: 64f307cda5c80280
+/agent-note-neural-retrieval-evidence-classes/alternatives-considered:
+  en: 858665a1a4208016
+  zh: bfa66faef4fd84b3
+/agent-note-neural-retrieval-evidence-classes/consequences:
+  en: 2f24d0ed0f322f63
+  zh: 06395809de200e2d

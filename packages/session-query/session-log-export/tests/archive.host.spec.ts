@@ -29,6 +29,8 @@ declare module '@deepseek-ai/dsh-llm' {
 const sid = (id: string): SessionId => id as SessionId
 const exportLogName = SessionLogExport.SESSION_LOG_FILENAME
 const subagentLogName = (id: string): string => `subagents/${id}/${exportLogName}`
+const trajectoryName = SessionLogExport.TRAJECTORY_FILENAME
+const subagentTrajectoryName = (id: string): string => `subagents/${id}/${trajectoryName}`
 const generationLogName = (version: number): string => version === 0
   ? 'session.jsonl'
   : `session.v${version}.jsonl`
@@ -131,6 +133,16 @@ async function buildApi(
   const persistence = services.persistence ?? true
   if (query) {
     ctx.provide('sessionQuery', {
+      readSession: async (id: SessionId) => {
+        const key = Object.keys(logs).find(candidate => sid(candidate) === id)
+        // Unknown ids get a minimal synthetic snapshot: these fixtures exercise
+        // log-read failures downstream, which fire before the trajectory fold.
+        return {
+          session: header(key ?? String(id)),
+          inheritedEventCount: 0,
+          events: key === undefined ? [turnStart] : logs[key]!.events,
+        }
+      },
       traceSession: services.traceSession ?? (async () => ({
         target: { header: header('session-root'), live: false, persisted: true },
         ancestors: [],
@@ -206,7 +218,14 @@ async function responseBytes(response: Response): Promise<Uint8Array> {
 /** Minimal ready services for the direct streamSessionLogZip chunking tests. */
 function directReady(): SessionLogExport.SessionLogExportReady {
   return {
-    sessionQuery: { traceSession: async () => { throw new Error('unused') } } as never,
+    sessionQuery: {
+      readSession: async () => ({
+        session: header('session-root'),
+        inheritedEventCount: 0,
+        events: [{ type: 'turn/start', seq: SessionSeq(0), time: 1, data: { turn: 1 } }],
+      }),
+      traceSession: async () => { throw new Error('unused') },
+    } as never,
     sessionPersistence: { open: async () => { throw new Error('unused') } } as never,
     attachments: { readImage: async () => { throw new Error('no media') } } as never,
     sessions: undefined,
@@ -315,7 +334,7 @@ describe('session.export download endpoint', () => {
     expect(response.headers.get('content-type')).toBe('application/zip')
     expect(response.headers.get('content-disposition')).toContain('dsh-session-session-root.zip')
     const files = unzipSync(await responseBytes(response))
-    expect(Object.keys(files)).toEqual([exportLogName])
+    expect(Object.keys(files)).toEqual([exportLogName, trajectoryName])
     expect(strFromU8(files[exportLogName] as Uint8Array)).toBe(logText(stored))
   })
 
@@ -381,9 +400,12 @@ describe('session.export download endpoint', () => {
     const files = unzipSync(await responseBytes(response))
     expect(Object.keys(files).sort()).toEqual([
       exportLogName,
+      trajectoryName,
       subagentLogName('child-a'),
+      subagentTrajectoryName('child-a'),
       subagentLogName('grandchild-a'),
-    ])
+      subagentTrajectoryName('grandchild-a'),
+    ].sort())
     expect(strFromU8(files[subagentLogName('child-a')] as Uint8Array))
       .toBe(logText(child))
   })
@@ -505,7 +527,7 @@ describe('session.export download endpoint', () => {
 
   it('streams an empty root text as an empty zip entry', async () => {
     const files = await directZipFiles('')
-    expect(Object.keys(files)).toEqual([exportLogName])
+    expect(Object.keys(files)).toEqual([exportLogName, trajectoryName])
     expect(strFromU8(files[exportLogName] as Uint8Array)).toBe('')
   })
 
@@ -514,7 +536,7 @@ describe('session.export download endpoint', () => {
     const text = [null, [], false, { type: 'agent/inbox/spliced', data: { content } },
       { type: 'session/title-llm-request', data: { content } }].map(value => JSON.stringify(value)).join('\n')
     const files = await directZipFiles(text)
-    expect(Object.keys(files)).toEqual([exportLogName])
+    expect(Object.keys(files)).toEqual([exportLogName, trajectoryName])
     expect(strFromU8(files[exportLogName] as Uint8Array)).toBe(text)
   })
 
@@ -566,10 +588,14 @@ describe('session.export download endpoint', () => {
     const files = unzipSync(await responseBytes(response))
     expect(Object.keys(files).sort()).toEqual([
       exportLogName,
+      trajectoryName,
       subagentLogName('child-a'),
+      subagentTrajectoryName('child-a'),
       subagentLogName('child-b'),
+      subagentTrajectoryName('child-b'),
       subagentLogName('shared'),
-    ])
+      subagentTrajectoryName('shared'),
+    ].sort())
   })
 
   it('answers 500 without leaking the backend error when the root read fails', async () => {
@@ -763,7 +789,7 @@ describe('session.export download endpoint', () => {
     )
     expect(response.status).toBe(200)
     const files = unzipSync(await responseBytes(response))
-    expect(Object.keys(files).sort()).toEqual(['media/img-1.png', exportLogName].sort())
+    expect(Object.keys(files).sort()).toEqual(['media/img-1.png', exportLogName, trajectoryName].sort())
     expect(files['media/img-1.png']).toEqual(storedImage('img-1').data)
   })
 
@@ -826,7 +852,7 @@ describe('session.export download endpoint', () => {
     const api = await buildApi({ 'session-root': stored })
     const response = await toFetchHandler(api).fetch(new Request('http://host/api/session.export?sessionId=session-root'))
     const files = unzipSync(await responseBytes(response))
-    expect(Object.keys(files).sort()).toEqual(['media/declared-image.png', exportLogName].sort())
+    expect(Object.keys(files).sort()).toEqual(['media/declared-image.png', exportLogName, trajectoryName].sort())
     expect(new TextDecoder().decode(files[exportLogName])).toBe(logText(stored))
   })
 
@@ -838,7 +864,7 @@ describe('session.export download endpoint', () => {
       const api = await buildApi({ 'session-root': stored }, [], { attachments: readImage })
       const response = await toFetchHandler(api).fetch(new Request('http://host/api/session.export?sessionId=session-root'))
       const files = unzipSync(await responseBytes(response))
-      expect(Object.keys(files)).toEqual([exportLogName])
+      expect(Object.keys(files)).toEqual([exportLogName, trajectoryName])
       expect(new TextDecoder().decode(files[exportLogName])).toBe(logText(stored))
       expect(readImage).not.toHaveBeenCalled()
     }
@@ -857,7 +883,7 @@ describe('session.export download endpoint', () => {
     const api = await buildApi({ 'session-root': stored }, [], { attachments: readImage })
     const response = await toFetchHandler(api).fetch(new Request('http://host/api/session.export?sessionId=session-root'))
     const files = unzipSync(await responseBytes(response))
-    expect(Object.keys(files)).toEqual([exportLogName])
+    expect(Object.keys(files)).toEqual([exportLogName, trajectoryName])
     expect(new TextDecoder().decode(files[exportLogName])).toBe(logText(stored))
     expect(readImage).not.toHaveBeenCalled()
   })
@@ -876,7 +902,7 @@ describe('session.export download endpoint', () => {
     const api = await buildApi({ 'session-root': stored }, [], { attachments: readImage, readFileStream })
     const response = await toFetchHandler(api).fetch(new Request('http://host/api/session.export?sessionId=session-root'))
     const files = unzipSync(await responseBytes(response))
-    expect(Object.keys(files)).toEqual([exportLogName])
+    expect(Object.keys(files)).toEqual([exportLogName, trajectoryName])
     expect(new TextDecoder().decode(files[exportLogName])).toBe(logText(stored))
     expect(readImage).not.toHaveBeenCalled()
     expect(readFileStream).not.toHaveBeenCalled()
@@ -896,7 +922,7 @@ describe('session.export download endpoint', () => {
       new Request('http://host/api/session.export?sessionId=session-root'),
     )
     const files = unzipSync(await responseBytes(response))
-    expect(Object.keys(files).sort()).toEqual(['media/tool-image.webp', exportLogName].sort())
+    expect(Object.keys(files).sort()).toEqual(['media/tool-image.webp', exportLogName, trajectoryName].sort())
   })
 
   it('scans wrapped, inserted, and embedded-stream carriers plus non-object content items', async () => {
@@ -935,6 +961,7 @@ describe('session.export download endpoint', () => {
       'media/stream-1.png',
       'media/wrapped-1.jpg',
       exportLogName,
+      trajectoryName,
     ])
   })
 
@@ -956,15 +983,17 @@ describe('session.export download endpoint', () => {
     const without = await toFetchHandler(api).fetch(
       new Request('http://host/api/session.export?sessionId=session-root'),
     )
-    expect(Object.keys(unzipSync(await responseBytes(without)))).toEqual([exportLogName])
+    expect(Object.keys(unzipSync(await responseBytes(without)))).toEqual([exportLogName, trajectoryName])
     const withDescendants = await toFetchHandler(api).fetch(
       new Request('http://host/api/session.export?sessionId=session-root&includeDescendants=true'),
     )
     expect(Object.keys(unzipSync(await responseBytes(withDescendants))).sort()).toEqual([
       'media/child-img.png',
       exportLogName,
+      trajectoryName,
       subagentLogName('child-a'),
-    ])
+      subagentTrajectoryName('child-a'),
+    ].sort())
   })
 
   it('fails the whole export when a referenced image cannot be read', async () => {

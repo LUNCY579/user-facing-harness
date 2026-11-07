@@ -41,8 +41,11 @@ export function parseFetchUrl(input: string): URL {
 
 /**
  * Validate a request URL against the provider's complete pre-network policy:
- * bounded length plus the restrictions enforced by {@link parseFetchUrl}.
- * Public-address resolution and connection pinning run after this check.
+ * bounded length plus the restrictions enforced by {@link parseFetchUrl}. No
+ * destination-address check follows: this provider intentionally reaches
+ * intranet and loopback destinations (see SAFETY.md, network access of web
+ * tools); deployments that must hide internal services compose the sandbox
+ * with `network: 'deny'` instead.
  *
  * @param input - the raw URL string from the fetch request.
  * @returns the parsed `URL`.

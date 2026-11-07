@@ -527,6 +527,13 @@ export class WebServer extends Service {
   /** Listen; resolves once the socket is bound (rejection = FAILED fiber). */
   async [Service.init](): Promise<void> {
     const handle = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
+      // Pin TLS for every response this listener serves once it is TLS: a
+      // downgraded navigation before the first pinned response is the gap HSTS
+      // cannot close, so the header ships with the first one. Setting it here
+      // (not inside each writer) covers handler routes that own their own
+      // writeHead: Node merges pre-set headers into it. HTTP responses carry
+      // none — the header over plaintext is meaningless.
+      if (this.protocol === 'https:') res.setHeader('strict-transport-security', 'max-age=31536000')
       /* v8 ignore next -- `?? '/'` arm: node:http always sets url on server
       requests; the field is only optional on the client-side IncomingMessage type */
       const target = new URL(req.url ?? '/', 'http://x')

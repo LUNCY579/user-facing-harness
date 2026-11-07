@@ -42,9 +42,11 @@ export type {
  * harness's own `DEEPSEEK_API_KEY`/secrets must not leak into a spawned
  * process implicitly). One heuristic for every in-repo spawner; a
  * deliberately supplied entry survives because explicit env layers merge
- * after the scrub.
+ * after the scrub. The PASS-family alternative is end-anchored with a BY
+ * lookbehind, so the widespread `*BYPASS` flags survive while the equally
+ * widespread `DB_PASS`-style credential spellings do not.
  */
-export const SENSITIVE_ENV_PATTERN = /KEY|PASSWORD|SECRET|TOKEN/i
+export const SENSITIVE_ENV_PATTERN = /KEY|PASSWORD|SECRET|TOKEN|(?<!BY)PASS(?:WORD|WD|PHRASE)?$/i
 
 /**
  * The ambient parent environment minus credential-shaped names and minus all

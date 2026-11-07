@@ -41,6 +41,9 @@ export {
   toCandidates,
 } from './fusion.ts'
 export type { ScoreScale } from './fusion.ts'
+export { MEMORY_EXPORT_VERSION, decodeMemoryExport, encodeMemoryExport, encodeMemoryRecord } from './portability.ts'
+export type { ExportedMemory, ForgottenEntry, ForgetLedger, ImportRefusal, ImportReport, MemoryExport } from './portability.ts'
+export type { ExportInput, ImportInput } from './portability-ops.ts'
 export type * from './types.ts'
 
 import { RetrievalService } from './engine.ts'

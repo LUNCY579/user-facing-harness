@@ -15,7 +15,7 @@ import SandboxPolicyService, { SANDBOX_MODES, setSandboxMode } from '@deepseek-a
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt, { renderContextSnapshot, renderPrompt } from '@deepseek-ai/dsh-system-prompt'
 
-async function mounted(config: { mode?: 'read-only' | 'workspace-write' | 'danger-full-access'; workspaceRoot?: string; additionalWritableRoots?: string[] } = {}) {
+async function mounted(config: { mode?: 'read-only' | 'workspace-write' | 'danger-full-access'; network?: 'allow' | 'deny'; workspaceRoot?: string; additionalWritableRoots?: string[] } = {}) {
   const ctx = new Context()
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SandboxPolicyService, config)
@@ -73,6 +73,23 @@ describe('SandboxPolicyService', () => {
       mode: 'workspace-write',
       workspaceRoot: '/fallback',
     })
+  })
+
+  it('carries the deployment network policy, deny included, into every resolved policy and the prompt context', async () => {
+    const ctx = await mounted({ network: 'deny', workspaceRoot: '/fallback' })
+    await ctx.plugin(SystemPrompt)
+    expect(ctx.sandboxPolicy.resolve()).toEqual({ mode: 'read-only', network: 'deny', workspaceRoot: '/fallback' })
+    const text = await policyContext(ctx, session('sess-deny'))
+    expect(text).toContain('no network access')
+  })
+
+  it('leaves the network policy absent (allow) by default', async () => {
+    const ctx = await mounted({ workspaceRoot: '/fallback' })
+    await ctx.plugin(SystemPrompt)
+    expect(ctx.sandboxPolicy.resolve()).toEqual({ mode: 'read-only', workspaceRoot: '/fallback' })
+    expect(ctx.sandboxPolicy.network).toBe('allow')
+    const text = await policyContext(ctx, session('sess-allow'))
+    expect(text).not.toContain('network access')
   })
 
   it('carries a frozen detached copy of the configured extra writable roots in execution-world spelling', async () => {
