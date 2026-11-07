@@ -47,13 +47,27 @@ __export(open_browser_exports, {
   openBrowser: () => openBrowser
 });
 import { spawn } from "node:child_process";
+function normalizedBrowserUrl(url) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`unsupported browser URL scheme ${parsed.protocol}`);
+  }
+  return parsed.href;
+}
 function openBrowser(url) {
   const warn = (error) => {
     console.error("[channel-pack] failed to open browser; open manually:", url, error);
   };
+  let target;
+  try {
+    target = normalizedBrowserUrl(url);
+  } catch (error) {
+    warn(error);
+    return;
+  }
   const win = process.platform === "win32";
   if (win) {
-    const args = ["/c", "start", '""', `"${url}"`];
+    const args = ["/c", "start", '""', `"${target}"`];
     try {
       const child = spawn("cmd", args, { detached: true, stdio: "ignore", windowsVerbatimArguments: true });
       child.on("error", warn);
@@ -66,7 +80,7 @@ function openBrowser(url) {
   }
   const cmd = process.platform === "darwin" ? "open" : "xdg-open";
   try {
-    const child = spawn(cmd, [url], { detached: true, stdio: "ignore" });
+    const child = spawn(cmd, [target], { detached: true, stdio: "ignore" });
     child.on("error", warn);
     child.unref();
   } catch (error) {
