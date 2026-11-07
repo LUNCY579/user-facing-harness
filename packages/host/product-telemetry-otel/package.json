@@ -32,7 +32,7 @@
     "@deepseek-ai/schemastery": "workspace:~",
     "@opentelemetry/api-logs": "0.222.0",
     "@opentelemetry/otlp-exporter-base": "0.222.0",
-    "@opentelemetry/sdk-logs": "0.222.0"
+    "@opentelemetry/sdk-logs": "0.223.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
