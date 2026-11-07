@@ -12,10 +12,13 @@ export interface WebOutputChunk {
   modules: Record<string, unknown>
   imports: string[]
   dynamicImports: string[]
-  implicitlyLoadedBefore: string[]
-  referencedFiles: string[]
+  implicitlyLoadedBefore?: string[]
+  referencedFiles?: string[]
   viteMetadata?: { importedCss: Set<string>; importedAssets: Set<string> }
 }
+
+// rolldown (vite 8) dropped the rollup-only chunk fields; the isolation walk
+// covers the edges the output actually carries.
 
 /** Original file names provide ownership for emitted, non-CSS assets. */
 export interface WebOutputAsset {
@@ -88,8 +91,8 @@ export class WebProductBundleIsolation {
         modules: { ...item.modules },
         imports: [...item.imports],
         dynamicImports: [...item.dynamicImports],
-        implicitlyLoadedBefore: [...item.implicitlyLoadedBefore],
-        referencedFiles: [...item.referencedFiles],
+        implicitlyLoadedBefore: [...item.implicitlyLoadedBefore ?? []],
+        referencedFiles: [...item.referencedFiles ?? []],
         ...(item.viteMetadata === undefined ? {} : { viteMetadata: {
           importedCss: new Set(item.viteMetadata.importedCss),
           importedAssets: new Set(item.viteMetadata.importedAssets),
@@ -98,9 +101,15 @@ export class WebProductBundleIsolation {
     }
   }
 
-  /** Each Vite worker subbuild has one entry and owns its complete watched input set. */
-  workerBundle(bundle: WebOutputBundle, watchedFiles: readonly string[]): void {
-    const inputs = new Set(watchedFiles)
+  /** Each Vite worker subbuild has one entry and owns its complete build-input set. */
+  workerBundle(bundle: WebOutputBundle): void {
+    // The chunk module keys are the worker's inputs; rolldown's plugin context
+    // has no getWatchFiles, so the rollup-era watched list is gone and these
+    // keys are the proven inputs the check asserts against.
+    const inputs = new Set<string>()
+    for (const item of Object.values(bundle)) {
+      if (item.type === 'chunk') for (const id of Object.keys(item.modules)) inputs.add(id)
+    }
     const entries: string[] = []
     for (const item of Object.values(bundle)) {
       if (item.type === 'chunk') {
@@ -156,7 +165,13 @@ export class WebProductBundleIsolation {
       visitedModules.add(id)
       this.inputs.assertInput(id)
       const info = moduleInfo(id)
-      if (info === null) throw new Error(`Web product isolation: module ${id} has no Rollup module record`)
+      if (info === null) {
+        // rolldown injects its interop helper as a synthetic module with no
+        // graph record; the build tool itself owns and bundles it, so it
+        // carries no dependency disclosure. Any other unknown id stays fatal.
+        if (id === '\0rolldown/runtime.js') return
+        throw new Error(`Web product isolation: module ${id} has no module record`)
+      }
       if (info.isExternal) throw new Error(`Web product isolation: external module ${id} has no bundled input proof`)
       if (/\.(?:css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/i.test(id) && !this.cssInputs.has(id)) {
         throw new Error(`Web product isolation: stylesheet ${id} has no recorded transform inputs`)
@@ -165,7 +180,7 @@ export class WebProductBundleIsolation {
       for (const file of this.cssInputs.get(id) ?? []) this.inputs.assertInput(file)
       for (const child of [...info.importedIds, ...info.dynamicallyImportedIds]) {
         const childInfo = moduleInfo(child)
-        if (childInfo === null) throw new Error(`Web product isolation: module ${child} has no Rollup module record`)
+        if (childInfo === null) throw new Error(`Web product isolation: module ${child} has no module record`)
         if (childInfo.isIncluded || childInfo.isExternal) checkModule(child)
       }
     }
@@ -178,7 +193,7 @@ export class WebProductBundleIsolation {
       if (this.workerInputs.has(file)) checkWorker(file)
       else if (item.type === 'chunk') {
         for (const id of Object.keys(item.modules)) checkModule(id)
-        queue.push(...item.imports, ...item.dynamicImports, ...item.implicitlyLoadedBefore, ...item.referencedFiles)
+        queue.push(...item.imports, ...item.dynamicImports, ...item.implicitlyLoadedBefore ?? [], ...item.referencedFiles ?? [])
         queue.push(...item.viteMetadata?.importedCss ?? [], ...item.viteMetadata?.importedAssets ?? [])
       } else if (cssOwners.has(file)) {
         for (const id of cssOwners.get(file) ?? []) checkModule(id)

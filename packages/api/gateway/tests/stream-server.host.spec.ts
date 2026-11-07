@@ -398,7 +398,7 @@ describe('Remote stream mux server Peer binding', () => {
       mapFailure,
       { heartbeatIntervalMs: 2_000, streamInboxBytes: 262_144, compression: true },
     )
-    running.add({ http, mux, url: '', port: 0 })
+    running.add({ http, mux, url: '' })
     // No auto-upgrade listener: the socket is handed over manually, the way a
     // disposed-peer race delivers it.
     await new Promise<void>(resolve => http.listen(0, '127.0.0.1', resolve))

@@ -81,8 +81,9 @@ export function scanText(file: string, text: string): string[] {
   for (const shape of SHAPES) {
     const pattern = new RegExp(shape.pattern.source, shape.pattern.flags)
     for (const match of text.matchAll(pattern)) {
-      // Every capture group in SHAPES is mandatory, so a present match carries it.
-      const candidate = shape.group === undefined ? match[0] : match[shape.group]
+      // Every capture group in SHAPES is mandatory; the fallback only satisfies
+      // the indexer type and cannot pass the length floor.
+      const candidate = shape.group === undefined ? match[0] : (match[shape.group] ?? '')
       if (shape.minLength !== undefined && candidate.length < shape.minLength) continue
       const line = text.slice(0, match.index).split('\n').length
       failures.push(`${file}:${line}: ${shape.name}`)
