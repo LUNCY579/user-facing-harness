@@ -12,6 +12,9 @@ overrides:
   node-forge: '>=1.4.1 <2'
   '@yao-pkg/pkg-fetch>undici': '>=8.12.2 <9'
   '@deepseek-ai/dsh-experimental-liveshare>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-http-proxy>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-web-fetch-http>undici': '>=8.12.2 <9'
+  dsh-our-free-model>undici: '>=8.12.2 <9'
   vite: '>=8.2.4 <8.3'
   zod: '>=4.6.6 <5'
   electron: '>=44.9.1 <45'
@@ -14511,6 +14514,9 @@ importers:
       '@deepseek-ai/dsh-session-format':
         specifier: workspace:*
         version: link:../../session/session-format
+      '@deepseek-ai/dsh-session-telemetry':
+        specifier: workspace:*
+        version: link:../../session/session-telemetry
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -17743,8 +17749,8 @@ importers:
   packages/util/http-proxy:
     dependencies:
       undici:
-        specifier: 8.11.2
-        version: 8.11.2
+        specifier: '>=8.12.2 <9'
+        version: 8.12.4
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~
@@ -17996,8 +18002,8 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
       undici:
-        specifier: 8.11.2
-        version: 8.11.2
+        specifier: '>=8.12.2 <9'
+        version: 8.12.4
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:~
@@ -18266,8 +18272,8 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
       undici:
-        specifier: 8.11.2
-        version: 8.11.2
+        specifier: '>=8.12.2 <9'
+        version: 8.12.4
 
   python/sdk-runtime:
     dependencies:
@@ -25887,10 +25893,6 @@ packages:
 
   undici@8.10.2:
     resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
-    engines: {node: '>=22.19.0'}
-
-  undici@8.11.2:
-    resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
     engines: {node: '>=22.19.0'}
 
   undici@8.12.4:
@@ -33699,8 +33701,6 @@ snapshots:
   undici@7.30.2: {}
 
   undici@8.10.2: {}
-
-  undici@8.11.2: {}
 
   undici@8.12.4: {}
 

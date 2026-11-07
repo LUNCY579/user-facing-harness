@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { redactSecretShapes } from '../src/redaction.ts'
+import { redactSecretShapes } from '@deepseek-ai/dsh-session-telemetry'
 import type { SessionTelemetryRecord } from '@deepseek-ai/dsh-session-telemetry'
 
 function record(body: unknown, attributes: Record<string, string | number> = {}): SessionTelemetryRecord {

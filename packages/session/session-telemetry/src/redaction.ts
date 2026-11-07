@@ -8,7 +8,7 @@
  *
  * The shapes mirror the fixture secrets-scan gate (`scripts/verify-secrets-scan.ts`);
  * when one side gains a shape, bring the other along.
- * @module session-telemetry-otel/redaction
+ * @module @deepseek-ai/dsh-session-telemetry/redaction
  */
 
 import type { SessionTelemetryRecord } from '@deepseek-ai/dsh-session-telemetry'
@@ -34,7 +34,7 @@ const SHAPES: readonly SecretShape[] = [
 ]
 
 /** Walk budget and change tracking shared by one record's redaction. */
-interface WalkState {
+export interface WalkState {
   /** Remaining nodes; exhaustion replaces the remaining subtree with a marker. */
   nodes: number
   /** Whether any string changed, so untouched containers keep their reference. */
@@ -44,8 +44,15 @@ interface WalkState {
 const MAX_DEPTH = 8
 const MAX_NODES = 4096
 
-/** Replace every secret-shaped substring in one string. */
-function redactString(value: string, state: WalkState): string {
+/**
+ * Replace every secret-shaped substring in one string. Shared by the OTel
+ * export backend and the Session trajectory export; both consumers scrub the
+ * same shape table, so a marker convention is identical across surfaces.
+ * @param value - text about to leave the process.
+ * @param state - the walk's change tracking.
+ * @returns the redacted text.
+ */
+export function redactSecretsInString(value: string, state: WalkState): string {
   let redacted = value
   for (const shape of SHAPES) {
     const pattern = new RegExp(shape.pattern.source, shape.pattern.flags)
@@ -64,7 +71,7 @@ function redactString(value: string, state: WalkState): string {
  * JSON-validated at append time, so they do not occur.
  */
 function redactValue(value: unknown, depth: number, state: WalkState): unknown {
-  if (typeof value === 'string') return redactString(value, state)
+  if (typeof value === 'string') return redactSecretsInString(value, state)
   if (depth >= MAX_DEPTH || state.nodes <= 0) {
     if (typeof value === 'string' || value === null || typeof value === 'number' || typeof value === 'boolean') return value
     state.changed = true
@@ -106,7 +113,7 @@ export function redactSecretShapes(record: SessionTelemetryRecord): SessionTelem
   const state: WalkState = { nodes: MAX_NODES, changed: false }
   const attributes: Record<string, string | number> = {}
   for (const [key, value] of Object.entries(record.attributes)) {
-    attributes[key] = typeof value === 'string' ? redactString(value, state) : value
+    attributes[key] = typeof value === 'string' ? redactSecretsInString(value, state) : value
   }
   const body = redactValue(record.body, 0, state)
   if (!state.changed) return record

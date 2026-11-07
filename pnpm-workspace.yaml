@@ -28,9 +28,14 @@ overrides:
   node-forge: '>=1.4.1 <2'
   # undici advisories split by major and by consumer: only the flagged paths
   # are pinned (8.x needs >=8.12.2); the 7.x web packages were never on a
-  # flagged path, and the blanket pin changed their proxy wire behavior.
+  # flagged path, and the blanket pin changed their proxy wire behavior. The
+  # 8.x runtime consumers must share one undici copy: a dispatcher type from
+  # 8.11.2 flowing into 8.12.4 code fails exactOptionalPropertyTypes.
   '@yao-pkg/pkg-fetch>undici': '>=8.12.2 <9'
   '@deepseek-ai/dsh-experimental-liveshare>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-http-proxy>undici': '>=8.12.2 <9'
+  '@deepseek-ai/dsh-web-fetch-http>undici': '>=8.12.2 <9'
+  'dsh-our-free-model>undici': '>=8.12.2 <9'
   vite: '>=8.2.4 <8.3'
   zod: '>=4.6.6 <5'
   electron: '>=44.9.1 <45'

@@ -18,7 +18,8 @@ import {
   type SessionLogExportReady,
 } from './archive.ts'
 import { formatSessionMarkdown } from './markdown.ts'
-import { SESSION_LOG_EXPORT_PATH, SESSION_MARKDOWN_EXPORT_PATH } from './routes.ts'
+import { formatSessionTrajectory } from './trajectory.ts'
+import { SESSION_LOG_EXPORT_PATH, SESSION_MARKDOWN_EXPORT_PATH, SESSION_TRAJECTORY_EXPORT_PATH } from './routes.ts'
 
 export {
   DEFAULT_SESSION_LOG_COMPRESSION_LEVEL,
@@ -38,11 +39,12 @@ export type {
   SessionLogZipEntry,
 } from './archive.ts'
 export { formatSessionMarkdown } from './markdown.ts'
+export { formatSessionTrajectory } from './trajectory.ts'
 
 export const name = 'session-log-download'
 export const inject = ['commands', 'connection']
 
-export { SESSION_LOG_EXPORT_PATH } from './routes.ts'
+export { SESSION_LOG_EXPORT_PATH, SESSION_MARKDOWN_EXPORT_PATH, SESSION_TRAJECTORY_EXPORT_PATH } from './routes.ts'
 
 /** Session-log archive policy. */
 export interface Config {
@@ -112,6 +114,17 @@ export function apply(ctx: Context, config: Config = {}): void {
       return new Response(null, { status: response.status, headers: response.headers })
     },
   })
+  connectionOf(ctx).fetch.register({
+    path: SESSION_TRAJECTORY_EXPORT_PATH,
+    methods: ['GET', 'HEAD'],
+    requestBody: 'buffered',
+    fetch: async (request) => {
+      const response = await sessionTrajectoryResponse(ctx, request)
+      if (request.method === 'GET') return response
+      await response.body?.cancel()
+      return new Response(null, { status: response.status, headers: response.headers })
+    },
+  })
 }
 
 function connectionOf(ctx: Context): SessionLogConnection {
@@ -156,6 +169,49 @@ async function sessionMarkdownResponse(ctx: Context, request: Request): Promise<
     // Every other failure stays opaque: the message may carry absolute host
     // paths into the browser toast.
     return new Response('session markdown export failed to read the stored log', { status: 500 })
+  }
+}
+
+/**
+ * Produce one complete Session trajectory as redacted structured JSON from one
+ * Session observation. The read is a detached export observation through
+ * session-query's live-preferred corpus, so it creates no Agent, retains no
+ * Session, and writes no Session data. Abort is observed before and after the
+ * read; the corpus read itself has no cancellation parameter.
+ * @param ctx - host context carrying Connection and session-query.
+ * @param request - authenticated Fetch request with a required `sessionId` query.
+ * @returns the JSON trajectory response, or a sanitized status for invalid, missing, or unavailable reads.
+ */
+async function sessionTrajectoryResponse(ctx: Context, request: Request): Promise<Response> {
+  const sessionIdValue = new URL(request.url).searchParams.get('sessionId')
+  if (sessionIdValue === null || sessionIdValue.length === 0) {
+    return new Response('missing or invalid sessionId query parameter', { status: 400 })
+  }
+  const sessionQuery = ctx.get('sessionQuery')
+  if (sessionQuery === undefined) {
+    return new Response('session trajectory export is unavailable: missing session-query service', { status: 500 })
+  }
+  const sessionId = brandString<SessionId>(sessionIdValue)
+  try {
+    request.signal.throwIfAborted()
+    const snapshot = await sessionQuery.readSession(sessionId)
+    request.signal.throwIfAborted()
+    const trajectory = formatSessionTrajectory(snapshot.events, {
+      id: sessionIdValue,
+      createdAt: snapshot.session.createdAt,
+      ...(snapshot.session.cwd === undefined ? {} : { cwd: snapshot.session.cwd }),
+    })
+    return new Response(JSON.stringify(trajectory), {
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+    })
+  } catch (error: unknown) {
+    request.signal.throwIfAborted()
+    // Absence is session-query's decision: match its stable error code rather
+    // than adding a Host value dependency on the session-query error class.
+    if (isSessionNotFound(error)) return new Response('session not found', { status: 404 })
+    // Every other failure stays opaque: the message may carry absolute host
+    // paths into the browser toast.
+    return new Response('session trajectory export failed to read the stored log', { status: 500 })
   }
 }
 

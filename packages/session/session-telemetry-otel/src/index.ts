@@ -26,7 +26,7 @@ import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
 import { getOrCreateAnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
 import type { LogExporterOptions, SessionLogProcessorOptions, SessionLogReporter } from '@deepseek-ai/dsh-otel'
 import { SeverityNumber } from '@opentelemetry/api-logs'
-import { redactSecretShapes } from './redaction.ts'
+import { redactSecretShapes } from '@deepseek-ai/dsh-session-telemetry'
 
 /** Session-sharing policy selected by {@link Config.mode}. */
 export enum SessionTelemetryMode {

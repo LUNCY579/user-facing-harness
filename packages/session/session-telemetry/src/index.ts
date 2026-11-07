@@ -172,3 +172,8 @@ export abstract class SessionTelemetryBackend extends Service implements Session
 }
 
 export { SessionTelemetryCoordinator, type SessionTelemetryCapture, type SessionTelemetryCaptureOptions } from './coordinator.ts'
+export {
+  redactSecretShapes,
+  redactSecretsInString,
+  type WalkState,
+} from './redaction.ts'
