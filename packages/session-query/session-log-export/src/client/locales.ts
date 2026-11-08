@@ -5,6 +5,7 @@ export const NS = 'session-log-download'
 export const zh = {
   'menu.copyMarkdown': '复制会话为 Markdown',
   'menu.download': '下载 Session 日志',
+  'menu.trajectory': '下载轨迹 (JSON)',
   'menu.feedback': '反馈',
   'toast.copied': 'Session 已复制为 Markdown',
   'toast.preparationFailed': '无法读取 Session 进行复制，请重试',
@@ -23,6 +24,7 @@ export const zh = {
 export const en: Record<keyof typeof zh, string> = {
   'menu.copyMarkdown': 'Copy Session as Markdown',
   'menu.download': 'Download session log',
+  'menu.trajectory': 'Download trajectory (JSON)',
   'menu.feedback': 'Feedback',
   'toast.copied': 'Session copied as Markdown.',
   'toast.preparationFailed': 'Could not read the Session for copying. Try again.',
@@ -44,6 +46,7 @@ export type SessionLogDownloadKey = keyof typeof zh
 export const ja = {
   'menu.copyMarkdown': 'セッションを Markdown としてコピー',
   'menu.download': 'セッションログをダウンロード',
+  'menu.trajectory': '軌跡をダウンロード (JSON)',
   'menu.feedback': 'フィードバック',
   'toast.copied': 'セッションを Markdown としてコピーしました',
   'toast.preparationFailed': 'コピーするセッションを読み取れませんでした。再試行してください。',
@@ -62,6 +65,7 @@ export const ja = {
 export const es = {
   'menu.copyMarkdown': 'Copiar sesión como Markdown',
   'menu.download': 'Descargar registro de sesión',
+  'menu.trajectory': 'Descargar trayectoria (JSON)',
   'menu.feedback': 'Comentarios',
   'toast.copied': 'Sesión copiada como Markdown.',
   'toast.preparationFailed': 'No se pudo leer la sesión para copiarla. Intentar otra vez.',
@@ -80,6 +84,7 @@ export const es = {
 export const fr = {
   'menu.copyMarkdown': 'Copier la session sous Markdown',
   'menu.download': 'Télécharger le journal de session',
+  'menu.trajectory': 'Télécharger la trajectoire (JSON)',
   'menu.feedback': 'Commentaires',
   'toast.copied': 'Session copiée sous le nom Markdown.',
   'toast.preparationFailed': 'Impossible de lire la session pour la copier. Essayer à nouveau.',
@@ -98,6 +103,7 @@ export const fr = {
 export const de = {
   'menu.copyMarkdown': 'Kopieren Sie die Sitzung als Markdown',
   'menu.download': 'Sitzungsprotokoll herunterladen',
+  'menu.trajectory': 'Trajektorie herunterladen (JSON)',
   'menu.feedback': 'Rückmeldung',
   'toast.copied': 'Sitzung als Markdown kopiert.',
   'toast.preparationFailed': 'Die Sitzung zum Kopieren konnte nicht gelesen werden. Versuchen Sie es erneut.',
@@ -116,6 +122,7 @@ export const de = {
 export const ru = {
   'menu.copyMarkdown': 'Скопировать сеанс как Markdown',
   'menu.download': 'Скачать журнал сеанса',
+  'menu.trajectory': 'Скачать траекторию (JSON)',
   'menu.feedback': 'Обратная связь',
   'toast.copied': 'Сессия скопирована как Markdown.',
   'toast.preparationFailed': 'Не удалось прочитать сеанс для копирования. Попробуйте еще раз.',
@@ -134,6 +141,7 @@ export const ru = {
 export const pt = {
   'menu.copyMarkdown': 'Copiar sessão como Markdown',
   'menu.download': 'Baixar registro da sessão',
+  'menu.trajectory': 'Baixar trajetória (JSON)',
   'menu.feedback': 'Comentários',
   'toast.copied': 'Sessão copiada como Markdown.',
   'toast.preparationFailed': 'Não foi possível ler a sessão para cópia. Tente novamente.',
