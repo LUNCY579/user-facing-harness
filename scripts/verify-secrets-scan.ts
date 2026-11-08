@@ -35,7 +35,13 @@ interface SecretShape {
   readonly minLength?: number
 }
 
-/** The structural secret shapes the gate recognizes. */
+/**
+ * The structural secret shapes the gate recognizes, compiled once at module
+ * load: `String.matchAll` with a global regex resets `lastIndex` around each
+ * call, so the shared instances are safe across every scanned file, and
+ * recompiling per file would multiply eleven RegExp constructions by the
+ * whole fixture corpus.
+ */
 const SHAPES: readonly SecretShape[] = [
   { name: 'OpenAI-style API key', pattern: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
   { name: 'GitHub token', pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
@@ -54,6 +60,15 @@ const SHAPES: readonly SecretShape[] = [
     group: 1,
   },
 ]
+
+// The shapes compiled once at module load: matchAll with a global regex
+// resets lastIndex around each call, so the shared instances are safe
+// across every file, and recompiling per file would multiply the RegExp
+// constructions by the whole fixture corpus.
+const COMPILED: readonly SecretShape[] = SHAPES.map(shape => ({
+  ...shape,
+  pattern: new RegExp(shape.pattern.source, shape.pattern.flags),
+}))
 
 /** Result of scanning every committed fixture file. */
 export interface SecretsScanReport {
@@ -79,9 +94,8 @@ function isScannedPath(relativePath: string): boolean {
  */
 export function scanText(file: string, text: string): string[] {
   const failures: string[] = []
-  for (const shape of SHAPES) {
-    const pattern = new RegExp(shape.pattern.source, shape.pattern.flags)
-    for (const match of text.matchAll(pattern)) {
+  for (const shape of COMPILED) {
+    for (const match of text.matchAll(shape.pattern)) {
       // Every capture group in SHAPES is mandatory; the fallback only satisfies
       // the indexer type and cannot pass the length floor.
       const candidate = shape.group === undefined ? match[0] : (match[shape.group] ?? '')
