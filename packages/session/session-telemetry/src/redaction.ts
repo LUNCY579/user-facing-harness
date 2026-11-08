@@ -33,6 +33,15 @@ const SHAPES: readonly SecretShape[] = [
   { name: 'pem-private-key', pattern: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY-----[^-]*-----END [A-Z ]*PRIVATE KEY-----/g },
 ]
 
+/**
+ * The shapes compiled once at module load. `String.prototype.replace` with a
+ * global regex resets `lastIndex` around each call, so the shared instances
+ * are safe across every string; recompiling per string would multiply nine
+ * RegExp constructions by every scanned value in a large body.
+ */
+const COMPILED: readonly { name: string; pattern: RegExp }[] =
+  SHAPES.map(shape => ({ name: shape.name, pattern: new RegExp(shape.pattern.source, shape.pattern.flags) }))
+
 /** Walk budget and change tracking shared by one record's redaction. */
 export interface WalkState {
   /** Remaining nodes; exhaustion replaces the remaining subtree with a marker. */
@@ -54,9 +63,8 @@ const MAX_NODES = 4096
  */
 export function redactSecretsInString(value: string, state: WalkState): string {
   let redacted = value
-  for (const shape of SHAPES) {
-    const pattern = new RegExp(shape.pattern.source, shape.pattern.flags)
-    const next = redacted.replace(pattern, `[REDACTED:${shape.name}]`)
+  for (const shape of COMPILED) {
+    const next = redacted.replace(shape.pattern, `[REDACTED:${shape.name}]`)
     if (next !== redacted) state.changed = true
     redacted = next
   }
