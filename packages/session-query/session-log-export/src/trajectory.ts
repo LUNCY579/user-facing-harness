@@ -8,10 +8,11 @@
  * leaves the process.
  *
  * The raw log is authoritative: compaction surface replacements never remove
- * earlier messages, and fork-inherited history appears once. System and
- * developer prompt renderings, request headers, and runtime records are
- * excluded — a trajectory describes the conversation's behavior, not the
- * harness's instruction text.
+ * earlier messages, and fork-inherited history appears once. Developer prompt
+ * renderings, request headers, and runtime records are excluded. The system
+ * prompt is excluded unless the caller opts in through `includeSystem` — a
+ * trajectory describes the conversation's behavior, and the harness's
+ * instruction text is not harness output the operator asked to share.
  * @module
  */
 
@@ -47,7 +48,14 @@ export interface TrajectoryToolError {
 /** One trajectory entry. */
 export type TrajectoryEntry =
   | { readonly kind: 'user'; readonly at: number; readonly text: string }
-  | { readonly kind: 'assistant'; readonly at: number; readonly text: string; readonly toolCalls: readonly TrajectoryToolCall[] }
+  | {
+    readonly kind: 'assistant'
+    readonly at: number
+    readonly provider: string
+    readonly model: string
+    readonly text: string
+    readonly toolCalls: readonly TrajectoryToolCall[]
+  }
   | {
     readonly kind: 'tool-result'
     readonly at: number
@@ -81,7 +89,14 @@ export interface TrajectoryTurn {
 export interface SessionTrajectory {
   readonly schema: typeof SESSION_TRAJECTORY_SCHEMA
   readonly version: typeof SESSION_TRAJECTORY_VERSION
-  readonly session: { readonly id?: string; readonly title: string; readonly createdAt?: number; readonly cwd?: string }
+  readonly session: {
+    readonly id?: string
+    readonly title: string
+    readonly createdAt?: number
+    readonly cwd?: string
+    /** The final rendered system prompt; present only when the fold opted in. */
+    readonly system?: string
+  }
   readonly turns: readonly TrajectoryTurn[]
 }
 
@@ -108,6 +123,8 @@ interface Fold {
   step: Step | undefined
   /** callId → tool name, so a result whose `tool/call` was lost still names its tool. */
   names: Map<string, string>
+  /** Final rendered system prompt when the fold opted in; undefined tracks exclusion. */
+  system: string | undefined
 }
 
 const emptyStep = (): Step => ({
@@ -144,10 +161,11 @@ function toolCallsOf(message: AssistantMessage): TrajectoryToolCall[] {
 export function formatSessionTrajectory(
   events: readonly SessionEvent[],
   meta: { readonly id?: string; readonly createdAt?: number; readonly cwd?: string } = {},
+  options: { readonly includeSystem?: boolean } = {},
 ): SessionTrajectory {
   const state: WalkState = { nodes: Number.MAX_SAFE_INTEGER, changed: false }
   const redact = (value: string): string => redactSecretsInString(value, state)
-  const fold: Fold = { turns: [], turn: undefined, step: undefined, names: new Map() }
+  const fold: Fold = { turns: [], turn: undefined, step: undefined, names: new Map(), system: options.includeSystem === true ? '' : undefined }
   for (const event of events) {
     switch (event.type) {
       case 'turn/start':
@@ -175,6 +193,12 @@ export function formatSessionTrajectory(
         if (fold.step !== undefined) fold.step.endedAt = event.time
         fold.step = undefined
         break
+      case 'system/message': {
+        // The head node always reflects the current full rendering after the
+        // documented normalization; an empty rendering clears the prompt.
+        if (fold.system !== undefined) fold.system = redact(visibleContent(event.data.message.content))
+        break
+      }
       case 'user/message': {
         if (event.surfaceOp !== 'append' || event.data.source.kind !== 'user') break
         const text = redact(visibleContent(event.data.content))
@@ -186,6 +210,8 @@ export function formatSessionTrajectory(
         const entry: TrajectoryEntry = {
           kind: 'assistant',
           at: event.time,
+          provider: event.data.message.source.provider,
+          model: event.data.message.source.model,
           text: redact(visibleContent(event.data.message.content)),
           toolCalls: toolCallsOf(event.data.message).map(call => ({
             ...call,
@@ -233,6 +259,7 @@ export function formatSessionTrajectory(
       title: redact(events.findLast(event => event.type === 'session/title')?.data.title ?? ''),
       ...(meta.createdAt === undefined ? {} : { createdAt: meta.createdAt }),
       ...(meta.cwd === undefined ? {} : { cwd: meta.cwd }),
+      ...(fold.system === undefined ? {} : { system: fold.system }),
     },
     turns: fold.turns.map(turn => projectTurn(turn)),
   }
