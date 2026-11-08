@@ -10,8 +10,9 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type {} from '@deepseek-ai/dsh-client-ui-context-menu/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import { IconCopyOutlineRegular, IconDownloadOutlineRegular, IconPaperPlaneOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
-import { SessionLogDownloadController } from './controller.ts'
+import { downloadUrl, SessionLogDownloadController } from './controller.ts'
 import { SessionMarkdownCopyController } from './copy-controller.ts'
+import { SESSION_TRAJECTORY_EXPORT_ROUTE } from '../routes.ts'
 import { SessionMarkdownCopyToast, type SessionMarkdownCopyToastInjected } from './CopyToast.tsx'
 import { SessionLogDownloadDialog, type SessionLogDownloadDialogInjected } from './Dialog.tsx'
 import { en, ja, es, fr, de, ru, pt, NS, zh, type SessionLogDownloadKey } from './locales.ts'
@@ -56,6 +57,7 @@ export function apply(ctx: ClientContext): void {
     for (const [key, Icon] of Object.entries({
       'session-log-download.copy': IconCopyOutlineRegular,
       'session-log-download.download': IconDownloadOutlineRegular,
+      'session-log-download.trajectory': IconDownloadOutlineRegular,
       'session-log-download.feedback': IconPaperPlaneOutlineRegular,
     })) yield ctx.slots.register({ name: 'contextMenu.icon', key }, Icon)
   })
@@ -68,6 +70,13 @@ export function apply(ctx: ClientContext): void {
       { id: 'download', label: t('menu.download'), icon: { key: 'session-log-download.download' },
         disabled: controller.store.getSnapshot().bySession[sessionId]?.status === 'downloading',
         run: () => controller.download(sessionId) },
+      { id: 'trajectory', label: t('menu.trajectory'), icon: { key: 'session-log-download.trajectory' },
+        run: () => {
+          downloadUrl(
+            `${SESSION_TRAJECTORY_EXPORT_ROUTE}?${new URLSearchParams({ sessionId }).toString()}`,
+            `dsh-session-${sessionId.replace(/[^A-Za-z0-9_-]/gu, '_')}.trajectory.json`,
+          )
+        } },
     ],
   }), 'session-log-download: Header exports')
   ctx.effect(() => ctx.contextMenus.register({

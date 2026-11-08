@@ -59,20 +59,21 @@ describe('session-log-download browser plugin', () => {
   it('follows feedback plugin availability without adding Header actions to Session context menus', async () => {
     const b = await bench()
     const menu = b.menu()
-    expect(menu.source.getSnapshot().map(row => row.label)).toEqual(['Copy Session as Markdown', 'Download session log'])
+    expect(menu.source.getSnapshot().map(row => row.label)).toEqual(['Copy Session as Markdown', 'Download session log', 'Download trajectory (JSON)'])
     const openSession = vi.fn()
     const feedback = b.ctx.plugin((ctx) => { ctx.provide('feedbackUi', { openSession }) })
     await feedback.await()
-    await vi.waitFor(() => { expect(menu.source.getSnapshot().map(row => row.label)).toEqual(['Copy Session as Markdown', 'Download session log', 'Feedback']) })
+    await vi.waitFor(() => { expect(menu.source.getSnapshot().map(row => row.label)).toEqual(['Copy Session as Markdown', 'Download session log',
+      'Download trajectory (JSON)', 'Feedback']) })
     b.menu().select('session-log-download.feedback/feedback')
     expect(openSession).toHaveBeenCalledWith(SID)
     await feedback.dispose()
-    await vi.waitFor(() => { expect(menu.source.getSnapshot()).toHaveLength(2) })
+    await vi.waitFor(() => { expect(menu.source.getSnapshot()).toHaveLength(3) })
     const session = b.registry.resolve({ kind: 'session', value: { sessionId: SID, displayTitle: 'Captured' } })
     expect(session.source.getSnapshot()).toEqual([])
     const reloaded = b.ctx.plugin((ctx) => { ctx.provide('feedbackUi', { openSession }) })
     await reloaded.await()
-    await vi.waitFor(() => { expect(menu.source.getSnapshot()).toHaveLength(3) })
+    await vi.waitFor(() => { expect(menu.source.getSnapshot()).toHaveLength(4) })
     b.menu().select('session-log-download.feedback/feedback')
     expect(openSession).toHaveBeenCalledTimes(2)
     await b.fiber.dispose()
@@ -123,12 +124,15 @@ describe('session-log-download browser plugin', () => {
     const menu = b.menu()
     b.menu().select('session-log-download.export/download')
     expect(menu.source.getSnapshot().map(row => [row.label, row.disabled === true])).toEqual([
-      ['Copy Session as Markdown', false], ['Download session log', true], ['Feedback', false],
+      ['Copy Session as Markdown', false],
+      ['Download session log', true],
+      ['Download trajectory (JSON)', false],
+      ['Feedback', false],
     ])
     b.menu().select('session-log-download.export/download')
     expect(fetcher).toHaveBeenCalledOnce()
     b.menu().select('session-log-download.export/copy')
-    expect(menu.source.getSnapshot().map(row => row.disabled === true)).toEqual([true, true, false])
+    expect(menu.source.getSnapshot().map(row => row.disabled === true)).toEqual([true, true, false, false])
     b.menu().select('session-log-download.export/copy')
     expect(fetcher).toHaveBeenCalledTimes(2)
     download.resolve(new Response('', { status: 500 }))
