@@ -139,7 +139,7 @@ describe('formatSessionTrajectory', () => {
     expect(first.usage).toEqual({ inputTokens: 10, outputTokens: 5, totalTokens: 15 })
     expect(first.entries.map(entry => entry.kind)).toEqual(['user', 'assistant', 'tool-result'])
     const assistantEntry = first.entries[1]!
-    expect(assistantEntry).toMatchObject({ kind: 'assistant', text: 'Checking.', toolCalls: [{ callId: 'c1', name: 'bash', arguments: '{"command":"ls -la"}' }] })
+    expect(assistantEntry).toMatchObject({ kind: 'assistant', provider: 'test', model: 'test', text: 'Checking.', toolCalls: [{ callId: 'c1', name: 'bash', arguments: '{"command":"ls -la"}' }] })
     const result = first.entries[2]!
     expect(result).toMatchObject({ kind: 'tool-result', callId: 'c1', name: 'bash', text: 'a.txt', isError: true, error: { name: 'ToolError', code: 'TOOL_FAILED', reason: 'sandbox denied' } })
     expect(turn.steps[1]!.usage).toEqual({ inputTokens: 8, outputTokens: 3 })
@@ -174,6 +174,33 @@ describe('formatSessionTrajectory', () => {
       end(4, 0),
     ])
     expect(trajectory.turns[0]?.steps[0]?.entries[0]).toMatchObject({ kind: 'tool-result', callId: 'c9', name: 'unknown', isError: false })
+  })
+
+  it('tracks the final rendered system prompt only when the fold opts in', () => {
+    const system = (seq: number, text: string): SessionEvent<'system/message'> => ({
+      type: 'system/message',
+      seq: sequence(seq),
+      time: seq,
+      surfaceOp: 'append',
+      data: {
+        turn: 1,
+        step: 0,
+        message: {
+          role: 'system',
+          id: messageId(`system-${String(seq)}`),
+          source: { kind: 'system-prompt' },
+          content: text === '' ? [] : [{ type: 'text', text }],
+        },
+      },
+    })
+    const events = [system(1, 'You are a helpful harness.'), system(2, ''), system(3, 'Final harness prompt with sk-abcdefghijklmnopqrstuvwx.'),
+      start(4, 0), stepStart(5, 0, 0), user(6, 'hi'), end(7, 0)]
+    const excluded = formatSessionTrajectory(events, { id: 's' })
+    expect(excluded.session.system).toBeUndefined()
+    const included = formatSessionTrajectory(events, { id: 's' }, { includeSystem: true })
+    // The last non-empty head node is the effective rendering; it is redacted.
+    expect(included.session.system).toBe('Final harness prompt with [REDACTED:openai-key].')
+    expect(included.turns[0]?.steps[0]?.entries[0]).toMatchObject({ kind: 'user', text: 'hi' })
   })
 
   it('excludes injected context, titles carry redaction, and empty logs fold to a turn-less trajectory', () => {
