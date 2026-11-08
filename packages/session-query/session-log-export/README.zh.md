@@ -56,9 +56,9 @@ export function convertTranscript(events: readonly SessionEvent[], sourcePath?: 
 
 ### 轨迹导出
 
-`GET /api/session.trajectory?sessionId=<id>` 把整个 Session 返回为一份结构化、机器可读的轨迹：`dsh.session-trajectory` 版本 1，包含轮次与步、逐条目时间戳、用户条目、附带工具调用规格的助手条目、配对且携带结构化失败标识的工具结果、已结算但未提交的模型尝试，以及每步的令牌用量。每个文本表面——用户文本、助手文本、工具参数、结果文本与失败原因——在导出前都会经过 session-telemetry 接缝的基线秘密形态脱敏，因此轨迹可以安全地交给训练或评估流水线。系统与开发者提示词渲染、请求头和运行时记录被排除：轨迹描述的是对话行为，而不是 harness 的指令文本。
+`GET /api/session.trajectory?sessionId=<id>` 把整个 Session 返回为一份结构化、机器可读的轨迹：`dsh.session-trajectory` 版本 1，包含轮次与步、逐条目时间戳、用户条目、附带工具调用规格的助手条目、配对且携带结构化失败标识的工具结果、已结算但未提交的模型尝试，以及每步的令牌用量，还有产出每个助手步骤的提供方与模型标识。每个文本表面——用户文本、助手文本、工具参数、结果文本与失败原因——在导出前都会经过 session-telemetry 接缝的基线秘密形态脱敏，因此轨迹可以安全地交给训练或评估流水线。开发者提示词渲染、请求头和运行时记录被排除。最终渲染的系统提示词仅在折叠通过 `includeSystem` 显式加入时才包含——轨迹描述的是对话行为，而 harness 的指令文本不是操作者要求分享的 harness 输出。
 
-包入口还导出 `formatSessionTrajectory(events, meta?)`：面向已经持有完整已提交逻辑事件快照（按 seq 排序）的调用方的同一纯折叠。可选的 `meta` 携带后端解析的 Session `id`、`createdAt` 与 `cwd`；标题来自最新的 `session/title` 事件。
+包入口还导出 `formatSessionTrajectory(events, meta?)`：面向已经持有完整已提交逻辑事件快照（按 seq 排序）的调用方的同一纯折叠。可选的 `meta` 携带后端解析的 Session `id`、`createdAt` 与 `cwd`；标题来自最新的 `session/title` 事件。选项对象可通过 `includeSystem: true` 让产物包含最终渲染的系统提示词。
 
 ```ts
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
