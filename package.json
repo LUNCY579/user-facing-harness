@@ -234,13 +234,6 @@
     "bench:retrieval": "node benchmarks/context-retrieval/run.mjs",
     "bench:retrieval:neural": "node benchmarks/context-retrieval/neural/run.mjs"
   },
-  "pnpm": {
-    "overrides": {
-      "dompurify": ">=3.4.17",
-      "node-forge": ">=1.4.1",
-      "undici": ">=7.16.0"
-    }
-  },
   "devDependencies": {
     "@deepseek-ai/dsh-hooks-claude-code": "workspace:*",
     "@deepseek-ai/dsh-hooks-codex": "workspace:*",
