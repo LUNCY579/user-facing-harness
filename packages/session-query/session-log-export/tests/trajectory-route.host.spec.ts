@@ -164,3 +164,69 @@ describe('Session trajectory Fetch route', () => {
     expect(gone.status).toBe(404)
   })
 })
+
+describe('Session trajectory descendants', () => {
+  it('includes sub-session trajectories when includeDescendants=true', async () => {
+    const header: SessionHeader = { ...HEADER, id: 'child-session' as SessionId }
+    const childEvents: SessionEvent[] = [
+      { type: 'turn/start', seq: brandNumber<SessionSeq>(1), time: 1, data: { turn: 1 } },
+      { type: 'user/message', seq: brandNumber<SessionSeq>(2), time: 2, surfaceOp: 'append',
+        data: { role: 'user', id: brandString<MessageId>('cm-1'), source: { kind: 'user' },
+          content: [{ type: 'text', text: 'child question' }] } },
+      { type: 'turn/end', seq: brandNumber<SessionSeq>(3), time: 3, data: { turn: 1, reason: { kind: 'completed' } } },
+    ]
+    const readSession = async (id: SessionId) => {
+      if (id === SESSION_ID) return { session: HEADER, inheritedEventCount: 0, events: EVENTS }
+      return { session: header, inheritedEventCount: 0, events: childEvents }
+    }
+    const trace = {
+      target: { header: HEADER, live: false, persisted: true },
+      ancestors: [],
+      complete: true,
+      root: { header: HEADER, live: false, persisted: true },
+      descendants: [{ session: { header, live: false, persisted: true }, descendants: [] }],
+    }
+    const sq = { readSession, traceSession: async () => trace }
+    const { shared, connection, dispose } = await mounted(sq)
+    const response = await shared.fetch(
+      request(`${SESSION_TRAJECTORY_EXPORT_PATH}?sessionId=${SESSION_ID}&includeDescendants=true`),
+      connection.browserPeer,
+    )
+    expect(response.status).toBe(200)
+    const body = await response.json() as {
+      schema: string
+      descendants?: Array<{ sessionId: string; trajectory: { schema: string; turns: unknown[] } }>
+    }
+    expect(body.schema).toBe('dsh.session-trajectory')
+    expect(body.descendants).toHaveLength(1)
+    expect(body.descendants![0]!.sessionId).toBe('child-session')
+    expect(body.descendants![0]!.trajectory.schema).toBe('dsh.session-trajectory')
+    await dispose()
+  })
+
+  it('serves only the root trajectory without includeDescendants', async () => {
+    const header: SessionHeader = { ...HEADER, id: 'child-session' as SessionId }
+    const childEvents: SessionEvent[] = [
+      { type: 'turn/start', seq: brandNumber<SessionSeq>(1), time: 1, data: { turn: 1 } },
+    ]
+    const readSession = async (id: SessionId) => {
+      if (id === SESSION_ID) return { session: HEADER, inheritedEventCount: 0, events: EVENTS }
+      return { session: header, inheritedEventCount: 0, events: childEvents }
+    }
+    const trace = {
+      target: { header: HEADER, live: false, persisted: true },
+      ancestors: [], complete: true,
+      root: { header: HEADER, live: false, persisted: true },
+      descendants: [{ session: { header, live: false, persisted: true }, descendants: [] }],
+    }
+    const sq = { readSession, traceSession: async () => trace }
+    const { shared, connection, dispose } = await mounted(sq)
+    const response = await shared.fetch(
+      request(`${SESSION_TRAJECTORY_EXPORT_PATH}?sessionId=${SESSION_ID}`),
+      connection.browserPeer,
+    )
+    const body = await response.json() as { descendants?: unknown }
+    expect(body.descendants).toBeUndefined()
+    await dispose()
+  })
+})

@@ -19,6 +19,7 @@ import {
 } from './archive.ts'
 import { formatSessionMarkdown } from './markdown.ts'
 import { formatSessionTrajectory } from './trajectory.ts'
+import type { SessionLineageNode } from '@deepseek-ai/dsh-session-query'
 import { SESSION_LOG_EXPORT_PATH, SESSION_MARKDOWN_EXPORT_PATH, SESSION_TRAJECTORY_EXPORT_PATH } from './routes.ts'
 
 export {
@@ -183,10 +184,12 @@ async function sessionMarkdownResponse(ctx: Context, request: Request): Promise<
  * @returns the JSON trajectory response, or a sanitized status for invalid, missing, or unavailable reads.
  */
 async function sessionTrajectoryResponse(ctx: Context, request: Request): Promise<Response> {
-  const sessionIdValue = new URL(request.url).searchParams.get('sessionId')
+  const url = new URL(request.url)
+  const sessionIdValue = url.searchParams.get('sessionId')
   if (sessionIdValue === null || sessionIdValue.length === 0) {
     return new Response('missing or invalid sessionId query parameter', { status: 400 })
   }
+  const includeDescendants = url.searchParams.get('includeDescendants') === 'true'
   const sessionQuery = ctx.get('sessionQuery')
   if (sessionQuery === undefined) {
     return new Response('session trajectory export is unavailable: missing session-query service', { status: 500 })
@@ -201,6 +204,31 @@ async function sessionTrajectoryResponse(ctx: Context, request: Request): Promis
       createdAt: snapshot.session.createdAt,
       ...(snapshot.session.cwd === undefined ? {} : { cwd: snapshot.session.cwd }),
     })
+    if (includeDescendants) {
+      const trace = await sessionQuery.traceSession(sessionId, request.signal)
+      request.signal.throwIfAborted()
+      const descendants: Array<{ sessionId: string; trajectory: unknown }> = []
+      const collect = async (nodes: readonly SessionLineageNode[]): Promise<void> => {
+        for (const node of nodes) {
+          request.signal.throwIfAborted()
+          const childSnapshot = await sessionQuery.readSession(node.session.header.id)
+          request.signal.throwIfAborted()
+          descendants.push({
+            sessionId: node.session.header.id,
+            trajectory: formatSessionTrajectory(childSnapshot.events, {
+              id: node.session.header.id,
+              createdAt: childSnapshot.session.createdAt,
+              ...(childSnapshot.session.cwd === undefined ? {} : { cwd: childSnapshot.session.cwd }),
+            }),
+          })
+          await collect(node.descendants)
+        }
+      }
+      await collect(trace.descendants)
+      return new Response(JSON.stringify({ ...trajectory, descendants }), {
+        headers: { 'content-type': 'application/json; charset=utf-8' },
+      })
+    }
     return new Response(JSON.stringify(trajectory), {
       headers: { 'content-type': 'application/json; charset=utf-8' },
     })

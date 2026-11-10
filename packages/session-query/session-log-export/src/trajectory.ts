@@ -98,6 +98,14 @@ export interface SessionTrajectory {
     readonly system?: string
   }
   readonly turns: readonly TrajectoryTurn[]
+  /** Sub-session trajectories, included when the export requested descendants. */
+  readonly descendants?: readonly SessionTrajectoryDescendant[]
+}
+
+/** One sub-session trajectory: the session identity and its folded trajectory. */
+export interface SessionTrajectoryDescendant {
+  readonly sessionId: string
+  readonly trajectory: SessionTrajectory
 }
 
 /** Mutable fold accumulators; the public shapes above are frozen copies. */
