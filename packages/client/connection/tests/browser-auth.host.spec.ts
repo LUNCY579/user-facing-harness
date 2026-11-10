@@ -127,7 +127,7 @@ describe('API credentials', () => {
     const cookie = res.state.headers?.['set-cookie']?.split(';', 1)[0]
     if (cookie === undefined) throw new Error('API connect did not set a cookie')
     const [name, value] = cookie.split('=') as [string, string]
-    const payload = { version: 2, authority, id, issuedAt, expiresAt: issuedAt + 30 * 86_400_000 }
+    const payload = { version: 2, authority, id, issuedAt, expiresAt: issuedAt + 30 * 86_400_000, epoch: 0 }
     expect(JSON.parse(Buffer.from(value.split('.')[1]!, 'base64url').toString('utf8'))).toEqual(payload)
     expect(auth.authenticateApi(request('/', authority, { cookie }))).toBe(id)
     expect(auth.isAuthenticated(request('/', authority, { cookie }))).toBe(false)
@@ -366,5 +366,30 @@ describe('BrowserAuth', () => {
 
     await expect(createAuth(new RecordCredentials(), Number.MAX_SAFE_INTEGER))
       .rejects.toThrow(/safe timestamp range/u)
+  })
+})
+
+describe('BrowserAuth revocation', () => {
+  it('refuses every cookie issued before the revoke call', async () => {
+    const store = new RecordCredentials()
+    const auth = await createAuth(store, 30)
+    const { cookie: minted } = exchange(auth)
+    expect(auth.isAuthenticated(request('/', '127.0.0.1:3080', { cookie: minted }))).toBe(true)
+
+    await auth.revoke()
+    expect(auth.isAuthenticated(request('/', '127.0.0.1:3080', { cookie: minted }))).toBe(false)
+    // The launch token is unaffected — a fresh token exchange works.
+    const reexchange = exchange(auth)
+    expect(reexchange.state.status).toBe(303)
+    expect(auth.isAuthenticated(request('/', '127.0.0.1:3080', { cookie: reexchange.cookie }))).toBe(true)
+  })
+
+  it('persists the epoch across BrowserAuth recreation', async () => {
+    const store = new RecordCredentials()
+    const first = await createAuth(store, 30)
+    const { cookie } = exchange(first)
+    await first.revoke()
+    const second = await createAuth(store, 30)
+    expect(second.isAuthenticated(request('/', '127.0.0.1:3080', { cookie }))).toBe(false)
   })
 })

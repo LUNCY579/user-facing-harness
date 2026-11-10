@@ -24,6 +24,8 @@ const PROCESS_LAUNCH_TOKENS = new WeakMap<object, string>()
 interface StoredSecretPayload {
   readonly version: typeof STORED_SECRET_VERSION
   readonly secret: string
+  /** Cookie epoch: cookies issued below this epoch are refused. Absent reads as 0. */
+  readonly epoch?: number
 }
 
 interface BrowserCookiePayload {
@@ -31,6 +33,8 @@ interface BrowserCookiePayload {
   readonly authority: string
   readonly issuedAt: number
   readonly expiresAt: number
+  /** Cookie epoch: cookies issued before the current epoch are refused. Absent reads as 0. */
+  readonly epoch: number
 }
 
 interface ApiCookiePayload extends Omit<BrowserCookiePayload, 'version'> {
@@ -107,6 +111,13 @@ function storedSecret(record: CredentialRecord | undefined): Buffer | undefined 
   return secret
 }
 
+/** Read the stored epoch from a credential record; absent reads as 0. */
+function storedEpoch(record: CredentialRecord | undefined): number {
+  if (record === undefined || record.kind !== 'grant' || !isRecord(record.payload)) return 0
+  const epoch = record.payload.epoch
+  return typeof epoch === 'number' && Number.isSafeInteger(epoch) && epoch >= 0 ? epoch : 0
+}
+
 function tokenMatches(actual: string, expected: string): boolean {
   const actualBytes = Buffer.from(actual, 'utf8')
   const expectedBytes = Buffer.from(expected, 'utf8')
@@ -173,13 +184,14 @@ function decodeCookie(value: string, secret: Buffer): CookiePayload | undefined 
     || typeof decoded.authority !== 'string'
     || typeof decoded.issuedAt !== 'number' || !Number.isSafeInteger(decoded.issuedAt)
     || typeof decoded.expiresAt !== 'number' || !Number.isSafeInteger(decoded.expiresAt)) return undefined
-  const payload = { authority: decoded.authority, issuedAt: decoded.issuedAt, expiresAt: decoded.expiresAt }
+  const epoch = typeof decoded.epoch === 'number' && Number.isSafeInteger(decoded.epoch) ? decoded.epoch : 0
+  const payload = { authority: decoded.authority, issuedAt: decoded.issuedAt, expiresAt: decoded.expiresAt, epoch }
   if (decoded.version === COOKIE_PAYLOAD_VERSION) return { version: COOKIE_PAYLOAD_VERSION, ...payload }
   if (typeof decoded.id !== 'string' || decoded.id.length === 0) return undefined
   return { version: 2, ...payload, id: decoded.id as PeerId }
 }
 
-async function initializeSecret(credentials: CredentialProvider): Promise<Buffer> {
+async function initializeSecret(credentials: CredentialProvider): Promise<{ secret: Buffer; epoch: number }> {
   const generated: StoredSecretPayload = {
     version: STORED_SECRET_VERSION,
     secret: encodeBase64Url(randomBytes(SECRET_BYTES)),
@@ -195,7 +207,7 @@ async function initializeSecret(credentials: CredentialProvider): Promise<Buffer
   if (secret === undefined) {
     throw new Error('client-connection: browser-session credential record was not created')
   }
-  return secret
+  return { secret, epoch: storedEpoch(record) }
 }
 
 /**
@@ -206,6 +218,8 @@ async function initializeSecret(credentials: CredentialProvider): Promise<Buffer
 export class BrowserAuth {
   private readonly launchToken: string
   private readonly maxAgeMilliseconds: number
+  /** Cookie epoch: cookies issued below this epoch are refused. */
+  private epoch = 0
   /** Optional structured sink for denied authentication attempts; absence logs nothing. */
   private readonly denied: ((message: string) => void) | undefined
   /** Denial-log throttle state: last logged timestamp and denials suppressed since. */
@@ -216,6 +230,7 @@ export class BrowserAuth {
     processOwner: object,
     private readonly secret: Buffer,
     maxAgeDays: number,
+    private readonly credentialProvider: CredentialProvider,
     denied?: (message: string) => void,
   ) {
     this.launchToken = processLaunchToken(processOwner)
@@ -241,7 +256,10 @@ export class BrowserAuth {
     maxAgeDays: number,
     denied?: (message: string) => void,
   ): Promise<BrowserAuth> {
-    return new BrowserAuth(processOwner, await initializeSecret(credentials), maxAgeDays, denied)
+    const { secret, epoch } = await initializeSecret(credentials)
+    const auth = new BrowserAuth(processOwner, secret, maxAgeDays, credentials, denied)
+    auth.epoch = epoch
+    return auth
   }
 
   /**
@@ -283,6 +301,7 @@ export class BrowserAuth {
           authority,
           issuedAt,
           expiresAt,
+          epoch: this.epoch,
         }, this.secret)
         res.writeHead(303, {
           'cache-control': 'no-store',
@@ -343,7 +362,7 @@ export class BrowserAuth {
     const issuedAt = Date.now()
     const expiresAt = issuedAt + this.maxAgeMilliseconds
     const id = publish(interactions)
-    const value = encodeCookie({ version: 2, authority, id, issuedAt, expiresAt }, this.secret)
+    const value = encodeCookie({ version: 2, authority, id, issuedAt, expiresAt, epoch: this.epoch }, this.secret)
     res.writeHead(302, {
       'cache-control': 'no-store',
       'location': './api/remote.mux',
@@ -384,10 +403,32 @@ export class BrowserAuth {
     if (value === undefined) return undefined
     const payload = decodeCookie(value, this.secret)
     if (payload === undefined || payload.authority !== authority) return undefined
+    if (payload.epoch < this.epoch) return undefined
     const now = Date.now()
     if (payload.issuedAt > now || payload.expiresAt <= now || payload.expiresAt <= payload.issuedAt
       || payload.expiresAt - payload.issuedAt > this.maxAgeMilliseconds) return undefined
     return payload
+  }
+
+  /**
+   * Revoke all currently issued browser and API cookies. Increments the
+   * cookie epoch in the credential store and updates this instance's epoch,
+   * so every cookie issued before this call is refused. The launch token is
+   * unaffected (it authenticates the token-exchange flow, not the cookie).
+   * @returns after the credential store has persisted the new epoch.
+   */
+  async revoke(): Promise<void> {
+    const next = this.epoch + 1
+    await this.credentialProvider.modifyRecord(AUTH_RECORD_KEY, (current) => {
+      if (current === undefined) return Promise.resolve(undefined)
+      const stored = current as { kind: string; payload: Record<string, unknown> }
+      if (stored.kind !== 'grant') return Promise.resolve(undefined)
+      return Promise.resolve({
+        kind: 'grant' as const,
+        payload: { ...stored.payload, epoch: next },
+      })
+    })
+    this.epoch = next
   }
 
   private writeUnauthorized(req: ConnectionIndexRequest, res: ConnectionIndexResponse): void {

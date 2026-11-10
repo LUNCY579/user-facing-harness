@@ -141,7 +141,8 @@ export async function apply(ctx: Context, config?: ConnectionConfig): Promise<vo
         ctx.logger.warn(message)
         // The audit log records the security event durably when mounted;
         // the message already carries the structured facts.
-        ctx.get('auditLog')?.record('auth-denial', 'browser-auth-denied', { message })
+        const audit = ctx.get('auditLog') as { record(category: string, action: string, detail: Record<string, string>): void } | undefined
+        audit?.record('auth-denial', 'browser-auth-denied', { message })
       }),
   )
   ctx.inject(['webServer'], (webCtx) => {
