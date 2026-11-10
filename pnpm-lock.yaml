@@ -2201,6 +2201,16 @@ importers:
         specifier: workspace:*
         version: link:../../util/home-paths
 
+  packages/audit/audit-local:
+    dependencies:
+      '@deepseek-ai/dsh-home-paths':
+        specifier: workspace:~
+        version: link:../../util/home-paths
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+
   packages/boot/app-boot:
     dependencies:
       '@deepseek-ai/dsh-atomic-write':
@@ -3609,6 +3619,9 @@ importers:
 
   packages/client/connection:
     dependencies:
+      '@deepseek-ai/dsh-audit-local':
+        specifier: workspace:*
+        version: link:../../audit/audit-local
       '@deepseek-ai/dsh-credentials':
         specifier: workspace:*
         version: link:../../credentials/credentials

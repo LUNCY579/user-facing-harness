@@ -137,7 +137,12 @@ export async function apply(ctx: Context, config?: ConnectionConfig): Promise<vo
     ctx,
     trustedHosts,
     await BrowserAuth.create(ctx.root, ctx.credentials, cookieMaxAgeDays,
-      (message) => { ctx.logger.warn(message) }),
+      (message) => {
+        ctx.logger.warn(message)
+        // The audit log records the security event durably when mounted;
+        // the message already carries the structured facts.
+        ctx.get('auditLog')?.record('auth-denial', 'browser-auth-denied', { message })
+      }),
   )
   ctx.inject(['webServer'], (webCtx) => {
     assertImageBodyCapacity(webCtx, maxRequestBodyBytes)

@@ -50,6 +50,7 @@
   ],
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/dsh-audit-local": "workspace:*",
     "@deepseek-ai/dsh-scope": "workspace:*"
   },
   "devDependencies": {
