@@ -12,6 +12,7 @@
 import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
+import { COMPILED_SECRET_SHAPES } from '@deepseek-ai/dsh-session-telemetry'
 
 const ROOT = resolve(import.meta.dirname, '..')
 
@@ -24,9 +25,8 @@ const SCANNED_EXTENSIONS = new Set(['.md', '.txt', '.json', '.jsonl', '.yaml', '
 /** Lockfiles and manifests are dependency records, not fixtures. */
 const SKIPPED_BASENAMES = new Set(['pnpm-lock.yaml', 'package-lock.json', 'yarn.lock'])
 
-/** One secret shape worth one diagnostic; `group` selects the matched text's position when the shape wraps it. */
-interface SecretShape {
-  /** Diagnostic name, e.g. `OpenAI-style API key`. */
+/** One scan-gate-specific shape that extends the shared secret-shape table. */
+interface ScanExtraShape {
   readonly name: string
   readonly pattern: RegExp
   /** Capture index carrying the secret-looking run; the match alone may include benign fixed text. */
@@ -36,23 +36,14 @@ interface SecretShape {
 }
 
 /**
- * The structural secret shapes the gate recognizes, compiled once at module
- * load: `String.matchAll` with a global regex resets `lastIndex` around each
- * call, so the shared instances are safe across every scanned file, and
- * recompiling per file would multiply eleven RegExp constructions by the
- * whole fixture corpus.
+ * Scan-gate-specific patterns that don't apply to telemetry redaction.
+ * The bearer-credential pattern has a capture group; the DeepSeek key is
+ * product-specific. The shared shapes from the telemetry redactor cover the
+ * rest.
  */
-const SHAPES: readonly SecretShape[] = [
-  { name: 'OpenAI-style API key', pattern: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
-  { name: 'GitHub token', pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
-  { name: 'GitLab token', pattern: /\bglpat-[A-Za-z0-9_-]{20,}\b/g },
-  { name: 'Slack token', pattern: /\bxox[abprs]-[A-Za-z0-9-]{10,}\b/g },
-  { name: 'AWS access key id', pattern: /\bAKIA[0-9A-Z]{16}\b/g },
-  { name: 'Google API key', pattern: /\bAIza[0-9A-Za-z_-]{35}\b/g },
-  { name: 'Anthropic API key', pattern: /\bsk-ant-[A-Za-z0-9_-]{20,}\b/g },
+const SCAN_EXTRA_SHAPES: readonly ScanExtraShape[] = [
+  { name: 'pem-private-key-header', pattern: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY-----/g },
   { name: 'DeepSeek API key', pattern: /\bsk-(?:hf|dl)-[A-Za-z0-9]{20,}\b/g },
-  { name: 'JWT', pattern: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g },
-  { name: 'PEM private key', pattern: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY-----/g },
   {
     name: 'bearer credential in committed text',
     // The /i flag makes A-Z and a-z duplicate ranges per sonarjs; \w- is the folded equivalent.
@@ -61,14 +52,15 @@ const SHAPES: readonly SecretShape[] = [
   },
 ]
 
-// The shapes compiled once at module load: matchAll with a global regex
-// resets lastIndex around each call, so the shared instances are safe
-// across every file, and recompiling per file would multiply the RegExp
-// constructions by the whole fixture corpus.
-const COMPILED: readonly SecretShape[] = SHAPES.map(shape => ({
-  ...shape,
-  pattern: new RegExp(shape.pattern.source, shape.pattern.flags),
-}))
+/**
+ * The full detection table: the shared secret shapes from the telemetry
+ * redactor (one source of truth, snake_case names), plus the scan gate's
+ * fixture-scanning extras.
+ */
+const ALL_SHAPES: readonly ScanExtraShape[] = [
+  ...COMPILED_SECRET_SHAPES,
+  ...SCAN_EXTRA_SHAPES,
+]
 
 /** Result of scanning every committed fixture file. */
 export interface SecretsScanReport {
@@ -94,7 +86,7 @@ function isScannedPath(relativePath: string): boolean {
  */
 export function scanText(file: string, text: string): string[] {
   const failures: string[] = []
-  for (const shape of COMPILED) {
+  for (const shape of ALL_SHAPES) {
     for (const match of text.matchAll(shape.pattern)) {
       // Every capture group in SHAPES is mandatory; the fallback only satisfies
       // the indexer type and cannot pass the length floor.

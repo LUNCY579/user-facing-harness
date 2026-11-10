@@ -13,8 +13,8 @@ describe('verify-secrets-scan', () => {
     const text = 'key: sk-abcdefghijklmnopqrstuvwx\nline two\n  token = "ghp_abcdefghijklmnopqrstuvwx"\n'
     const failures = scanText('snapshots/example.jsonl', text)
     expect(failures).toEqual([
-      'snapshots/example.jsonl:1: OpenAI-style API key',
-      'snapshots/example.jsonl:3: GitHub token',
+      'snapshots/example.jsonl:1: openai-key',
+      'snapshots/example.jsonl:3: github-token',
       'snapshots/example.jsonl:3: bearer credential in committed text',
     ])
   })
@@ -25,8 +25,8 @@ describe('verify-secrets-scan', () => {
       'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJVadQssw5c',
     ].join('\n')
     const failures = scanText('examples/demo.md', text)
-    expect(failures).toContain('examples/demo.md:1: PEM private key')
-    expect(failures).toContain('examples/demo.md:2: JWT')
+    expect(failures.some(f => f.includes('pem-private-key'))).toBe(true)
+    expect(failures).toContain('examples/demo.md:2: jwt')
   })
 
   it('leaves synthetic placeholder text clean', () => {

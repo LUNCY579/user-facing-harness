@@ -14,14 +14,18 @@
 import type { SessionTelemetryRecord } from '@deepseek-ai/dsh-session-telemetry'
 
 /** One secret shape worth one replacement class. */
-interface SecretShape {
+export interface SecretShape {
   /** Diagnostic name used in the `[REDACTED:<name>]` marker. */
   readonly name: string
   readonly pattern: RegExp
 }
 
-/** Structural secret shapes redacted before export. */
-const SHAPES: readonly SecretShape[] = [
+/**
+ * Structural secret shapes redacted before export. The scan gate
+ * (`scripts/verify-secrets-scan.ts`) consumes these as its base and adds
+ * its own fixture-scanning patterns on top.
+ */
+export const SHAPES: readonly SecretShape[] = [
   { name: 'openai-key', pattern: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
   { name: 'anthropic-key', pattern: /\bsk-ant-[A-Za-z0-9_-]{20,}\b/g },
   { name: 'github-token', pattern: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
@@ -39,7 +43,7 @@ const SHAPES: readonly SecretShape[] = [
  * are safe across every string; recompiling per string would multiply nine
  * RegExp constructions by every scanned value in a large body.
  */
-const COMPILED: readonly { name: string; pattern: RegExp }[] =
+export const COMPILED: readonly { name: string; pattern: RegExp }[] =
   SHAPES.map(shape => ({ name: shape.name, pattern: new RegExp(shape.pattern.source, shape.pattern.flags) }))
 
 /** Walk budget and change tracking shared by one record's redaction. */

@@ -173,6 +173,9 @@ export abstract class SessionTelemetryBackend extends Service implements Session
 
 export { SessionTelemetryCoordinator, type SessionTelemetryCapture, type SessionTelemetryCaptureOptions } from './coordinator.ts'
 export {
+  type SecretShape,
+  SHAPES as SECRET_SHAPES,
+  COMPILED as COMPILED_SECRET_SHAPES,
   redactSecretShapes,
   redactSecretsInString,
   type WalkState,
