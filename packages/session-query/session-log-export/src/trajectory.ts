@@ -75,6 +75,8 @@ export interface TrajectoryStep {
   readonly usage?: TokenUsage
   readonly interrupted?: true
   readonly entries: readonly TrajectoryEntry[]
+  /** Computed cost for this step; present when a pricing entry matched the step's model. */
+  readonly cost?: TrajectoryCost
 }
 
 /** One user-visible turn. */
@@ -83,6 +85,25 @@ export interface TrajectoryTurn {
   readonly startedAt?: number
   readonly endedAt?: number
   readonly steps: readonly TrajectoryStep[]
+}
+
+/** Token pricing for one model route, in dollars per million tokens. */
+export interface ModelPricing {
+  /** Provider route (e.g. `deepseek`). */
+  readonly provider: string
+  /** Provider model id (e.g. `deepseek-chat`). */
+  readonly model: string
+  readonly inputPerMillion: number
+  readonly outputPerMillion: number
+}
+
+/** Aggregated cost for one trajectory (or one step). */
+export interface TrajectoryCost {
+  readonly inputTokens: number
+  readonly outputTokens: number
+  readonly totalTokens: number
+  /** Computed cost in dollars, using the provided pricing table. Absent when no pricing matched. */
+  readonly costUsd?: number
 }
 
 /** The complete structured trajectory of one Session. */
@@ -116,6 +137,8 @@ interface Step {
   usage: TokenUsage | undefined
   interrupted: true | undefined
   entries: TrajectoryEntry[]
+  provider: string | undefined
+  model: string | undefined
 }
 
 interface Turn {
@@ -142,6 +165,8 @@ const emptyStep = (): Step => ({
   usage: undefined,
   interrupted: undefined,
   entries: [],
+  provider: undefined,
+  model: undefined,
 })
 
 function toolCallsOf(message: AssistantMessage): TrajectoryToolCall[] {
@@ -159,17 +184,42 @@ function toolCallsOf(message: AssistantMessage): TrajectoryToolCall[] {
 }
 
 /**
+ * Compute the cost for one step's token usage against the pricing table.
+ * The pricing table maps `provider/model` to per-million-token rates; a step
+ * whose model has no matching entry carries no cost.
+ */
+function computeCost(
+  usage: TokenUsage,
+  provider: string,
+  model: string,
+  pricing: readonly ModelPricing[],
+): TrajectoryCost | undefined {
+  const inputTokens = usage.inputTokens
+  const outputTokens = usage.outputTokens
+  const totalTokens = usage.totalTokens ?? inputTokens + outputTokens
+  const entry = pricing.find(p => p.provider === provider && p.model === model)
+  if (entry === undefined) return undefined
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens,
+    costUsd: (inputTokens / 1e6) * entry.inputPerMillion + (outputTokens / 1e6) * entry.outputPerMillion,
+  }
+}
+
+/**
  * Fold one complete committed Session log into a redacted structured
  * trajectory. Pure: no mounted plugin, no storage, no mutation of the
  * supplied events.
  * @param events - complete committed logical event snapshot in seq order, including any inherited prefix.
  * @param meta - optional session identity from the backend-resolved artifact.
+ * @param options - fold options: `includeSystem` for the system prompt, `pricing` for cost attribution.
  * @returns the trajectory; an empty log yields one turn-less trajectory.
  */
 export function formatSessionTrajectory(
   events: readonly SessionEvent[],
   meta: { readonly id?: string; readonly createdAt?: number; readonly cwd?: string } = {},
-  options: { readonly includeSystem?: boolean } = {},
+  options: { readonly includeSystem?: boolean; readonly pricing?: readonly ModelPricing[] } = {},
 ): SessionTrajectory {
   const state: WalkState = { nodes: Number.MAX_SAFE_INTEGER, changed: false }
   const redact = (value: string): string => redactSecretsInString(value, state)
@@ -194,6 +244,8 @@ export function formatSessionTrajectory(
           usage: undefined,
           interrupted: undefined,
           entries: [],
+          provider: undefined,
+          model: undefined,
         }
         fold.turn?.steps.push(fold.step)
         break
@@ -231,6 +283,8 @@ export function formatSessionTrajectory(
         step.entries.push(entry)
         if (event.data.usage !== undefined) step.usage = event.data.usage
         if (event.data.interrupted === true) step.interrupted = true
+        step.provider = event.data.message.source.provider
+        step.model = event.data.message.source.model
         break
       }
       case 'assistant/attempt': {
@@ -269,7 +323,7 @@ export function formatSessionTrajectory(
       ...(meta.cwd === undefined ? {} : { cwd: meta.cwd }),
       ...(fold.system === undefined ? {} : { system: fold.system }),
     },
-    turns: fold.turns.map(turn => projectTurn(turn)),
+    turns: fold.turns.map(turn => projectTurn(turn, options.pricing ?? [])),
   }
 }
 
@@ -296,18 +350,24 @@ function redactError(
 }
 
 /** Freeze one turn's mutable accumulators into the wire shape. */
-function projectTurn(turn: Turn): TrajectoryTurn {
+function projectTurn(turn: Turn, pricing: readonly ModelPricing[]): TrajectoryTurn {
   return {
     index: turn.index,
     ...(turn.startedAt === undefined ? {} : { startedAt: turn.startedAt }),
     ...(turn.endedAt === undefined ? {} : { endedAt: turn.endedAt }),
-    steps: turn.steps.map(step => ({
-      index: step.index,
-      ...(step.startedAt === undefined ? {} : { startedAt: step.startedAt }),
-      ...(step.endedAt === undefined ? {} : { endedAt: step.endedAt }),
-      ...(step.usage === undefined ? {} : { usage: step.usage }),
-      ...(step.interrupted === undefined ? {} : { interrupted: step.interrupted }),
-      entries: step.entries,
-    })),
+    steps: turn.steps.map((step) => {
+      const cost = step.usage !== undefined && step.provider !== undefined && step.model !== undefined
+        ? computeCost(step.usage, step.provider, step.model, pricing)
+        : undefined
+      return {
+        index: step.index,
+        ...(step.startedAt === undefined ? {} : { startedAt: step.startedAt }),
+        ...(step.endedAt === undefined ? {} : { endedAt: step.endedAt }),
+        ...(step.usage === undefined ? {} : { usage: step.usage }),
+        ...(step.interrupted === undefined ? {} : { interrupted: step.interrupted }),
+        ...(cost === undefined ? {} : { cost }),
+        entries: step.entries,
+      }
+    }),
   }
 }

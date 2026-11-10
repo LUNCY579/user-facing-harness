@@ -176,6 +176,29 @@ describe('formatSessionTrajectory', () => {
     expect(trajectory.turns[0]?.steps[0]?.entries[0]).toMatchObject({ kind: 'tool-result', callId: 'c9', name: 'unknown', isError: false })
   })
 
+  it('computes per-step cost when a pricing entry matches the model', () => {
+    const pricing = [{ provider: 'test', model: 'test', inputPerMillion: 1, outputPerMillion: 2 }]
+    const trajectory = formatSessionTrajectory([
+      start(1, 0),
+      stepStart(2, 0, 0),
+      assistant(3, [{ type: 'text', text: 'response' }], { usage: { inputTokens: 1_000_000, outputTokens: 500_000 } }),
+      stepEnd(4, 0, 0),
+      end(5, 0),
+    ], { id: 's' }, { pricing })
+    const step = trajectory.turns[0]?.steps[0]
+    expect(step?.cost).toEqual({ inputTokens: 1_000_000, outputTokens: 500_000, totalTokens: 1_500_000, costUsd: 2 })
+  })
+
+  it('carries no cost when no pricing entry matches', () => {
+    const trajectory = formatSessionTrajectory([
+      start(1, 0),
+      stepStart(2, 0, 0),
+      assistant(3, [{ type: 'text', text: 'response' }], { usage: { inputTokens: 100, outputTokens: 50 } }),
+      end(4, 0),
+    ])
+    expect(trajectory.turns[0]?.steps[0]?.cost).toBeUndefined()
+  })
+
   it('tracks the final rendered system prompt only when the fold opts in', () => {
     const system = (seq: number, text: string): SessionEvent<'system/message'> => ({
       type: 'system/message',
