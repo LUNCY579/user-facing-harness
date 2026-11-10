@@ -18,6 +18,12 @@ updates:
       # reviewed patch. Bumps reopen when those sequences land.
       - dependency-name: "koffi"
       - dependency-name: "lexical"
+      - dependency-name: "app-builder-lib"
+      - dependency-name: "exceljs"
+      - dependency-name: "mdast-util-gfm-autolink-literal"
+      - dependency-name: "micromark-extension-gfm-autolink-literal"
+      - dependency-name: "node-pty"
+      - dependency-name: "@yao-pkg/pkg-fetch"
       - dependency-name: "@lexical/*"
     labels:
       - "kind/dependency"
